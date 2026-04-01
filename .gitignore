@@ -1,0 +1,29 @@
+# Backend
+backend/venv/
+backend/aquatic_market.db
+
+# Frontend
+aquatic-web-app/node_modules/
+aquatic-web-app/dist/
+aquatic-web-app/dist-ssr/
+aquatic-web-app/*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
