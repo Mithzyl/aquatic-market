@@ -5,6 +5,7 @@ import ProductDetail from './pages/ProductDetail'
 import Booking from './pages/Booking'
 import PriceQuery from './pages/PriceQuery'
 import OrderManagement from './pages/OrderManagement'
+import My from './pages/My'
 
 const CartContext = createContext()
 
@@ -13,7 +14,8 @@ export const useCart = () => useContext(CartContext)
 const tabs = [
   { path: '/', label: '首页', icon: 'home' },
   { path: '/price-query', label: '下单', icon: 'order' },
-  { path: '/order-management', label: '订单', icon: 'receipt' }
+  { path: '/order-management', label: '订单', icon: 'receipt' },
+  { path: '/my', label: '我的', icon: 'user' }
 ]
 
 function NavIcon({ type, isActive }) {
@@ -40,6 +42,15 @@ function NavIcon({ type, isActive }) {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M7.5 8.5h9l-.8 8H8.3l-.8-8Z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M9.5 8.5a2.5 2.5 0 1 1 5 0" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M10 12h4" />
+      </svg>
+    )
+  }
+
+  if (type === 'user') {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="8" r="4" strokeWidth={1.9} />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M4 20c0-4 4-6 8-6s8 2 8 6" />
       </svg>
     )
   }
@@ -140,6 +151,7 @@ function AppShell() {
             <Route path="/booking" element={<Booking />} />
             <Route path="/price-query" element={<PriceQuery />} />
             <Route path="/order-management" element={<OrderManagement />} />
+            <Route path="/my" element={<My />} />
           </Routes>
         </main>
 

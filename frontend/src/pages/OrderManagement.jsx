@@ -218,7 +218,7 @@ function EmptyState() {
 
 function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
   const config = statusConfig[order.status] || statusConfig.pending
-  const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   return (
     <article className="overflow-hidden rounded-[34px] border border-[#eadfce] bg-[#fffaf3] shadow-[0_20px_40px_rgba(105,77,44,0.08)]">
@@ -233,15 +233,28 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
           </div>
         </div>
 
-        <h2
-          className="mt-5 text-[28px] font-bold leading-tight text-[#2f281f]"
-          style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
-        >
-          {getOrderTitle(order)}
-        </h2>
-        <p className="mt-2 text-sm text-[#7d6a53]">{totalItems} 件商品，合计 ¥{order.totalAmount}。</p>
+        <div className="mt-5 flex items-baseline justify-between gap-4">
+          <h2
+            className="text-[28px] font-bold leading-tight text-[#2f281f]"
+            style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
+          >
+            {getOrderTitle(order)}
+          </h2>
+          <div className="text-[36px] font-bold text-[#df6f33]">¥{order.totalAmount}</div>
+        </div>
 
-        <div className="mt-5 space-y-3">
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="mt-3 flex items-center gap-1 text-sm font-medium text-[#7d6a53] transition-colors hover:text-[#5a4633]"
+        >
+          订单明细
+          <span className={`inline-block transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+            ▼
+          </span>
+        </button>
+
+        <div className={`mt-4 space-y-3 overflow-hidden transition-all duration-300 ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
           {order.items.map((item, index) => (
             <div key={`${order.id}-${index}`} className="rounded-[24px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
               <div className="flex items-start justify-between gap-3">
@@ -263,57 +276,15 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
               </div>
             </div>
           ))}
-        </div>
-
-        <div className={`mt-5 rounded-[28px] border px-4 py-4 ${config.ctaClass}`}>
-          {order.status === 'preparing' && (
-            <>
-              <div className="text-[18px] font-bold leading-tight text-[#214838]">{config.ctaTitle}</div>
-              <div className="mt-3 flex items-start gap-3 rounded-[22px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(31,122,85,0.08)]">
-                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e7f7ef] text-[#1f7a55]">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M12 8v4l2.5 2.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#69a585]">预计领取时间窗口</div>
-                  <div className="mt-1 text-base font-bold text-[#214838]">{formatPickupWindow(order.pickupTime)}</div>
-                </div>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-[#44715f]">{config.ctaHint}</p>
-            </>
-          )}
-
-          {order.status === 'pending' && (
-            <>
-              <div className="text-[18px] font-bold leading-tight text-[#7d5316]">{config.ctaTitle}</div>
-              <p className="mt-2 text-sm leading-6 text-[#8a6732]">{config.ctaHint}</p>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <a
-                  href={merchantContact.href}
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-[#2d2a27] px-5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(35,31,28,0.22)] transition-transform active:scale-[0.98]"
-                >
-                  联系店主
-                </a>
-                <div className="text-sm text-[#8f6a34]">联系电话 {merchantContact.phoneLabel}</div>
-              </div>
-            </>
-          )}
 
           {order.status === 'completed' && (
-            <>
-              <div className="text-[18px] font-bold leading-tight text-[#5f5042]">{config.ctaTitle}</div>
-              <p className="mt-2 text-sm leading-6 text-[#7a6854]">{config.ctaHint}</p>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={onToggleReceipt}
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-[#2d2a27] px-5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(35,31,28,0.16)] transition-transform active:scale-[0.98]"
-                >
-                  {isReceiptOpen ? '收起交易凭证' : '查看交易凭证'}
-                </button>
-              </div>
-            </>
+            <button
+              type="button"
+              onClick={onToggleReceipt}
+              className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#2d2a27] px-5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(35,31,28,0.16)] transition-transform active:scale-[0.98]"
+            >
+              {isReceiptOpen ? '收起交易凭证' : '查看交易凭证'}
+            </button>
           )}
         </div>
       </div>
