@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+const merchantContact = {
+  phoneLabel: '400-820-5520',
+  href: 'tel:4008205520'
+}
+
 const mockOrders = [
   {
     id: 'DD2026040201',
@@ -13,8 +18,7 @@ const mockOrders = [
     pickupTime: '2026-04-03 10:00',
     totalAmount: 374,
     status: 'pending',
-    createdAt: '2026-04-02 09:00',
-    store: '鲜选海鲜 柳州谷埠街店'
+    createdAt: '2026-04-02 09:00'
   },
   {
     id: 'DD2026040202',
@@ -26,8 +30,7 @@ const mockOrders = [
     pickupTime: '2026-04-03 14:00',
     totalAmount: 204,
     status: 'preparing',
-    createdAt: '2026-04-02 10:00',
-    store: '鲜选海鲜 东门鲜活店'
+    createdAt: '2026-04-02 10:00'
   },
   {
     id: 'DD2026040203',
@@ -40,8 +43,7 @@ const mockOrders = [
     pickupTime: '2026-04-02 16:00',
     totalAmount: 474,
     status: 'completed',
-    createdAt: '2026-04-02 11:00',
-    store: '鲜选海鲜 柳州谷埠街店'
+    createdAt: '2026-04-02 11:00'
   },
   {
     id: 'DD2026040204',
@@ -53,53 +55,104 @@ const mockOrders = [
     pickupTime: '2026-04-01 18:00',
     totalAmount: 128,
     status: 'completed',
-    createdAt: '2026-04-01 15:00',
-    store: '鲜选海鲜 城中门店'
+    createdAt: '2026-04-01 15:00'
   }
 ]
-
-const statusConfig = {
-  pending: {
-    label: '待处理',
-    hint: '待订单确认',
-    chipClass: 'bg-[#fff1e5] text-[#d97938]',
-    dotClass: 'bg-[#f09552]'
-  },
-  preparing: {
-    label: '备货中',
-    hint: '正在处理商品',
-    chipClass: 'bg-[#e9f4ef] text-[#2f6b56]',
-    dotClass: 'bg-[#2f6b56]'
-  },
-  completed: {
-    label: '已完成',
-    hint: '可回看明细',
-    chipClass: 'bg-[#f1ede6] text-[#7a6855]',
-    dotClass: 'bg-[#96826c]'
-  },
-  cancelled: {
-    label: '已取消',
-    hint: '订单已关闭',
-    chipClass: 'bg-[#efe8df] text-[#a18d79]',
-    dotClass: 'bg-[#b59f89]'
-  }
-}
 
 const filterTabs = [
   { key: 'all', label: '全部' },
-  { key: 'pending', label: '待处理' },
-  { key: 'preparing', label: '备货中' },
+  { key: 'preparing', label: '待取货' },
+  { key: 'pending', label: '已下单' },
   { key: 'completed', label: '已完成' }
 ]
 
-function formatTime(pickupTime) {
-  const date = new Date(pickupTime)
-
-  if (Number.isNaN(date.getTime())) {
-    return pickupTime
+const statusConfig = {
+  preparing: {
+    badgeLabel: '待取货',
+    badgeEnglish: 'READY FOR PICKUP',
+    badgeClass: 'bg-[#1f7a55] text-white shadow-[0_18px_36px_rgba(31,122,85,0.24)]',
+    badgeDotClass: 'bg-white',
+    pulse: true,
+    ctaClass: 'border-[#b9e0cf] bg-[linear-gradient(180deg,#effbf5_0%,#e6f6ee_100%)]',
+    ctaTitle: '请注意！您的海鲜已备好，请尽快领取！',
+    ctaHint: '为保证最佳品相，请在指定时段内到店核对。',
+    ctaAccentClass: 'text-[#1f7a55]'
+  },
+  pending: {
+    badgeLabel: '已下单',
+    badgeEnglish: 'ORDER RECEIVED',
+    badgeClass: 'bg-[#f4b54a] text-[#4c3414] shadow-[0_18px_36px_rgba(209,151,48,0.22)]',
+    badgeDotClass: 'bg-[#7a4a10]',
+    pulse: false,
+    ctaClass: 'border-[#edd9b6] bg-[linear-gradient(180deg,#fff7e8_0%,#fff2d6_100%)]',
+    ctaTitle: '等待店主确认与工艺处理中...',
+    ctaHint: '当前订单已进入队列，如需加急或确认细节，可以直接联系店主。',
+    ctaAccentClass: 'text-[#a36a17]'
+  },
+  completed: {
+    badgeLabel: '已领取',
+    badgeEnglish: 'COMPLETED',
+    badgeClass: 'bg-[#ebe7e1] text-[#786553] shadow-[0_12px_26px_rgba(121,101,83,0.12)]',
+    badgeDotClass: 'bg-[#96826c]',
+    pulse: false,
+    ctaClass: 'border-[#e7ddd0] bg-[linear-gradient(180deg,#faf6f0_0%,#f4eee7_100%)]',
+    ctaTitle: '本次交易已完成',
+    ctaHint: '可查看交易凭证与收货记录，作为后续复购参考。',
+    ctaAccentClass: 'text-[#7b6854]'
+  },
+  cancelled: {
+    badgeLabel: '已取消',
+    badgeEnglish: 'CANCELLED',
+    badgeClass: 'bg-[#efe8df] text-[#8b7865]',
+    badgeDotClass: 'bg-[#b59f89]',
+    pulse: false,
+    ctaClass: 'border-[#e7ddd0] bg-[linear-gradient(180deg,#faf6f0_0%,#f4eee7_100%)]',
+    ctaTitle: '订单已关闭',
+    ctaHint: '如果仍有购买需求，可以重新选择商品。',
+    ctaAccentClass: 'text-[#7b6854]'
   }
+}
+
+const itemCraftTags = {
+  三文鱼刺身: ['现切', '冰鲜处理'],
+  鲜活龙虾: ['去线', '氧气处理'],
+  鲍鱼: ['刷洗净选', '规格复核'],
+  帝王蟹: ['分切处理', '低温保鲜'],
+  扇贝: ['代开壳', '净选即烹'],
+  金枪鱼: ['低温冷藏', '即切即取']
+}
+
+function parseDateTime(value) {
+  if (!value) return new Date(0)
+  const normalized = String(value).replace(' ', 'T')
+  const parsed = new Date(normalized)
+  return Number.isNaN(parsed.getTime()) ? new Date(0) : parsed
+}
+
+function formatDateTimeLabel(value) {
+  const date = parseDateTime(value)
+  if (date.getTime() === 0) return value
 
   return `${date.getMonth() + 1}月${date.getDate()}日 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+function formatDateLabel(value) {
+  const date = parseDateTime(value)
+  if (date.getTime() === 0) return value
+
+  return `${date.getMonth() + 1}月${date.getDate()}日`
+}
+
+function formatPickupWindow(value) {
+  const center = parseDateTime(value)
+  if (center.getTime() === 0) return value
+
+  const start = new Date(center.getTime() - 60 * 60 * 1000)
+  const end = new Date(center.getTime() + 60 * 60 * 1000)
+  const sameDay = start.toDateString() === end.toDateString()
+  const dayLabel = sameDay ? `${start.getMonth() + 1}月${start.getDate()}日` : `${start.getMonth() + 1}月${start.getDate()}日 - ${end.getMonth() + 1}月${end.getDate()}日`
+
+  return `${dayLabel} ${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - ${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`
 }
 
 function getOrderTitle(order) {
@@ -108,12 +161,209 @@ function getOrderTitle(order) {
   return `${order.items[0].name}等${order.items.length}款鲜货`
 }
 
-function SectionStat({ label, value, accent = false }) {
+function getCraftTags(itemName) {
+  return itemCraftTags[itemName] || ['标准处理', '鲜度复核']
+}
+
+function getOrderActionText(status) {
+  if (status === 'preparing') return '建议尽快到店'
+  if (status === 'pending') return '建议主动联系'
+  if (status === 'completed') return '历史记录'
+  return '查看详情'
+}
+
+function StatusBadge({ status }) {
+  const config = statusConfig[status] || statusConfig.pending
+
   return (
-    <div className="rounded-[24px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
-      <div className="text-[11px] uppercase tracking-[0.16em] text-[#aa9277]">{label}</div>
-      <div className={`mt-2 text-[28px] font-bold leading-none ${accent ? 'text-[#df6f33]' : 'text-[#2f281f]'}`}>{value}</div>
+    <div className={`inline-flex min-h-[78px] min-w-[220px] items-center gap-3 rounded-[24px] px-4 py-3 ${config.badgeClass}`}>
+      <div className="relative flex h-4 w-4 items-center justify-center">
+        {config.pulse && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/65" />}
+        <span className={`relative inline-flex h-4 w-4 rounded-full ${config.badgeDotClass}`} />
+      </div>
+      <div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.22em]">{config.badgeEnglish}</div>
+        <div className="mt-1 text-[18px] font-bold leading-none">{config.badgeLabel}</div>
+      </div>
     </div>
+  )
+}
+
+function EmptyState() {
+  const navigate = useNavigate()
+
+  return (
+    <div className="rounded-[34px] border border-dashed border-[#e5d7c5] bg-[#fffaf3] px-6 py-14 text-center shadow-[0_20px_40px_rgba(105,77,44,0.06)]">
+      <div className="mx-auto flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#f3e8d8] text-[#8f775d]">
+        <svg className="h-9 w-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" />
+        </svg>
+      </div>
+      <h2
+        className="mt-5 text-[28px] font-bold leading-tight text-[#2f281f]"
+        style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
+      >
+        当前没有这类订单
+      </h2>
+      <p className="mt-2 text-sm text-[#7d6a53]">切换筛选看看其他状态，或者回到下单页继续选购鲜货。</p>
+      <button
+        onClick={() => navigate('/price-query')}
+        className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-[#1f4034] px-6 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(31,64,52,0.22)] transition-transform active:scale-95"
+      >
+        去下单
+      </button>
+    </div>
+  )
+}
+
+function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
+  const config = statusConfig[order.status] || statusConfig.pending
+  const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0)
+
+  return (
+    <article className="overflow-hidden rounded-[34px] border border-[#eadfce] bg-[#fffaf3] shadow-[0_20px_40px_rgba(105,77,44,0.08)]">
+      <div className="px-5 py-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <StatusBadge status={order.status} />
+
+          <div className="min-w-[132px] text-right">
+            <div className="text-[11px] uppercase tracking-[0.16em] text-[#aa9277]">{getOrderActionText(order.status)}</div>
+            <div className="mt-1 text-sm font-semibold text-[#2f281f]">订单号 {order.id}</div>
+            <div className="mt-1 text-xs text-[#8f775d]">下单日期 {formatDateLabel(order.createdAt)}</div>
+          </div>
+        </div>
+
+        <h2
+          className="mt-5 text-[28px] font-bold leading-tight text-[#2f281f]"
+          style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
+        >
+          {getOrderTitle(order)}
+        </h2>
+        <p className="mt-2 text-sm text-[#7d6a53]">{totalItems} 件商品，合计 ¥{order.totalAmount}。</p>
+
+        <div className="mt-5 space-y-3">
+          {order.items.map((item, index) => (
+            <div key={`${order.id}-${index}`} className="rounded-[24px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold text-[#2f281f]">{item.name}</div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {getCraftTags(item.name).map((tag) => (
+                      <span key={tag} className="rounded-full bg-[#fff4e8] px-2.5 py-1 text-[11px] font-medium text-[#d67635]">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-sm font-semibold text-[#2f281f]">x{item.quantity}</div>
+                  <div className="mt-1 text-sm font-bold text-[#df6f33]">¥{item.price * item.quantity}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className={`mt-5 rounded-[28px] border px-4 py-4 ${config.ctaClass}`}>
+          {order.status === 'preparing' && (
+            <>
+              <div className="text-[18px] font-bold leading-tight text-[#214838]">{config.ctaTitle}</div>
+              <div className="mt-3 flex items-start gap-3 rounded-[22px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(31,122,85,0.08)]">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e7f7ef] text-[#1f7a55]">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M12 8v4l2.5 2.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#69a585]">预计领取时间窗口</div>
+                  <div className="mt-1 text-base font-bold text-[#214838]">{formatPickupWindow(order.pickupTime)}</div>
+                </div>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-[#44715f]">{config.ctaHint}</p>
+            </>
+          )}
+
+          {order.status === 'pending' && (
+            <>
+              <div className="text-[18px] font-bold leading-tight text-[#7d5316]">{config.ctaTitle}</div>
+              <p className="mt-2 text-sm leading-6 text-[#8a6732]">{config.ctaHint}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <a
+                  href={merchantContact.href}
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-[#2d2a27] px-5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(35,31,28,0.22)] transition-transform active:scale-[0.98]"
+                >
+                  联系店主
+                </a>
+                <div className="text-sm text-[#8f6a34]">联系电话 {merchantContact.phoneLabel}</div>
+              </div>
+            </>
+          )}
+
+          {order.status === 'completed' && (
+            <>
+              <div className="text-[18px] font-bold leading-tight text-[#5f5042]">{config.ctaTitle}</div>
+              <p className="mt-2 text-sm leading-6 text-[#7a6854]">{config.ctaHint}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onToggleReceipt}
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-[#2d2a27] px-5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(35,31,28,0.16)] transition-transform active:scale-[0.98]"
+                >
+                  {isReceiptOpen ? '收起交易凭证' : '查看交易凭证'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {isReceiptOpen && (
+        <div className="border-t border-[#efe4d4] bg-[linear-gradient(180deg,#fffaf3_0%,#f8f1e7_100%)] px-5 py-5">
+          <div className="grid gap-4 md:grid-cols-[1.05fr_0.95fr]">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c47b36]">交易凭证</div>
+              <div className="mt-3 rounded-[24px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
+                <div className="space-y-3 text-sm text-[#6f5e4b]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[#9a846c]">订单号</span>
+                    <span className="font-semibold text-[#2f281f]">{order.id}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[#9a846c]">完成时间</span>
+                    <span className="font-semibold text-[#2f281f]">{formatDateTimeLabel(order.pickupTime)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[#9a846c]">支付金额</span>
+                    <span className="font-semibold text-[#df6f33]">¥{order.totalAmount}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c47b36]">收货记录</div>
+              <div className="mt-3 rounded-[24px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
+                <div className="space-y-3 text-sm text-[#6f5e4b]">
+                  <div>
+                    <div className="text-[11px] text-[#9a846c]">收货人</div>
+                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customerName}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-[#9a846c]">联系电话</div>
+                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customerPhone}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-[#9a846c]">收货状态</div>
+                    <div className="mt-1 font-semibold text-[#2f281f]">已领取并完成交易</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </article>
   )
 }
 
@@ -122,7 +372,7 @@ function OrderManagement() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState('all')
-  const [expandedOrder, setExpandedOrder] = useState(null)
+  const [receiptOrderId, setReceiptOrderId] = useState(null)
 
   useEffect(() => {
     let mounted = true
@@ -153,29 +403,28 @@ function OrderManagement() {
     }
   }, [])
 
+  const sortedOrders = useMemo(() => {
+    return [...orders].sort((a, b) => parseDateTime(b.createdAt).getTime() - parseDateTime(a.createdAt).getTime())
+  }, [orders])
+
   const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
+    return sortedOrders.filter((order) => {
       if (activeFilter === 'all') return true
       return order.status === activeFilter
     })
-  }, [activeFilter, orders])
+  }, [activeFilter, sortedOrders])
 
   const orderStats = useMemo(() => {
+    const readyCount = orders.filter((order) => order.status === 'preparing').length
     const pendingCount = orders.filter((order) => order.status === 'pending').length
-    const preparingCount = orders.filter((order) => order.status === 'preparing').length
-    const totalAmount = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0)
+    const completedCount = orders.filter((order) => order.status === 'completed').length
 
     return {
-      total: orders.length,
+      readyCount,
       pendingCount,
-      preparingCount,
-      totalAmount
+      completedCount
     }
   }, [orders])
-
-  const toggleExpand = (orderId) => {
-    setExpandedOrder((current) => (current === orderId ? null : orderId))
-  }
 
   return (
     <div
@@ -194,7 +443,7 @@ function OrderManagement() {
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-full bg-[#fff4e6] px-3 py-1 text-xs font-semibold text-[#bb6c25]">
                     <span className="h-2 w-2 rounded-full bg-[#ff7e45]" />
-                    到店履约中心
+                    Customer View
                   </div>
                   <h1
                     className="mt-3 text-[32px] font-bold leading-tight text-[#2f281f]"
@@ -202,23 +451,31 @@ function OrderManagement() {
                   >
                     我的订单
                   </h1>
-                  <p className="mt-2 text-sm text-[#7d6a53]">查看待处理、备货中和已完成订单，快速确认取货时间和商品明细。</p>
+                  <p className="mt-2 text-sm text-[#7d6a53]">按下单时间倒序展示。请优先关注绿色状态，它代表你可以立即行动。</p>
                 </div>
 
                 <button
                   onClick={() => navigate('/price-query')}
-                  className="rounded-[22px] bg-[#f6f0e7] px-4 py-3 text-right text-xs text-[#8a7152] transition-transform active:scale-[0.98]"
+                  className="w-[120px] whitespace-nowrap rounded-[22px] bg-[#f6f0e7] px-2 py-2 text-center text-sm font-semibold text-[#574533] transition-transform active:scale-[0.98]"
                 >
-                  <div className="font-semibold text-[#574533]">继续下单</div>
-                  <div>返回鲜选页</div>
+                  继续下单
                 </button>
               </div>
 
               {!loading && (
                 <div className="mt-5 grid grid-cols-3 gap-3">
-                  <SectionStat label="订单总数" value={orderStats.total} />
-                  <SectionStat label="待确认" value={orderStats.pendingCount} accent />
-                  <SectionStat label="累计金额" value={`¥${orderStats.totalAmount}`} />
+                  <div className="rounded-[24px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
+                    <div className="text-[11px] uppercase tracking-[0.16em] text-[#aa9277]">待取货</div>
+                    <div className="mt-2 text-[28px] font-bold leading-none text-[#1f7a55]">{orderStats.readyCount}</div>
+                  </div>
+                  <div className="rounded-[24px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
+                    <div className="text-[11px] uppercase tracking-[0.16em] text-[#aa9277]">待确认</div>
+                    <div className="mt-2 text-[28px] font-bold leading-none text-[#d78622]">{orderStats.pendingCount}</div>
+                  </div>
+                  <div className="rounded-[24px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
+                    <div className="text-[11px] uppercase tracking-[0.16em] text-[#aa9277]">历史订单</div>
+                    <div className="mt-2 text-[28px] font-bold leading-none text-[#7b6854]">{orderStats.completedCount}</div>
+                  </div>
                 </div>
               )}
             </div>
@@ -232,8 +489,8 @@ function OrderManagement() {
                 const active = activeFilter === tab.key
                 const count =
                   tab.key === 'all'
-                    ? orders.length
-                    : orders.filter((order) => order.status === tab.key).length
+                    ? sortedOrders.length
+                    : sortedOrders.filter((order) => order.status === tab.key).length
 
                 return (
                   <button
@@ -264,182 +521,26 @@ function OrderManagement() {
                     className="overflow-hidden rounded-[30px] border border-[#eadfce] bg-[#fffaf3] p-5 shadow-[0_20px_40px_rgba(105,77,44,0.08)]"
                   >
                     <div className="animate-pulse space-y-3">
-                      <div className="h-4 w-28 rounded-full bg-[#efe5d8]" />
-                      <div className="h-8 w-40 rounded-full bg-[#f3ecdf]" />
-                      <div className="h-4 w-full rounded-full bg-[#f3ecdf]" />
-                      <div className="h-4 w-3/4 rounded-full bg-[#f3ecdf]" />
+                      <div className="h-16 w-56 rounded-[24px] bg-[#efe5d8]" />
+                      <div className="h-8 w-48 rounded-full bg-[#f3ecdf]" />
+                      <div className="h-24 w-full rounded-[24px] bg-[#f3ecdf]" />
+                      <div className="h-28 w-full rounded-[24px] bg-[#f3ecdf]" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : filteredOrders.length === 0 ? (
-              <div className="rounded-[34px] border border-dashed border-[#e5d7c5] bg-[#fffaf3] px-6 py-14 text-center shadow-[0_20px_40px_rgba(105,77,44,0.06)]">
-                <div className="mx-auto flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#f3e8d8] text-[#8f775d]">
-                  <svg className="h-9 w-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" />
-                  </svg>
-                </div>
-                <h2
-                  className="mt-5 text-[28px] font-bold leading-tight text-[#2f281f]"
-                  style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
-                >
-                  当前没有这类订单
-                </h2>
-                <p className="mt-2 text-sm text-[#7d6a53]">切换筛选看看其他状态，或者回到下单页继续选购鲜货。</p>
-                <button
-                  onClick={() => navigate('/price-query')}
-                  className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-[#1f4034] px-6 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(31,64,52,0.22)] transition-transform active:scale-95"
-                >
-                  去下单
-                </button>
-              </div>
+              <EmptyState />
             ) : (
               <div className="space-y-4">
-                {filteredOrders.map((order) => {
-                  const status = statusConfig[order.status] || statusConfig.pending
-                  const isExpanded = expandedOrder === order.id
-
-                  return (
-                    <article
-                      key={order.id}
-                      className="overflow-hidden rounded-[32px] border border-[#eadfce] bg-[#fffaf3] shadow-[0_20px_40px_rgba(105,77,44,0.08)] transition-all"
-                    >
-                      <button
-                        onClick={() => toggleExpand(order.id)}
-                        className="w-full px-5 py-5 text-left"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${status.chipClass}`}>
-                                <span className={`h-2 w-2 rounded-full ${status.dotClass}`} />
-                                {status.label}
-                              </span>
-                              <span className="text-xs text-[#8f775d]">{status.hint}</span>
-                            </div>
-
-                            <h2
-                              className="mt-3 text-[26px] font-bold leading-tight text-[#2f281f]"
-                              style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
-                            >
-                              {getOrderTitle(order)}
-                            </h2>
-                            <p className="mt-2 text-sm text-[#7d6a53]">
-                              {order.items.map((item) => `${item.name} x${item.quantity}`).join(' · ')}
-                            </p>
-                          </div>
-
-                          <div className="flex shrink-0 items-center gap-3">
-                            <div className="text-right">
-                              <div className="text-[11px] uppercase tracking-[0.16em] text-[#aa9277]">合计</div>
-                              <div className="mt-1 text-[28px] font-bold leading-none text-[#df6f33]">¥{order.totalAmount}</div>
-                            </div>
-                            <div
-                              className={`flex h-9 w-9 items-center justify-center rounded-full bg-[#f4eadb] text-[#7c654b] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                            >
-                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.1} d="m6 9 6 6 6-6" />
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-5 grid grid-cols-3 gap-3">
-                          <div className="rounded-[22px] bg-white px-3 py-3 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
-                            <div className="text-[11px] text-[#9a846c]">订单号</div>
-                            <div className="mt-1 truncate text-sm font-semibold text-[#2f281f]">{order.id}</div>
-                          </div>
-                          <div className="rounded-[22px] bg-white px-3 py-3 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
-                            <div className="text-[11px] text-[#9a846c]">取货时间</div>
-                            <div className="mt-1 text-sm font-semibold text-[#2f281f]">{formatTime(order.pickupTime)}</div>
-                          </div>
-                          <div className="rounded-[22px] bg-white px-3 py-3 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
-                            <div className="text-[11px] text-[#9a846c]">商品件数</div>
-                            <div className="mt-1 text-sm font-semibold text-[#2f281f]">
-                              {order.items.reduce((sum, item) => sum + item.quantity, 0)} 件
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 flex gap-2">
-                          {order.status === 'pending' && (
-                            <>
-                              <span className="inline-flex h-11 items-center justify-center rounded-full border border-[#e1d3c0] px-5 text-sm font-semibold text-[#7d6a53]">
-                                取消订单
-                              </span>
-                              <span className="inline-flex h-11 items-center justify-center rounded-full bg-[#1f4034] px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(31,64,52,0.22)]">
-                                立即支付
-                              </span>
-                            </>
-                          )}
-
-                          {order.status === 'preparing' && (
-                            <span className="inline-flex h-11 items-center justify-center rounded-full bg-[#e9f4ef] px-5 text-sm font-semibold text-[#2f6b56]">
-                              订单准备中
-                            </span>
-                          )}
-
-                          {order.status === 'completed' && (
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                navigate('/price-query')
-                              }}
-                              className="inline-flex h-11 items-center justify-center rounded-full bg-[#1f4034] px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(31,64,52,0.22)] transition-transform active:scale-[0.98]"
-                            >
-                              再来一单
-                            </button>
-                          )}
-                        </div>
-                      </button>
-
-                      {isExpanded && (
-                        <div className="border-t border-[#efe4d4] bg-[linear-gradient(180deg,#fffaf3_0%,#f8f1e7_100%)] px-5 py-5">
-                          <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
-                            <div>
-                              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c47b36]">商品明细</div>
-                              <div className="mt-3 space-y-3">
-                                {order.items.map((item, index) => (
-                                  <div key={`${order.id}-${index}`} className="flex items-center justify-between rounded-[22px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
-                                    <div>
-                                      <div className="text-sm font-semibold text-[#2f281f]">{item.name}</div>
-                                      <div className="mt-1 text-xs text-[#9a846c]">单价 ¥{item.price}</div>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="text-xs text-[#9a846c]">数量</div>
-                                      <div className="mt-1 text-sm font-semibold text-[#2f281f]">x{item.quantity}</div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c47b36]">联系信息</div>
-                              <div className="mt-3 rounded-[26px] bg-white px-4 py-4 shadow-[0_10px_20px_rgba(130,96,59,0.05)]">
-                                <div className="space-y-3 text-sm text-[#6f5e4b]">
-                                  <div>
-                                    <div className="text-[11px] text-[#9a846c]">顾客</div>
-                                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customerName}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[11px] text-[#9a846c]">电话</div>
-                                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customerPhone}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[11px] text-[#9a846c]">下单时间</div>
-                                    <div className="mt-1 font-semibold text-[#2f281f]">{order.createdAt}</div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </article>
-                  )
-                })}
+                {filteredOrders.map((order) => (
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    isReceiptOpen={receiptOrderId === order.id}
+                    onToggleReceipt={() => setReceiptOrderId((current) => (current === order.id ? null : order.id))}
+                  />
+                ))}
               </div>
             )}
           </section>

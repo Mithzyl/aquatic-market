@@ -304,10 +304,9 @@ const PriceQuery = () => {
 
               <Link
                 to="/order-management"
-                className="rounded-2xl bg-[#f6f0e7] px-3 py-2 text-right text-xs text-[#8a7152] transition-transform active:scale-[0.98]"
+                className="w-[120px] whitespace-nowrap rounded-[22px] bg-[#f6f0e7] px-2 py-2 text-center text-sm font-semibold text-[#574533] transition-transform active:scale-[0.98]"
               >
-                <div className="font-semibold text-[#574533]">我的订单</div>
-                <div>查看履约状态</div>
+                我的订单
               </Link>
             </div>
 
