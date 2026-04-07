@@ -422,7 +422,6 @@ function OrderManagement() {
                   >
                     我的订单
                   </h1>
-                  <p className="mt-2 text-sm text-[#7d6a53]">按下单时间倒序展示。请优先关注绿色状态，它代表你可以立即行动。</p>
                 </div>
 
                 <button

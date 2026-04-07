@@ -299,14 +299,13 @@ const PriceQuery = () => {
                 >
                   左侧分类，右侧商品
                 </h1>
-                <p className="mt-2 text-sm text-[#7d6a53]">右侧连续滚动浏览商品，左侧类目会自动同步切换。</p>
               </div>
 
               <Link
                 to="/order-management"
-                className="w-[120px] whitespace-nowrap rounded-[22px] bg-[#f6f0e7] px-2 py-2 text-center text-sm font-semibold text-[#574533] transition-transform active:scale-[0.98]"
+                className="rounded-2xl bg-[#f6f0e7] px-3 py-2 text-right text-xs text-[#8a7152] transition-transform active:scale-[0.98]"
               >
-                我的订单
+                <div className="font-semibold text-[#574533]">我的订单</div>
               </Link>
             </div>
 
