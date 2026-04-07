@@ -2,6 +2,57 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { retailCategories, retailProducts } from '../data/products'
 
+// CategoryIcon 组件（复用 PriceQuery.jsx 的实现）
+function CategoryIcon({ categoryId }) {
+  const commonProps = {
+    className: 'h-8 w-8',
+    fill: 'none',
+    stroke: 'currentColor',
+    viewBox: '0 0 24 24'
+  }
+
+  if (categoryId === 'shrimp') {
+    return (
+      <svg {...commonProps}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M6.5 13.5c2.5-5.5 8.5-7.5 11-5 2 2-1 5-4 5H9.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M9.5 13.5c0 2.5 1.5 4 4 4" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M7 10.5 5.5 9M7 13.5l-2 .5M8 16l-1 2" />
+      </svg>
+    )
+  } else if (categoryId === 'crab') {
+    return (
+      <svg {...commonProps}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M8 12a4 4 0 1 1 8 0v2H8v-2Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M8 11 5.5 9M16 11 18.5 9M8 14 5 15.5M16 14l3 1.5M10 8.5 8.5 6.5M14 8.5l1.5-2" />
+      </svg>
+    )
+  } else if (categoryId === 'fish') {
+    return (
+      <svg {...commonProps}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M5.5 12c2-2.6 4.9-4 8.3-4 2.3 0 4.1.6 5.7 1.9l-2 2.1 2 2.1c-1.6 1.3-3.4 1.9-5.7 1.9-3.4 0-6.3-1.4-8.3-4Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M7 12h4.5" />
+        <circle cx="14.5" cy="10.5" r="0.8" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  } else if (categoryId === 'shell') {
+    return (
+      <svg {...commonProps}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M6 15c0-4.2 2.5-7 6-7s6 2.8 6 7c-2-.7-4-.7-6 0-2-.7-4-.7-6 0Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M12 8v7M9 9.2l1.5 5M15 9.2l-1.5 5" />
+      </svg>
+    )
+  } else if (categoryId === 'lobster') {
+    return (
+      <svg {...commonProps}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M9 7h6l1.5 4.5L12 17l-4.5-5.5L9 7Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M9 7 7 4.5M15 7 17 4.5" />
+      </svg>
+    )
+  }
+
+  return null
+}
+
 const heroProduct = retailProducts[0]
 const showcaseProducts = retailProducts.slice(0, 3)
 
@@ -115,7 +166,7 @@ const Home = () => {
                 to="/price-query"
                 className="flex min-h-[92px] flex-col items-center justify-center rounded-[22px] bg-[#fff4e8] px-2 py-3 text-center transition-transform active:scale-[0.98]"
               >
-                <span className="text-2xl">{category.icon}</span>
+                <CategoryIcon categoryId={category.id} />
                 <span className="mt-2 text-xs font-semibold text-[#46392c]">{category.name}</span>
                 <span className="mt-1 text-[10px] text-[#9a8062]">{category.description}</span>
               </Link>
