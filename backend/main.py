@@ -153,16 +153,14 @@ def get_products_by_category(
 
 @app.get("/orders", tags=["订单"])
 def get_orders(
-    merchant_id: Optional[int] = None,
+    merchant_id: int,
     session: Session = Depends(get_session)
 ):
-    """获取订单列表，支持按商家筛选"""
-    if merchant_id:
-        orders = session.exec(
-            select(Order).where(Order.merchant_id == merchant_id)
-        ).all()
-    else:
-        orders = session.exec(select(Order)).all()
+    """获取订单列表，必须指定商家ID（防止数据泄露）"""
+    # 安全要求：强制要求 merchant_id 参数，防止跨商家数据泄露
+    orders = session.exec(
+        select(Order).where(Order.merchant_id == merchant_id)
+    ).all()
     return orders
 
 
@@ -205,12 +203,22 @@ def get_order(order_id: int, session: Session = Depends(get_session)):
 
 @app.post("/orders", tags=["订单"])
 def create_order(order_data: OrderCreateRequest, session: Session = Depends(get_session)):
-    """创建订单（包含订单明细）"""
+    """创建订单（包含订单明细）- 事务性操作
+    
+    整个订单创建流程在一个事务中完成：
+    1. 验证商品存在性和库存
+    2. 创建订单主表
+    3. 创建订单明细
+    4. 扣减库存
+    5. 统一提交事务
+    
+    任何步骤失败都会回滚，确保数据一致性。
+    """
     now = datetime.utcnow()
     
-    # 计算订单总金额
+    # 计算订单总金额并预验证
     total_amount = 0.0
-    order_items = []
+    order_items_data = []
     
     for item_req in order_data.items:
         # 获取商品信息
@@ -219,6 +227,7 @@ def create_order(order_data: OrderCreateRequest, session: Session = Depends(get_
         ).first()
         
         if not product:
+            # 商品不存在，返回错误（此时还没有任何数据库修改，无需回滚）
             return {"error": f"商品 {item_req.product_id} 不存在"}
         
         if not product.is_active:
@@ -230,61 +239,69 @@ def create_order(order_data: OrderCreateRequest, session: Session = Depends(get_
         subtotal = product.price * item_req.quantity
         total_amount += subtotal
         
-        order_items.append({
+        order_items_data.append({
             "product_id": product.id,
             "quantity": item_req.quantity,
             "unit_price": product.price,
             "subtotal": subtotal
         })
     
-    # 创建订单
-    order = Order(
-        merchant_id=order_data.merchant_id,
-        customer_name=order_data.customer_name,
-        customer_phone=order_data.customer_phone,
-        pickup_time=order_data.pickup_time,
-        total_amount=total_amount,
-        status="pending",
-        created_at=now,
-        updated_at=now
-    )
-    session.add(order)
-    session.commit()
-    session.refresh(order)
-    
-    # 创建订单明细并更新库存
-    for item_data in order_items:
-        order_item = OrderItem(
-            order_id=order.id,
-            product_id=item_data["product_id"],
-            quantity=item_data["quantity"],
-            unit_price=item_data["unit_price"],
-            subtotal=item_data["subtotal"]
+    try:
+        # 创建订单主表
+        order = Order(
+            merchant_id=order_data.merchant_id,
+            customer_name=order_data.customer_name,
+            customer_phone=order_data.customer_phone,
+            pickup_time=order_data.pickup_time,
+            total_amount=total_amount,
+            status="pending",
+            created_at=now,
+            updated_at=now
         )
-        session.add(order_item)
+        session.add(order)
+        # 刷新以获取 order.id，但不提交事务
+        session.flush()
         
-        # 更新库存
-        product = session.exec(
-            select(Product).where(Product.id == item_data["product_id"])
-        ).first()
-        product.stock -= item_data["quantity"]
-        session.add(product)
-    
-    session.commit()
-    
-    # 返回完整订单信息
-    return {
-        "id": order.id,
-        "merchant_id": order.merchant_id,
-        "customer_name": order.customer_name,
-        "customer_phone": order.customer_phone,
-        "pickup_time": order.pickup_time,
-        "total_amount": order.total_amount,
-        "status": order.status,
-        "created_at": order.created_at,
-        "updated_at": order.updated_at,
-        "items": order_items
-    }
+        # 创建订单明细并更新库存
+        for item_data in order_items_data:
+            # 创建订单明细
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=item_data["product_id"],
+                quantity=item_data["quantity"],
+                unit_price=item_data["unit_price"],
+                subtotal=item_data["subtotal"]
+            )
+            session.add(order_item)
+            
+            # 更新库存
+            product = session.exec(
+                select(Product).where(Product.id == item_data["product_id"])
+            ).first()
+            product.stock -= item_data["quantity"]
+            session.add(product)
+        
+        # 统一提交事务：Order、OrderItem 和库存更新要么全部成功，要么全部回滚
+        session.commit()
+        session.refresh(order)
+        
+        # 返回完整订单信息
+        return {
+            "id": order.id,
+            "merchant_id": order.merchant_id,
+            "customer_name": order.customer_name,
+            "customer_phone": order.customer_phone,
+            "pickup_time": order.pickup_time,
+            "total_amount": order.total_amount,
+            "status": order.status,
+            "created_at": order.created_at,
+            "updated_at": order.updated_at,
+            "items": order_items_data
+        }
+    except Exception as e:
+        # 发生异常时回滚事务
+        session.rollback()
+        return {"error": f"订单创建失败: {str(e)}"}
 
 
 # ============== 根路径 ==============

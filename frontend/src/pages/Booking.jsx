@@ -2,6 +2,12 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../App'
 
+// API 基础 URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
+// 默认商家 ID（用户端视图固定使用 merchant_id=1）
+const DEFAULT_MERCHANT_ID = 1
+
 function StepperIcon({ type }) {
   if (type === 'minus') {
     return (
@@ -59,16 +65,19 @@ function Booking() {
 
     setSubmitting(true)
     try {
+      // 转换数据格式：后端期望 { product_id, quantity }
       const orderData = {
+        merchant_id: DEFAULT_MERCHANT_ID,
         customer_name: customerName,
         customer_phone: customerPhone,
         pickup_time: pickupTime,
-        items: cartItems,
-        total_amount: totalAmount,
-        status: 'pending'
+        items: cartItems.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity
+        }))
       }
 
-      const response = await fetch('http://localhost:8000/orders', {
+      const response = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)

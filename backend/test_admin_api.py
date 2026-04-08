@@ -168,39 +168,40 @@ class TestAdminLogin:
         assert merchant1_id == merchant2_id
     
     def test_login_with_phone_success(self, client):
-        """测试手机号验证码登录成功"""
+        """测试手机号验证码登录 - 安全修复后返回 503（服务未启用）"""
+        # P0 安全修复：生产模式下验证码登录服务未启用
+        # 测试期望返回 503 Service Unavailable
         response = client.post("/api/admin/login", json={
             "phone": "13800138888",
             "verify_code": "123456"
         })
         
-        assert response.status_code == 200
-        data = response.json()
-        assert "token" in data
-        assert "merchant" in data
-        assert data["merchant"]["phone"] == "13800138888"
+        assert response.status_code == 503
+        assert "验证码登录服务暂未开放" in response.json()["detail"]
     
     def test_login_with_phone_create_new_merchant(self, client):
-        """测试手机号验证码登录自动创建新商家"""
+        """测试手机号验证码登录 - 安全修复后返回 503（服务未启用）"""
+        # P0 安全修复：生产模式下验证码登录服务未启用
+        # 测试期望返回 503 Service Unavailable
         response = client.post("/api/admin/login", json={
             "phone": "13800139999",
             "verify_code": "123456"
         })
         
-        assert response.status_code == 200
-        data = response.json()
-        assert "token" in data
-        assert data["merchant"]["phone"] == "13800139999"
+        assert response.status_code == 503
+        assert "验证码登录服务暂未开放" in response.json()["detail"]
     
     def test_login_with_invalid_verify_code(self, client):
-        """测试错误的验证码"""
+        """测试错误的验证码 - 安全修复后返回 503（服务未启用）"""
+        # P0 安全修复：生产模式下验证码登录服务未启用
+        # 无论验证码是否正确，都返回 503 Service Unavailable
         response = client.post("/api/admin/login", json={
             "phone": "13800137777",
             "verify_code": "000000"  # 错误验证码
         })
         
-        assert response.status_code == 401
-        assert "验证码错误" in response.json()["detail"]
+        assert response.status_code == 503
+        assert "验证码登录服务暂未开放" in response.json()["detail"]
     
     def test_login_without_credentials(self, client):
         """测试缺少登录凭证"""

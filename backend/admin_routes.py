@@ -165,13 +165,38 @@ def admin_login(request: LoginRequest, session: Session = Depends(get_session)):
             session.refresh(merchant)
     
     elif request.phone and request.verify_code:
-        # 手机号+验证码登录 - 演示实现
-        # 实际生产环境需要验证验证码
-        # 演示：验证码为 "123456" 时允许登录
-        if request.verify_code != "123456":
+        # 手机号+验证码登录
+        # 安全要求：生产环境必须对接真实的短信验证码服务
+        # 开发环境可通过 VERIFY_CODE_DEMO_MODE=true 启用演示模式
+        demo_mode = os.getenv("VERIFY_CODE_DEMO_MODE", "false").lower() == "true"
+        
+        if demo_mode:
+            # 演示模式：仅用于开发测试，生产环境必须禁用
+            import warnings
+            warnings.warn(
+                "演示验证码模式已启用！仅限开发环境使用，生产环境必须禁用 VERIFY_CODE_DEMO_MODE "
+                "并对接真实的短信验证码服务。",
+                UserWarning
+            )
+            # 演示模式下的验证码从环境变量读取，默认为随机值（必须显式设置）
+            demo_code = os.getenv("DEMO_VERIFY_CODE")
+            if not demo_code:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="验证码服务暂未配置，请联系管理员"
+                )
+            if request.verify_code != demo_code:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="验证码错误"
+                )
+        else:
+            # 生产模式：需要对接真实的验证码服务
+            # TODO: 对接短信验证码服务（如阿里云短信、腾讯云短信等）
+            # 当前未实现，返回服务不可用
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="验证码错误"
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="验证码登录服务暂未开放，请使用微信登录"
             )
         
         merchant = session.exec(

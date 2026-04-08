@@ -1,12 +1,20 @@
 # Backend
 backend/venv/
 backend/aquatic_market.db
+venv_backend/
+__pycache__/
+*.pyc
+*.pyo
+.coverage
+.env
 
 # Frontend
 aquatic-web-app/node_modules/
 aquatic-web-app/dist/
 aquatic-web-app/dist-ssr/
 aquatic-web-app/*.local
+node_modules/
+.vite/
 
 # Editor directories and files
 .vscode/*
@@ -27,3 +35,21 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Temporary files
+*.zip
+*.tmp
+
+# Test scripts (temporary)
+visual_qa_*.py
+e2e_*.py
+debug_page.py
+capture_*.py
+
+# Evidence directories
+dogfood-output/
+e2e_evidence/
+visual_qa_evidence/
+
+# Tool directories
+.trae/

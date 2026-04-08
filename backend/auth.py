@@ -14,8 +14,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # JWT 配置
-# 从环境变量 JWT_SECRET 读取密钥（任务要求）
-SECRET_KEY = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
+# 从环境变量 JWT_SECRET 读取密钥
+# 安全要求：生产环境必须设置 JWT_SECRET 环境变量
+_jwt_secret = os.getenv("JWT_SECRET")
+if not _jwt_secret:
+    import warnings
+    warnings.warn(
+        "JWT_SECRET 环境变量未设置。使用临时密钥，仅限开发环境使用！"
+        "生产环境必须设置 JWT_SECRET 环境变量。",
+        UserWarning
+    )
+    # 开发环境生成临时密钥（每次启动不同）
+    import secrets
+    _jwt_secret = secrets.token_urlsafe(32)
+SECRET_KEY = _jwt_secret
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7  # Token 有效期：7天
 
