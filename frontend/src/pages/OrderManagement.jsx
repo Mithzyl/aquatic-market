@@ -1,11 +1,63 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-// API 基础 URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const merchantContact = {
+  phoneLabel: '400-820-5520',
+  href: 'tel:4008205520'
+}
 
-// 默认商家 ID（用户端视图固定使用 merchant_id=1）
-const DEFAULT_MERCHANT_ID = 1
+const mockOrders = [
+  {
+    id: 'DD2026040201',
+    items: [
+      { name: '三文鱼刺身', quantity: 2, price: 88 },
+      { name: '鲜活龙虾', quantity: 1, price: 198 }
+    ],
+    customerName: '张三',
+    customerPhone: '138****8000',
+    pickupTime: '2026-04-03 10:00',
+    totalAmount: 374,
+    status: 'pending',
+    createdAt: '2026-04-02 09:00'
+  },
+  {
+    id: 'DD2026040202',
+    items: [
+      { name: '鲍鱼', quantity: 3, price: 68 }
+    ],
+    customerName: '李四',
+    customerPhone: '139****9000',
+    pickupTime: '2026-04-03 14:00',
+    totalAmount: 204,
+    status: 'preparing',
+    createdAt: '2026-04-02 10:00'
+  },
+  {
+    id: 'DD2026040203',
+    items: [
+      { name: '帝王蟹', quantity: 1, price: 398 },
+      { name: '扇贝', quantity: 2, price: 38 }
+    ],
+    customerName: '王五',
+    customerPhone: '137****7000',
+    pickupTime: '2026-04-02 16:00',
+    totalAmount: 474,
+    status: 'completed',
+    createdAt: '2026-04-02 11:00'
+  },
+  {
+    id: 'DD2026040204',
+    items: [
+      { name: '金枪鱼', quantity: 1, price: 128 }
+    ],
+    customerName: '赵六',
+    customerPhone: '136****6000',
+    pickupTime: '2026-04-01 18:00',
+    totalAmount: 128,
+    status: 'completed',
+    createdAt: '2026-04-01 15:00'
+  }
+]
 
 const filterTabs = [
   { key: 'all', label: '全部' },
@@ -91,18 +143,17 @@ function formatDateLabel(value) {
   return `${date.getMonth() + 1}月${date.getDate()}日`
 }
 
-// 取货时间窗口格式化（后续功能扩展时使用）
-// function formatPickupWindow(value) {
-//   const center = parseDateTime(value)
-//   if (center.getTime() === 0) return value
-//
-//   const start = new Date(center.getTime() - 60 * 60 * 1000)
-//   const end = new Date(center.getTime() + 60 * 60 * 1000)
-//   const sameDay = start.toDateString() === end.toDateString()
-//   const dayLabel = sameDay ? `${start.getMonth() + 1}月${start.getDate()}日` : `${start.getMonth() + 1}月${start.getDate()}日 - ${end.getMonth() + 1}月${end.getDate()}日`
-//
-//   return `${dayLabel} ${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - ${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`
-// }
+function formatPickupWindow(value) {
+  const center = parseDateTime(value)
+  if (center.getTime() === 0) return value
+
+  const start = new Date(center.getTime() - 60 * 60 * 1000)
+  const end = new Date(center.getTime() + 60 * 60 * 1000)
+  const sameDay = start.toDateString() === end.toDateString()
+  const dayLabel = sameDay ? `${start.getMonth() + 1}月${start.getDate()}日` : `${start.getMonth() + 1}月${start.getDate()}日 - ${end.getMonth() + 1}月${end.getDate()}日`
+
+  return `${dayLabel} ${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - ${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`
+}
 
 function getOrderTitle(order) {
   if (!order?.items?.length) return '海鲜订单'
@@ -166,6 +217,7 @@ function EmptyState() {
 }
 
 function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
+  const config = statusConfig[order.status] || statusConfig.pending
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
@@ -290,64 +342,23 @@ function OrderManagement() {
   const navigate = useNavigate()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [activeFilter, setActiveFilter] = useState('all')
   const [receiptOrderId, setReceiptOrderId] = useState(null)
 
   useEffect(() => {
     let mounted = true
 
-    const fetchData = async () => {
+    const fetchOrders = async () => {
       try {
-        setLoading(true)
-        setError(null)
-
-        // 1. 先获取商品列表，建立 product_id -> name 映射
-        const productsResponse = await fetch(`${API_BASE_URL}/products?merchant_id=${DEFAULT_MERCHANT_ID}`)
-        if (!productsResponse.ok) {
-          throw new Error('获取商品列表失败')
-        }
-        const products = await productsResponse.json()
-        const productNameMap = new Map(
-          products.map(p => [p.id, p.name])
-        )
-
-        // 2. 获取订单列表
-        const ordersResponse = await fetch(`${API_BASE_URL}/orders?merchant_id=${DEFAULT_MERCHANT_ID}`)
-        if (!ordersResponse.ok) {
-          throw new Error('获取订单列表失败')
-        }
-        const ordersData = await ordersResponse.json()
-
-        // 3. 数据转换：后端字段映射到前端期望结构
-        const transformedOrders = ordersData.map(order => ({
-          id: order.id,
-          customerName: order.customer_name,
-          customerPhone: order.customer_phone,
-          pickupTime: order.pickup_time,
-          totalAmount: order.total_amount,
-          status: order.status,
-          createdAt: order.created_at,
-          updatedAt: order.updated_at,
-          // 转换订单明细：添加 name 字段
-          items: (order.items || []).map(item => ({
-            id: item.id,
-            productId: item.product_id,
-            name: productNameMap.get(item.product_id) || `商品#${item.product_id}`,
-            quantity: item.quantity,
-            price: item.unit_price,
-            subtotal: item.subtotal
-          }))
-        }))
+        const response = await fetch('http://localhost:8000/orders')
+        const data = await response.json()
 
         if (mounted) {
-          setOrders(transformedOrders)
+          setOrders(Array.isArray(data) && data.length ? data : mockOrders)
         }
-      } catch (err) {
-        console.error('[OrderManagement] 数据获取失败:', err)
+      } catch (error) {
         if (mounted) {
-          setError(err.message || '数据加载失败，请稍后重试')
-          setOrders([])
+          setOrders(mockOrders)
         }
       } finally {
         if (mounted) {
@@ -356,7 +367,7 @@ function OrderManagement() {
       }
     }
 
-    fetchData()
+    fetchOrders()
 
     return () => {
       mounted = false
@@ -487,27 +498,6 @@ function OrderManagement() {
                     </div>
                   </div>
                 ))}
-              </div>
-            ) : error ? (
-              <div className="rounded-[34px] border border-dashed border-[#e5d7c5] bg-[#fffaf3] px-6 py-14 text-center shadow-[0_20px_40px_rgba(105,77,44,0.06)]">
-                <div className="mx-auto flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#f3e8d8] text-[#c47b36]">
-                  <svg className="h-9 w-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <h2
-                  className="mt-5 text-[28px] font-bold leading-tight text-[#2f281f]"
-                  style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
-                >
-                  数据加载失败
-                </h2>
-                <p className="mt-2 text-sm text-[#7d6a53]">{error}</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-[#1f4034] px-6 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(31,64,52,0.22)] transition-transform active:scale-95"
-                >
-                  重新加载
-                </button>
               </div>
             ) : filteredOrders.length === 0 ? (
               <EmptyState />

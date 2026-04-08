@@ -1,5 +1,11 @@
 import React from 'react'
 
+// 模拟用户数据，实际项目中应从 Context 或 API 获取
+const mockUser = {
+  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
+  name: '柳州鲜选会员'
+}
+
 const My = () => {
   return (
     <div
@@ -18,8 +24,8 @@ const My = () => {
             style={{ borderColor: '#f3e8d8' }}
           >
             <img
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=liuzhou-fresh"
-              alt="柳州鲜选会员"
+              src={mockUser.avatar}
+              alt={mockUser.name}
               className="h-full w-full object-cover"
             />
           </div>
@@ -32,7 +38,7 @@ const My = () => {
               fontFamily: '"Noto Serif SC", "Songti SC", serif'
             }}
           >
-            柳州鲜选会员
+            {mockUser.name}
           </h1>
         </div>
 

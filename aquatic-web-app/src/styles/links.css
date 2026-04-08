@@ -1,0 +1,609 @@
+/* ========================================
+   水产菜市 - 超链接样式系统
+   Ocean-Themed Link Styles
+   ======================================== */
+
+/* ========================================
+   1. 基础链接样式
+   ======================================== */
+
+/* 默认链接 - 优雅的海洋蓝 */
+a {
+  position: relative;
+  color: #0284c7;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+a:hover {
+  color: #0369a1;
+}
+
+/* ========================================
+   2. 主要链接样式 - 导航和重要链接
+   ======================================== */
+
+/* 主要链接 - 带下划线动画 */
+.link-primary {
+  position: relative;
+  color: #0ea5e9;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.25rem 0;
+  transition: color 0.3s ease;
+}
+
+.link-primary::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #0ea5e9, #f43f5e, #0ea5e9);
+  background-size: 200% 100%;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: gradient-shift 3s ease infinite;
+}
+
+.link-primary:hover::after {
+  width: 100%;
+}
+
+.link-primary:hover {
+  color: #0284c7;
+}
+
+/* ========================================
+   3. 水波纹链接 - 特色效果
+   ======================================== */
+
+/* 水波纹链接 - 悬停时产生波纹 */
+.link-wave {
+  position: relative;
+  display: inline-block;
+  color: #0ea5e9;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.link-wave::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+}
+
+.link-wave:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.link-wave:hover {
+  color: #0284c7;
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   4. 渐变边框链接 - 精致设计
+   ======================================== */
+
+/* 渐变边框链接 */
+.link-border-gradient {
+  position: relative;
+  display: inline-block;
+  color: #0c4a6e;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  background: white;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.link-border-gradient::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #0ea5e9, #f43f5e, #22c55e, #0ea5e9);
+  background-size: 300% 300%;
+  border-radius: 9999px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: gradient-shift 4s ease infinite;
+}
+
+.link-border-gradient::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: white;
+  border-radius: 9999px;
+  z-index: -1;
+}
+
+.link-border-gradient:hover::before {
+  opacity: 1;
+}
+
+.link-border-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2);
+}
+
+/* ========================================
+   5. 气泡链接 - 海洋主题
+   ======================================== */
+
+/* 气泡链接 - 悬停时出现气泡 */
+.link-bubble {
+  position: relative;
+  display: inline-block;
+  color: #0ea5e9;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.link-bubble::before,
+.link-bubble::after {
+  content: '';
+  position: absolute;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(14, 165, 233, 0.3));
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.link-bubble::before {
+  width: 8px;
+  height: 8px;
+  top: 0;
+  right: 10%;
+  transition: all 0.4s ease;
+  transition-delay: 0s;
+}
+
+.link-bubble::after {
+  width: 6px;
+  height: 6px;
+  top: 20%;
+  left: 10%;
+  transition: all 0.4s ease;
+  transition-delay: 0.1s;
+}
+
+.link-bubble:hover::before {
+  opacity: 1;
+  transform: translateY(-10px) scale(1.2);
+}
+
+.link-bubble:hover::after {
+  opacity: 1;
+  transform: translateY(-15px) scale(1.1);
+}
+
+.link-bubble:hover {
+  color: #0284c7;
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   6. 下划线滑动链接 - 经典优雅
+   ======================================== */
+
+/* 下划线从左滑入 */
+.link-underline-left {
+  position: relative;
+  display: inline-block;
+  color: #0c4a6e;
+  text-decoration: none;
+  padding-bottom: 0.25rem;
+  overflow: hidden;
+}
+
+.link-underline-left::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #0ea5e9, #0284c7);
+  transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.link-underline-left:hover::after {
+  left: 0;
+}
+
+.link-underline-left:hover {
+  color: #0ea5e9;
+}
+
+/* 下划线从中间展开 */
+.link-underline-center {
+  position: relative;
+  display: inline-block;
+  color: #0c4a6e;
+  text-decoration: none;
+  padding-bottom: 0.25rem;
+}
+
+.link-underline-center::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #0ea5e9, #f43f5e);
+  transform: translateX(-50%);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.link-underline-center:hover::after {
+  width: 100%;
+}
+
+.link-underline-center:hover {
+  color: #0ea5e9;
+}
+
+/* 下划线从右滑入 */
+.link-underline-right {
+  position: relative;
+  display: inline-block;
+  color: #0c4a6e;
+  text-decoration: none;
+  padding-bottom: 0.25rem;
+  overflow: hidden;
+}
+
+.link-underline-right::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #0284c7, #0ea5e9);
+  transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.link-underline-right:hover::after {
+  right: 0;
+}
+
+.link-underline-right:hover {
+  color: #0ea5e9;
+}
+
+/* ========================================
+   7. 发光链接 - 现代科技感
+   ======================================== */
+
+/* 发光链接 */
+.link-glow {
+  position: relative;
+  display: inline-block;
+  color: #0ea5e9;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.link-glow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(14, 165, 233, 0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.link-glow:hover::before {
+  opacity: 1;
+}
+
+.link-glow:hover {
+  color: #0284c7;
+  text-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+}
+
+/* ========================================
+   8. 箭头链接 - 导航提示
+   ======================================== */
+
+/* 箭头链接 - 带动态箭头 */
+.link-arrow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #0ea5e9;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.5rem 0;
+  transition: all 0.3s ease;
+}
+
+.link-arrow::after {
+  content: '→';
+  margin-left: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.link-arrow:hover {
+  color: #0284c7;
+}
+
+.link-arrow:hover::after {
+  transform: translateX(5px);
+}
+
+/* ========================================
+   9. 卡片链接 - 产品展示
+   ======================================== */
+
+/* 卡片链接 - 整个卡片可点击 */
+.link-card {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+}
+
+.link-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 0 rgba(14, 165, 233, 0);
+  transition: box-shadow 0.3s ease;
+}
+
+.link-card:hover::before {
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3);
+}
+
+.link-card:hover {
+  transform: translateY(-4px);
+}
+
+/* ========================================
+   10. 文本内链接 - 段落中的链接
+   ======================================== */
+
+/* 文本内链接 - 柔和的强调 */
+.link-text {
+  color: #0284c7;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.link-text:hover {
+  color: #0ea5e9;
+  border-bottom-color: #0ea5e9;
+}
+
+/* ========================================
+   11. 社交链接 - 圆形图标
+   ======================================== */
+
+/* 社交链接 - 圆形背景 */
+.link-social {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #0ea5e9;
+  text-decoration: none;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.1);
+  transition: all 0.3s ease;
+}
+
+.link-social:hover {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: white;
+  transform: translateY(-3px) rotate(360deg);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+}
+
+/* ========================================
+   12. 按钮式链接 - CTA
+   ======================================== */
+
+/* 按钮式链接 - 主要CTA */
+.link-button-primary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 2rem;
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.link-button-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.link-button-primary:hover::before {
+  left: 100%;
+}
+
+.link-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.4);
+}
+
+/* 按钮式链接 - 次要CTA */
+.link-button-secondary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 2rem;
+  color: #0ea5e9;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 9999px;
+  border: 2px solid #0ea5e9;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.link-button-secondary:hover {
+  background: #0ea5e9;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
+}
+
+/* ========================================
+   13. 面包屑链接 - 导航路径
+   ======================================== */
+
+/* 面包屑链接 */
+.link-breadcrumb {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #64748b;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.link-breadcrumb:not(:last-child)::after {
+  content: '/';
+  margin: 0 0.5rem;
+  color: #cbd5e1;
+}
+
+.link-breadcrumb:hover {
+  color: #0ea5e9;
+}
+
+.link-breadcrumb:last-child {
+  color: #0c4a6e;
+  font-weight: 500;
+}
+
+/* ========================================
+   14. 标签链接 - 分类标签
+   ======================================== */
+
+/* 标签链接 */
+.link-tag {
+  position: relative;
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  color: #0ea5e9;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 9999px;
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  transition: all 0.3s ease;
+}
+
+.link-tag:hover {
+  background: #0ea5e9;
+  color: white;
+  border-color: #0ea5e9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+/* ========================================
+   15. 响应式调整
+   ======================================== */
+
+@media (max-width: 768px) {
+  .link-button-primary,
+  .link-button-secondary {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .link-social {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+/* ========================================
+   16. 无障碍访问
+   ======================================== */
+
+/* 焦点状态 */
+a:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 禁用状态 */
+.link-disabled {
+  color: #94a3b8;
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 已访问链接 */
+a:visited {
+  color: #7c3aed;
+}
+
+.link-primary:visited,
+.link-wave:visited,
+.link-bubble:visited {
+  color: #0284c7;
+}
