@@ -1,0 +1,41 @@
+{
+  "models": [
+    {
+      "id": "qwen3.5-plus",
+      "name": "Bailian",
+      "vendor": "Alibaba",
+      "apiKey": "sk-sp-03513d258f8c4852835328d2a8be7560",
+      "maxInputTokens": 65536,
+      "maxOutputTokens": 65536,
+      "url": "https://coding.dashscope.aliyuncs.com/v1/chat/completions",
+      "temperature": 0.7,
+      "supportsToolCall": true,
+      "supportsImages": true
+    },
+    {
+      "id": "MiniMax-M2.5",
+      "name": "Bailian",
+      "vendor": "Alibaba",
+      "apiKey": "sk-sp-03513d258f8c4852835328d2a8be7560",
+      "maxInputTokens": 32768,
+      "maxOutputTokens": 32768,
+      "url": "https://coding.dashscope.aliyuncs.com/v1/chat/completions",
+      "temperature": 0.7,
+      "supportsToolCall": true,
+      "supportsImages": true
+    },
+    {
+      "id": "glm-5",
+      "name": "Bailian",
+      "vendor": "Alibaba",
+      "apiKey": "sk-sp-03513d258f8c4852835328d2a8be7560",
+      "maxInputTokens": 32768,
+      "maxOutputTokens": 32768,
+      "url": "https://coding.dashscope.aliyuncs.com/v1/chat/completions",
+      "temperature": 0.7,
+      "supportsToolCall": true,
+      "supportsImages": true
+    }
+  ]
+
+}

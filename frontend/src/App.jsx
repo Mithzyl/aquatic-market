@@ -1,15 +1,35 @@
 import React, { useState, createContext, useContext } from 'react'
-import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import ProductDetail from './pages/ProductDetail'
 import Booking from './pages/Booking'
 import PriceQuery from './pages/PriceQuery'
 import OrderManagement from './pages/OrderManagement'
 import My from './pages/My'
+import AdminLogin from './pages/admin/AdminLogin'
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminProducts from './pages/admin/AdminProducts'
+import AdminRevenue from './pages/admin/AdminRevenue'
+import AdminCategories from './pages/admin/AdminCategories'
+import AdminSettings from './pages/admin/AdminSettings'
+import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
 
 const CartContext = createContext()
 
 export const useCart = () => useContext(CartContext)
+
+// 管理端路由守卫
+function AdminRouteGuard({ children }) {
+  const { isAuthenticated } = useAdminAuth()
+  const location = useLocation()
+
+  if (!isAuthenticated) {
+    // 未登录则跳转到登录页，保存当前路径
+    return <Navigate to="/admin" state={{ from: location.pathname }} replace />
+  }
+
+  return children
+}
 
 const tabs = [
   { path: '/', label: '首页', icon: 'home' },
@@ -161,10 +181,61 @@ function AppShell() {
   )
 }
 
+// 管理端 Shell（独立路由，无底部导航）
+function AdminShell() {
+  return (
+    <AdminAuthProvider>
+      <Routes>
+        <Route path="" element={<AdminLogin />} />
+        <Route element={<AdminLayout />}>
+          {/* 管理端其他路由需要登录 */}
+          <Route
+            path="products"
+            element={
+              <AdminRouteGuard>
+                <AdminProducts />
+              </AdminRouteGuard>
+            }
+          />
+          <Route
+            path="categories"
+            element={
+              <AdminRouteGuard>
+                <AdminCategories />
+              </AdminRouteGuard>
+            }
+          />
+          <Route
+            path="revenue"
+            element={
+              <AdminRouteGuard>
+                <AdminRevenue />
+              </AdminRouteGuard>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <AdminRouteGuard>
+                <AdminSettings />
+              </AdminRouteGuard>
+            }
+          />
+        </Route>
+      </Routes>
+    </AdminAuthProvider>
+  )
+}
+
 function App() {
   return (
     <Router>
-      <AppShell />
+      <Routes>
+        {/* 管理端路由 */}
+        <Route path="/admin/*" element={<AdminShell />} />
+        {/* 用户端路由 */}
+        <Route path="/*" element={<AppShell />} />
+      </Routes>
     </Router>
   )
 }
