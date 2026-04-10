@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field as PydanticField
 from models import Merchant, Product, Order, OrderItem, Category
 from auth import verify_token, get_merchant_id
 import os
+import json
 
 # 创建数据库引擎
 from sqlmodel import create_engine
@@ -18,7 +19,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./aquatic_market.db")
-engine = create_engine(DATABASE_URL)
+# MySQL连接配置
+if DATABASE_URL.startswith("mysql"):
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        echo=False,
+        connect_args={"charset": "utf8mb4"}
+    )
+else:
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 # 创建路由器
 router = APIRouter(prefix="/api/admin", tags=["商家端"])
@@ -55,9 +66,16 @@ class ProductCreate(BaseModel):
     name: str = PydanticField(..., max_length=100)
     description: str = PydanticField(default="", max_length=500)
     price: float = PydanticField(..., gt=0)
-    image_url: str = PydanticField(default="", max_length=500)
+    original_price: float = PydanticField(default=0, ge=0)
+    image: str = PydanticField(default="", max_length=500)
     category: str = PydanticField(default="", max_length=50)
+    category_name: str = PydanticField(default="", max_length=50)
     stock: int = PydanticField(default=0, ge=0)
+    sales: int = PydanticField(default=0, ge=0)
+    unit: str = PydanticField(default="", max_length=50)
+    tag: str = PydanticField(default="", max_length=50)
+    tag_type: str = PydanticField(default="", max_length=20)
+    badges: List[str] = PydanticField(default=[])
 
 
 class ProductUpdate(BaseModel):
@@ -65,9 +83,16 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = PydanticField(None, max_length=100)
     description: Optional[str] = PydanticField(None, max_length=500)
     price: Optional[float] = PydanticField(None, gt=0)
-    image_url: Optional[str] = PydanticField(None, max_length=500)
+    original_price: Optional[float] = PydanticField(None, ge=0)
+    image: Optional[str] = PydanticField(None, max_length=500)
     category: Optional[str] = PydanticField(None, max_length=50)
+    category_name: Optional[str] = PydanticField(None, max_length=50)
     stock: Optional[int] = PydanticField(None, ge=0)
+    sales: Optional[int] = PydanticField(None, ge=0)
+    unit: Optional[str] = PydanticField(None, max_length=50)
+    tag: Optional[str] = PydanticField(None, max_length=50)
+    tag_type: Optional[str] = PydanticField(None, max_length=20)
+    badges: Optional[List[str]] = None
     is_active: Optional[bool] = None
 
 
@@ -82,9 +107,16 @@ class ProductResponse(BaseModel):
     name: str
     description: str
     price: float
-    image_url: str
+    original_price: float
+    image: str
     category: str
+    category_name: str
     stock: int
+    sales: int
+    unit: str
+    tag: str
+    tag_type: str
+    badges: List[str]
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -118,6 +150,36 @@ def get_session():
     """获取数据库会话"""
     with Session(engine) as session:
         yield session
+
+
+def product_to_response_dict(product: Product) -> dict:
+    """将Product模型转换为响应字典"""
+    badges_list = []
+    if product.badges:
+        try:
+            badges_list = json.loads(product.badges)
+        except:
+            badges_list = []
+    
+    return {
+        "id": product.id,
+        "name": product.name,
+        "description": product.description,
+        "price": product.price,
+        "original_price": product.original_price,
+        "image": product.image,
+        "category": product.category,
+        "category_name": product.category_name,
+        "stock": product.stock,
+        "sales": product.sales,
+        "unit": product.unit,
+        "tag": product.tag,
+        "tag_type": product.tag_type,
+        "badges": badges_list,
+        "is_active": product.is_active,
+        "created_at": product.created_at,
+        "updated_at": product.updated_at
+    }
 
 
 def get_current_merchant_id(
@@ -237,7 +299,7 @@ def admin_login(request: LoginRequest, session: Session = Depends(get_session)):
 
 # ============== 商品管理 API ==============
 
-@router.get("/products", response_model=List[ProductResponse])
+@router.get("/products")
 def get_products(
     merchant_id: int = Depends(get_current_merchant_id),
     session: Session = Depends(get_session)
@@ -246,10 +308,10 @@ def get_products(
     products = session.exec(
         select(Product).where(Product.merchant_id == merchant_id)
     ).all()
-    return products
+    return [product_to_response_dict(p) for p in products]
 
 
-@router.post("/products", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/products", status_code=status.HTTP_201_CREATED)
 def create_product(
     product_data: ProductCreate,
     merchant_id: int = Depends(get_current_merchant_id),
@@ -262,9 +324,16 @@ def create_product(
         name=product_data.name,
         description=product_data.description,
         price=product_data.price,
-        image_url=product_data.image_url,
+        original_price=product_data.original_price,
+        image=product_data.image,
         category=product_data.category,
+        category_name=product_data.category_name,
         stock=product_data.stock,
+        sales=product_data.sales,
+        unit=product_data.unit,
+        tag=product_data.tag,
+        tag_type=product_data.tag_type,
+        badges=json.dumps(product_data.badges, ensure_ascii=False),
         is_active=True,
         created_at=now,
         updated_at=now
@@ -272,10 +341,10 @@ def create_product(
     session.add(product)
     session.commit()
     session.refresh(product)
-    return product
+    return product_to_response_dict(product)
 
 
-@router.put("/products/{product_id}", response_model=ProductResponse)
+@router.put("/products/{product_id}")
 def update_product(
     product_id: int,
     product_data: ProductUpdate,
@@ -299,13 +368,17 @@ def update_product(
     # 更新字段
     update_data = product_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
-        setattr(product, key, value)
+        if key == "badges" and value is not None:
+            # badges需要转换为JSON字符串
+            setattr(product, key, json.dumps(value, ensure_ascii=False))
+        else:
+            setattr(product, key, value)
     
     product.updated_at = datetime.utcnow()
     session.add(product)
     session.commit()
     session.refresh(product)
-    return product
+    return product_to_response_dict(product)
 
 
 @router.delete("/products/{product_id}")
@@ -333,7 +406,7 @@ def delete_product(
     return {"success": True}
 
 
-@router.patch("/products/{product_id}/status", response_model=ProductResponse)
+@router.patch("/products/{product_id}/status")
 def update_product_status(
     product_id: int,
     status_data: ProductStatusUpdate,
@@ -359,7 +432,7 @@ def update_product_status(
     session.add(product)
     session.commit()
     session.refresh(product)
-    return product
+    return product_to_response_dict(product)
 
 
 # ============== 品类管理 API ==============

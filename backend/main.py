@@ -3,9 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel, create_engine, Session, select
 from models import Product, Order, OrderItem, Merchant, Category
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any
 from pydantic import BaseModel, Field as PydanticField
 import os
+import json
 from dotenv import load_dotenv
 from fastapi import Depends
 
@@ -14,8 +15,18 @@ load_dotenv()
 
 # 数据库连接
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./aquatic_market.db")
-# 移除 connect_args，因为 MySQL 连接器不支持 check_same_thread 参数
-engine = create_engine(DATABASE_URL)
+# MySQL连接配置：添加连接池参数和调试
+if DATABASE_URL.startswith("mysql"):
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,  # 自动检测连接是否有效
+        pool_recycle=3600,   # 每小时回收连接
+        echo=False,          # 生产环境关闭SQL日志
+        connect_args={"charset": "utf8mb4"}
+    )
+else:
+    # SQLite配置
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 # 创建数据库表
 def create_db_and_tables():
@@ -50,6 +61,29 @@ def get_session():
 
 # ============== 用户端请求/响应模型 ==============
 
+class ProductResponse(BaseModel):
+    """商品响应模型 - 与前端字段命名一致"""
+    id: int
+    merchant_id: int
+    name: str
+    description: str
+    price: float
+    original_price: float
+    image: str
+    category: str
+    category_name: str
+    stock: int
+    sales: int
+    unit: str
+    tag: str
+    tag_type: str
+    badges: List[str]
+    is_active: bool
+    
+    class Config:
+        from_attributes = True
+
+
 class OrderCreateRequest(BaseModel):
     """用户端创建订单请求"""
     merchant_id: int = PydanticField(default=1, description="商家ID")
@@ -80,6 +114,36 @@ class OrderResponse(BaseModel):
 
 # ============== 用户端商品接口 ==============
 
+def product_to_response(product: Product) -> dict:
+    """将Product模型转换为前端需要的响应格式"""
+    # 处理badges字段：从JSON字符串转换为列表
+    badges_list = []
+    if product.badges:
+        try:
+            badges_list = json.loads(product.badges)
+        except:
+            badges_list = []
+    
+    return {
+        "id": product.id,
+        "merchant_id": product.merchant_id,
+        "name": product.name,
+        "description": product.description,
+        "price": product.price,
+        "original_price": product.original_price,
+        "image": product.image,
+        "category": product.category,
+        "category_name": product.category_name,
+        "stock": product.stock,
+        "sales": product.sales,
+        "unit": product.unit,
+        "tag": product.tag,
+        "tag_type": product.tag_type,
+        "badges": badges_list,
+        "is_active": product.is_active
+    }
+
+
 @app.get("/products", tags=["商品"])
 def get_products(
     merchant_id: Optional[int] = None,
@@ -95,7 +159,9 @@ def get_products(
         products = session.exec(
             select(Product).where(Product.is_active == True)
         ).all()
-    return products
+    
+    # 转换为前端需要的格式
+    return [product_to_response(p) for p in products]
 
 
 @app.get("/products/{product_id}", tags=["商品"])
@@ -106,7 +172,8 @@ def get_product(product_id: int, session: Session = Depends(get_session)):
     ).first()
     if not product:
         return {"error": "商品不存在"}
-    return product
+    
+    return product_to_response(product)
 
 
 # ============== 用户端价格查询接口 ==============
@@ -128,7 +195,7 @@ def search_products_by_price(
         query = query.where(Product.merchant_id == merchant_id)
     
     products = session.exec(query).all()
-    return products
+    return [product_to_response(p) for p in products]
 
 
 @app.get("/products/price/category", tags=["价格查询"])
@@ -146,7 +213,7 @@ def get_products_by_category(
         query = query.where(Product.merchant_id == merchant_id)
     
     products = session.exec(query).all()
-    return products
+    return [product_to_response(p) for p in products]
 
 
 # ============== 用户端订单接口 ==============
@@ -162,6 +229,58 @@ def get_orders(
         select(Order).where(Order.merchant_id == merchant_id)
     ).all()
     return orders
+
+
+@app.get("/orders/user/{user_id}", tags=["订单"])
+def get_orders_by_user_id(user_id: int, session: Session = Depends(get_session)):
+    """获取用户（商家）的所有订单，包含完整订单明细
+    
+    前端契约接口：GET /orders/user/:userId
+    - user_id 对应 merchant_id（商家ID）
+    - 返回该商家的所有订单，每个订单包含 items 明细
+    - items 中包含商品名称、单价、数量等信息
+    """
+    orders = session.exec(
+        select(Order).where(Order.merchant_id == user_id).order_by(Order.created_at.desc())
+    ).all()
+    
+    result = []
+    for order in orders:
+        # 获取订单明细
+        items = session.exec(
+            select(OrderItem).where(OrderItem.order_id == order.id)
+        ).all()
+        
+        # 获取商品信息以补充商品名称
+        items_with_product_info = []
+        for item in items:
+            product = session.exec(
+                select(Product).where(Product.id == item.product_id)
+            ).first()
+            items_with_product_info.append({
+                "id": item.id,
+                "product_id": item.product_id,
+                "name": product.name if product else f"商品{item.product_id}",
+                "quantity": item.quantity,
+                "price": item.unit_price,
+                "unit_price": item.unit_price,
+                "subtotal": item.subtotal
+            })
+        
+        result.append({
+            "id": order.id,
+            "merchant_id": order.merchant_id,
+            "customer_name": order.customer_name,
+            "customer_phone": order.customer_phone,
+            "pickup_time": order.pickup_time,
+            "total_amount": order.total_amount,
+            "status": order.status,
+            "created_at": order.created_at,
+            "updated_at": order.updated_at,
+            "items": items_with_product_info
+        })
+    
+    return result
 
 
 @app.get("/orders/{order_id}", tags=["订单"])
