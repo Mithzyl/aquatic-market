@@ -158,7 +158,7 @@ def product_to_response_dict(product: Product) -> dict:
     if product.badges:
         try:
             badges_list = json.loads(product.badges)
-        except:
+        except (json.JSONDecodeError, Exception):
             badges_list = []
     
     return {

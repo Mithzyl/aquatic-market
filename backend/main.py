@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import SQLModel, create_engine, Session, select
 from models import Product, Order, OrderItem, Merchant, Category
 from datetime import datetime
@@ -8,7 +9,7 @@ from pydantic import BaseModel, Field as PydanticField
 import os
 import json
 from dotenv import load_dotenv
-from fastapi import Depends
+from auth import verify_token
 
 # 加载环境变量
 load_dotenv()
@@ -121,7 +122,7 @@ def product_to_response(product: Product) -> dict:
     if product.badges:
         try:
             badges_list = json.loads(product.badges)
-        except:
+        except (json.JSONDecodeError, Exception):
             badges_list = []
     
     return {
@@ -171,7 +172,10 @@ def get_product(product_id: int, session: Session = Depends(get_session)):
         select(Product).where(Product.id == product_id)
     ).first()
     if not product:
-        return {"error": "商品不存在"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="商品不存在"
+        )
     
     return product_to_response(product)
 
@@ -231,32 +235,91 @@ def get_orders(
     return orders
 
 
+# HTTP Bearer 认证方案（用于用户端订单接口）
+user_security = HTTPBearer(auto_error=False)
+
+
+def get_current_merchant_id_from_token(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(user_security)
+) -> int:
+    """获取当前商家ID（从JWT Token）"""
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="缺少认证凭证",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token = credentials.credentials
+    payload = verify_token(token)
+    merchant_id = payload.get("merchant_id")
+    if merchant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证凭证",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return merchant_id
+
+
 @app.get("/orders/user/{user_id}", tags=["订单"])
-def get_orders_by_user_id(user_id: int, session: Session = Depends(get_session)):
-    """获取用户（商家）的所有订单，包含完整订单明细
+def get_orders_by_user_id(
+    user_id: int,
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
+    session: Session = Depends(get_session)
+):
+    """获取当前商家的所有订单，包含完整订单明细
+    
+    安全要求：
+    - 必须携带有效的 JWT Token
+    - 只能访问自己的订单（user_id 必须等于认证的 merchant_id）
     
     前端契约接口：GET /orders/user/:userId
     - user_id 对应 merchant_id（商家ID）
     - 返回该商家的所有订单，每个订单包含 items 明细
     - items 中包含商品名称、单价、数量等信息
     """
+    # 安全检查：只能访问自己的订单
+    if merchant_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权访问该商家的订单"
+        )
+    
     orders = session.exec(
         select(Order).where(Order.merchant_id == user_id).order_by(Order.created_at.desc())
     ).all()
     
+    if not orders:
+        return []
+    
+    # ========== 优化 N+1 查询问题：使用批量查询 ==========
+    # 1. 批量获取所有订单明细
+    order_ids = [o.id for o in orders]
+    all_items = session.exec(
+        select(OrderItem).where(OrderItem.order_id.in_(order_ids))
+    ).all()
+    
+    # 2. 批量获取所有商品
+    product_ids = [item.product_id for item in all_items]
+    products = session.exec(
+        select(Product).where(Product.id.in_(product_ids))
+    ).all()
+    product_map = {p.id: p for p in products}
+    
+    # 3. 按 order_id 分组订单明细
+    items_by_order = {}
+    for item in all_items:
+        if item.order_id not in items_by_order:
+            items_by_order[item.order_id] = []
+        items_by_order[item.order_id].append(item)
+    
+    # 4. 组装结果
     result = []
     for order in orders:
-        # 获取订单明细
-        items = session.exec(
-            select(OrderItem).where(OrderItem.order_id == order.id)
-        ).all()
-        
-        # 获取商品信息以补充商品名称
+        items = items_by_order.get(order.id, [])
         items_with_product_info = []
         for item in items:
-            product = session.exec(
-                select(Product).where(Product.id == item.product_id)
-            ).first()
+            product = product_map.get(item.product_id)
             items_with_product_info.append({
                 "id": item.id,
                 "product_id": item.product_id,
@@ -290,7 +353,10 @@ def get_order(order_id: int, session: Session = Depends(get_session)):
         select(Order).where(Order.id == order_id)
     ).first()
     if not order:
-        return {"error": "订单不存在"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="订单不存在"
+        )
     
     # 获取订单明细
     items = session.exec(
@@ -347,13 +413,22 @@ def create_order(order_data: OrderCreateRequest, session: Session = Depends(get_
         
         if not product:
             # 商品不存在，返回错误（此时还没有任何数据库修改，无需回滚）
-            return {"error": f"商品 {item_req.product_id} 不存在"}
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"商品 {item_req.product_id} 不存在"
+            )
         
         if not product.is_active:
-            return {"error": f"商品 {item_req.product_id} 已下架"}
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"商品 {item_req.product_id} 已下架"
+            )
         
         if product.stock < item_req.quantity:
-            return {"error": f"商品 {item_req.product_id} 库存不足"}
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"商品 {item_req.product_id} 库存不足"
+            )
         
         subtotal = product.price * item_req.quantity
         total_amount += subtotal
@@ -420,7 +495,10 @@ def create_order(order_data: OrderCreateRequest, session: Session = Depends(get_
     except Exception as e:
         # 发生异常时回滚事务
         session.rollback()
-        return {"error": f"订单创建失败: {str(e)}"}
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"订单创建失败: {str(e)}"
+        )
 
 
 # ============== 根路径 ==============

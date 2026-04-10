@@ -8,11 +8,13 @@ from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 from sqlmodel import SQLModel, create_engine, Session, select
 
-# 设置测试环境变量（使用 JWT_SECRET）
+# 设置测试环境变量 - 使用SQLite数据库
+os.environ["DATABASE_URL"] = "sqlite:///./test_user_api.db"
 os.environ["JWT_SECRET"] = "test-secret-key-for-jwt-testing-min-32-chars"
 
 from models import Merchant, Product, Order, OrderItem
 from main import app
+from auth import create_access_token
 
 # 创建测试数据库引擎
 TEST_DATABASE_URL = "sqlite:///./test_user_api.db"
@@ -56,8 +58,16 @@ def setup_database():
             name="测试商品1",
             description="测试商品描述1",
             price=99.99,
-            category="海鲜",
+            original_price=120.00,
+            image="https://example.com/image1.jpg",
+            category="shrimp",
+            category_name="虾类",
             stock=100,
+            sales=50,
+            unit="500g/份",
+            tag="招牌",
+            tag_type="hot",
+            badges='["活鲜现挑", "白灼推荐"]',
             is_active=True
         )
         product2 = Product(
@@ -65,8 +75,16 @@ def setup_database():
             name="测试商品2",
             description="测试商品描述2",
             price=199.99,
-            category="鱼类",
+            original_price=250.00,
+            image="https://example.com/image2.jpg",
+            category="fish",
+            category_name="鱼类",
             stock=50,
+            sales=30,
+            unit="300g/盒",
+            tag="刺身",
+            tag_type="new",
+            badges='["现切装盒", "刺身推荐"]',
             is_active=True
         )
         session.add(product1)
@@ -118,8 +136,9 @@ class TestProducts:
     def test_get_product_not_found(self, client):
         """测试获取不存在的商品"""
         response = client.get("/products/99999")
-        assert response.status_code == 200
-        assert "error" in response.json()
+        assert response.status_code == 404
+        assert "detail" in response.json()
+        assert "商品不存在" in response.json()["detail"]
 
 
 # ============== 价格查询测试 ==============
@@ -146,12 +165,12 @@ class TestPriceSearch:
     
     def test_get_products_by_category(self, client):
         """测试按品类获取商品"""
-        response = client.get("/products/price/category?category=海鲜")
+        response = client.get("/products/price/category?category=shrimp")
         assert response.status_code == 200
         products = response.json()
         assert isinstance(products, list)
         for p in products:
-            assert p["category"] == "海鲜"
+            assert p["category"] == "shrimp"
 
 
 # ============== 订单相关测试 ==============
@@ -217,8 +236,9 @@ class TestOrders:
             ]
         }
         response = client.post("/orders", json=order_data)
-        assert response.status_code == 200
-        assert "error" in response.json()
+        assert response.status_code == 404
+        assert "detail" in response.json()
+        assert "不存在" in response.json()["detail"]
     
     def test_get_order_by_id(self, client):
         """测试获取单个订单"""
@@ -245,8 +265,166 @@ class TestOrders:
     def test_get_order_not_found(self, client):
         """测试获取不存在的订单"""
         response = client.get("/orders/99999")
+        assert response.status_code == 404
+        assert "detail" in response.json()
+        assert "订单不存在" in response.json()["detail"]
+    
+    def test_created_order_can_be_queried(self, client):
+        """测试提交订单后接口能否查询到这个订单"""
+        # 1. 创建订单
+        order_data = {
+            "merchant_id": 1,
+            "customer_name": "查询验证用户",
+            "customer_phone": "13800138003",
+            "pickup_time": datetime.now().isoformat(),
+            "items": [
+                {"product_id": 1, "quantity": 1}
+            ]
+        }
+        create_response = client.post("/orders", json=order_data)
+        assert create_response.status_code == 200
+        created_order = create_response.json()
+        order_id = created_order["id"]
+        
+        # 2. 通过订单列表查询
+        list_response = client.get("/orders?merchant_id=1")
+        assert list_response.status_code == 200
+        orders = list_response.json()
+        
+        # 3. 验证新订单出现在列表中
+        found_order = next((o for o in orders if o["id"] == order_id), None)
+        assert found_order is not None, f"订单 {order_id} 未在订单列表中找到"
+        assert found_order["customer_name"] == "查询验证用户"
+        assert found_order["customer_phone"] == "13800138003"
+        assert found_order["status"] == "pending"
+        
+        # 4. 通过订单详情查询
+        detail_response = client.get(f"/orders/{order_id}")
+        assert detail_response.status_code == 200
+        detail_order = detail_response.json()
+        assert detail_order["id"] == order_id
+        assert len(detail_order["items"]) == 1
+        assert detail_order["items"][0]["product_id"] == 1
+        assert detail_order["items"][0]["quantity"] == 1
+    
+    def test_get_orders_by_user_id(self, client):
+        """测试通过用户ID获取订单列表 - 前端契约接口（需要认证）"""
+        # 生成认证 token
+        token = create_access_token(merchant_id=1)
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # 先创建一个订单确保有数据
+        order_data = {
+            "merchant_id": 1,
+            "customer_name": "用户ID查询测试",
+            "customer_phone": "13800138004",
+            "pickup_time": datetime.now().isoformat(),
+            "items": [
+                {"product_id": 1, "quantity": 2},
+                {"product_id": 2, "quantity": 1}
+            ]
+        }
+        create_response = client.post("/orders", json=order_data)
+        assert create_response.status_code == 200
+        
+        # 通过用户ID接口查询订单（携带认证token）
+        response = client.get("/orders/user/1", headers=headers)
         assert response.status_code == 200
-        assert "error" in response.json()
+        orders = response.json()
+        assert isinstance(orders, list)
+        
+        # 验证返回的订单包含完整信息
+        assert len(orders) > 0, "应该返回至少一个订单"
+        
+        # 验证订单结构
+        order = orders[0]
+        assert "id" in order
+        assert "merchant_id" in order
+        assert "customer_name" in order
+        assert "customer_phone" in order
+        assert "pickup_time" in order
+        assert "total_amount" in order
+        assert "status" in order
+        assert "created_at" in order
+        assert "items" in order
+        
+        # 验证 items 包含商品名称
+        assert isinstance(order["items"], list)
+        if len(order["items"]) > 0:
+            item = order["items"][0]
+            assert "product_id" in item
+            assert "name" in item, "items 应包含商品名称 name 字段"
+            assert "quantity" in item
+            assert "price" in item, "items 应包含 price 字段"
+            assert "subtotal" in item
+    
+    def test_get_orders_by_user_id_requires_auth(self, client):
+        """测试用户ID查询需要认证"""
+        # 不带认证token访问
+        response = client.get("/orders/user/1")
+        assert response.status_code == 401
+        assert "detail" in response.json()
+    
+    def test_get_orders_by_user_id_forbidden(self, client):
+        """测试用户只能访问自己的订单"""
+        # 使用 merchant_id=1 的 token 访问 merchant_id=2 的订单
+        token = create_access_token(merchant_id=1)
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # 尝试访问 user_id=2 的订单，应该返回 403
+        response = client.get("/orders/user/2", headers=headers)
+        assert response.status_code == 403
+        assert "detail" in response.json()
+        assert "无权访问" in response.json()["detail"]
+    
+    def test_get_orders_by_user_id_empty_result(self, client):
+        """测试用户ID查询返回空数组的情况"""
+        # 生成认证 token
+        token = create_access_token(merchant_id=99999)
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        response = client.get("/orders/user/99999", headers=headers)
+        assert response.status_code == 200
+        orders = response.json()
+        assert isinstance(orders, list)
+        assert len(orders) == 0, "不存在的用户应返回空数组"
+    
+    def test_get_orders_by_user_id_includes_product_name(self, client):
+        """测试用户ID查询返回的订单明细包含商品名称"""
+        # 生成认证 token
+        token = create_access_token(merchant_id=1)
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # 创建订单
+        order_data = {
+            "merchant_id": 1,
+            "customer_name": "商品名称测试",
+            "customer_phone": "13800138005",
+            "pickup_time": datetime.now().isoformat(),
+            "items": [
+                {"product_id": 1, "quantity": 3}
+            ]
+        }
+        create_response = client.post("/orders", json=order_data)
+        assert create_response.status_code == 200
+        created_order = create_response.json()
+        
+        # 通过用户ID接口查询
+        response = client.get("/orders/user/1", headers=headers)
+        assert response.status_code == 200
+        orders = response.json()
+        
+        # 找到刚创建的订单
+        found_order = next((o for o in orders if o["id"] == created_order["id"]), None)
+        assert found_order is not None
+        
+        # 验证明细包含商品名称
+        assert len(found_order["items"]) == 1
+        item = found_order["items"][0]
+        assert item["product_id"] == 1
+        assert item["name"] == "测试商品1", "商品名称应为测试商品1"
+        assert item["quantity"] == 3
+        assert item["price"] == 99.99
 
 
 # ============== 事务完整性测试 ==============
@@ -336,8 +514,10 @@ class TestOrderTransaction:
         }
         response = client.post("/orders", json=order_data)
         
-        # 应该返回错误
-        assert "error" in response.json()
+        # 应该返回错误（400 Bad Request）
+        assert response.status_code == 400
+        assert "detail" in response.json()
+        assert "库存不足" in response.json()["detail"]
         
         # 验证库存未扣减
         product_response = client.get("/products/1")
@@ -363,8 +543,9 @@ class TestOrderTransaction:
         }
         response = client.post("/orders", json=order_data)
         
-        # 应该返回错误
-        assert "error" in response.json()
+        # 应该返回错误（404 Not Found）
+        assert response.status_code == 404
+        assert "detail" in response.json()
         
         # 验证库存未扣减
         product_response = client.get("/products/1")
@@ -389,8 +570,9 @@ class TestOrderTransaction:
         }
         response = client.post("/orders", json=order_data)
         
-        # 应该返回错误
-        assert "error" in response.json()
+        # 应该返回错误（400 Bad Request）
+        assert response.status_code == 400
+        assert "detail" in response.json()
         
         # 验证订单数量未增加
         orders_response = client.get("/orders?merchant_id=1")
