@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel, Field
 from datetime import datetime
 from typing import Optional
+import json
 
 class Merchant(SQLModel, table=True):
     """商家模型"""
@@ -19,12 +20,32 @@ class Product(SQLModel, table=True):
     name: str = Field(..., index=True, max_length=100)
     description: str = Field(default="", max_length=500)
     price: float = Field(..., gt=0)
-    image_url: str = Field(default="", max_length=500)
+    original_price: float = Field(default=0, ge=0)  # 原价
+    image: str = Field(default="", max_length=500)  # 商品图片URL
     category: str = Field(default="", max_length=50)
+    category_name: str = Field(default="", max_length=50)  # 分类名称
     stock: int = Field(default=0, ge=0)
+    sales: int = Field(default=0, ge=0)  # 销量
+    unit: str = Field(default="", max_length=50)  # 单位规格
+    tag: str = Field(default="", max_length=50)  # 标签文字
+    tag_type: str = Field(default="", max_length=20)  # 标签类型: hot, new 等
+    badges: str = Field(default="")  # JSON数组字符串，如 ["活鲜现挑", "白灼推荐"]
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    def get_badges_list(self) -> list:
+        """获取badges列表"""
+        if self.badges:
+            try:
+                return json.loads(self.badges)
+            except:
+                return []
+        return []
+    
+    def set_badges_list(self, badges_list: list):
+        """设置badges列表"""
+        self.badges = json.dumps(badges_list, ensure_ascii=False)
 
 class Order(SQLModel, table=True):
     """订单模型 - 支持商家数据隔离"""

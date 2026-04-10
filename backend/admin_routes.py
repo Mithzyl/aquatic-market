@@ -10,26 +10,10 @@ from typing import Optional, List
 from pydantic import BaseModel, Field as PydanticField
 from models import Merchant, Product, Order, OrderItem, Category
 from auth import verify_token, get_merchant_id
-import os
 import json
 
-# 创建数据库引擎
-from sqlmodel import create_engine
-from dotenv import load_dotenv
-
-load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./aquatic_market.db")
-# MySQL连接配置
-if DATABASE_URL.startswith("mysql"):
-    engine = create_engine(
-        DATABASE_URL,
-        pool_pre_ping=True,
-        pool_recycle=3600,
-        echo=False,
-        connect_args={"charset": "utf8mb4"}
-    )
-else:
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# 统一依赖注入配置
+from config.database import engine, get_session
 
 # 创建路由器
 router = APIRouter(prefix="/api/admin", tags=["商家端"])
@@ -144,13 +128,7 @@ class MerchantUpdate(BaseModel):
     shop_name: Optional[str] = PydanticField(None, max_length=100)
 
 
-# ============== 依赖注入 ==============
-
-def get_session():
-    """获取数据库会话"""
-    with Session(engine) as session:
-        yield session
-
+# ============== 辅助函数 ==============
 
 def product_to_response_dict(product: Product) -> dict:
     """将Product模型转换为响应字典"""
