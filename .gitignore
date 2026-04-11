@@ -67,8 +67,11 @@ frontend/verify_*.js
 # Backend test files
 backend/test_*.py
 
+# Test evidence and reports
+tests/
+
 # AI/Agent configuration
-.codebuddy/
+.codebuddy/*
 AGENTS.md
 agent/
 
@@ -77,3 +80,5 @@ agent/
 
 # Skills archives
 skills/
+
+docs/
