@@ -42,7 +42,15 @@ export function AdminAuthProvider({ children }) {
       setToken(newToken)
       setMerchant(merchantInfo)
       setError(null)
-      console.log('[AdminAuth] 登录成功:', { merchantId: merchantInfo.id, shopName: merchantInfo.shop_name })
+      console.log('[AdminAuth] 登录成功:', {
+        merchantId: merchantInfo.id,
+        shopName: merchantInfo.shop_name,
+        role: merchantInfo.role ? {
+          code: merchantInfo.role.code,
+          name: merchantInfo.role.name,
+          permissions: merchantInfo.role.permissions
+        } : '无角色信息'
+      })
     } catch (err) {
       console.error('[AdminAuth] Token 存储失败:', err)
       setError('登录状态保存失败')
@@ -66,6 +74,69 @@ export function AdminAuthProvider({ children }) {
   // 检查是否已登录
   const isAuthenticated = Boolean(token && merchant)
 
+  // 获取当前角色信息（便捷访问）
+  const role = merchant?.role || null
+
+  /**
+   * 检查是否拥有指定权限
+   * @param {string} permissionCode - 权限代码，如 'product:create'
+   * @returns {boolean} 是否拥有该权限
+   * 
+   * @example
+   * const { hasPermission } = useAdminAuth()
+   * if (hasPermission('product:create')) {
+   *   // 显示创建商品按钮
+   * }
+   */
+  const hasPermission = useCallback((permissionCode) => {
+    if (!role || !role.permissions || !Array.isArray(role.permissions)) {
+      return false
+    }
+    return role.permissions.includes(permissionCode)
+  }, [role])
+
+  /**
+   * 检查是否拥有任意一个指定权限
+   * @param {string[]} permissionCodes - 权限代码数组
+   * @returns {boolean} 是否拥有任意一个权限
+   * 
+   * @example
+   * const { hasAnyPermission } = useAdminAuth()
+   * if (hasAnyPermission(['product:create', 'product:delete'])) {
+   *   // 用户有创建或删除商品的权限
+   * }
+   */
+  const hasAnyPermission = useCallback((permissionCodes) => {
+    if (!role || !role.permissions || !Array.isArray(role.permissions)) {
+      return false
+    }
+    if (!Array.isArray(permissionCodes) || permissionCodes.length === 0) {
+      return false
+    }
+    return permissionCodes.some(code => role.permissions.includes(code))
+  }, [role])
+
+  /**
+   * 检查是否拥有所有指定权限
+   * @param {string[]} permissionCodes - 权限代码数组
+   * @returns {boolean} 是否拥有所有权限
+   * 
+   * @example
+   * const { hasAllPermissions } = useAdminAuth()
+   * if (hasAllPermissions(['product:create', 'product:edit'])) {
+   *   // 用户同时拥有创建和编辑权限
+   * }
+   */
+  const hasAllPermissions = useCallback((permissionCodes) => {
+    if (!role || !role.permissions || !Array.isArray(role.permissions)) {
+      return false
+    }
+    if (!Array.isArray(permissionCodes) || permissionCodes.length === 0) {
+      return false
+    }
+    return permissionCodes.every(code => role.permissions.includes(code))
+  }, [role])
+
   // 清除错误
   const clearError = useCallback(() => {
     setError(null)
@@ -74,13 +145,21 @@ export function AdminAuthProvider({ children }) {
   // 初始化时验证 token 有效性（可选，后续可对接后端验证接口）
   useEffect(() => {
     if (token && merchant) {
-      console.log('[AdminAuth] 恢复登录状态:', { merchantId: merchant.id, shopName: merchant.shop_name })
+      console.log('[AdminAuth] 恢复登录状态:', {
+        merchantId: merchant.id,
+        shopName: merchant.shop_name,
+        role: merchant.role ? {
+          code: merchant.role.code,
+          name: merchant.role.name
+        } : '无角色信息'
+      })
     }
   }, [token, merchant])
 
   const value = {
     token,
     merchant,
+    role,           // 当前角色信息 (merchant.role 的便捷访问)
     isAuthenticated,
     isLoading,
     setIsLoading,
@@ -88,7 +167,11 @@ export function AdminAuthProvider({ children }) {
     setError,
     login,
     logout,
-    clearError
+    clearError,
+    // 权限检查方法
+    hasPermission,        // 检查单个权限
+    hasAnyPermission,     // 检查任意一个权限
+    hasAllPermissions     // 检查所有权限
   }
 
   return (

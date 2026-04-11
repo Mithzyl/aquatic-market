@@ -11,7 +11,7 @@ import jwt
 # 设置测试环境变量（至少32字节以满足JWT安全要求）
 os.environ["JWT_SECRET"] = "test-secret-key-for-jwt-testing-min-32-chars"
 
-from auth import (
+from shared.auth import (
     create_access_token,
     create_token,
     verify_token,
@@ -288,9 +288,9 @@ class TestTokenConfiguration:
         """测试密钥从 JWT_SECRET 环境变量读取"""
         # 重新导入以验证环境变量读取
         import importlib
-        import auth
-        importlib.reload(auth)
-        assert auth.SECRET_KEY == "test-secret-key-for-jwt-testing-min-32-chars"
+        import shared.auth
+        importlib.reload(shared.auth)
+        assert shared.auth.SECRET_KEY == "test-secret-key-for-jwt-testing-min-32-chars"
 
 
 class TestCreateTokenAlias:

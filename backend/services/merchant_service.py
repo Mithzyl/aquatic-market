@@ -1,5 +1,6 @@
 """
 Merchant Service - 商家端业务逻辑层
+支持 RBAC 权限管理：登录返回角色信息、Token 包含权限
 """
 import json
 import os
@@ -10,8 +11,8 @@ from typing import List, Optional
 from sqlmodel import Session, select, col
 import threading
 
-from models import Merchant, Product, Order, OrderItem, Category
-from auth import create_access_token
+from shared.models import Merchant, Product, Order, OrderItem, Category, MerchantRole
+from shared.auth import create_access_token
 
 
 # 有效订单状态列表
@@ -80,8 +81,12 @@ class AuthService:
         - Critical #2: 自动创建商家添加环境变量控制
         - Critical #3: 登录接口添加限流
         
+        RBAC 支持：
+        - 返回商家角色信息
+        - Token 包含角色代码和权限列表
+        
         Returns:
-            dict: 包含 token 和 merchant 信息
+            dict: 包含 token 和 merchant 信息（含角色）
         """
         merchant = None
         
@@ -127,7 +132,8 @@ class AuthService:
                     name="新商家",
                     phone="",
                     wechat_openid=openid,
-                    shop_name="我的店铺"
+                    shop_name="我的店铺",
+                    role_id=1  # 默认 owner 角色
                 )
                 self.session.add(merchant)
                 self.session.commit()
@@ -172,7 +178,8 @@ class AuthService:
                     name="新商家",
                     phone=phone,
                     wechat_openid=f"phone_{phone}",
-                    shop_name="我的店铺"
+                    shop_name="我的店铺",
+                    role_id=1  # 默认 owner 角色
                 )
                 self.session.add(merchant)
                 self.session.commit()
@@ -180,8 +187,26 @@ class AuthService:
         else:
             raise ValueError("请提供登录凭证（code 或 phone+verify_code）")
         
-        # 生成 JWT Token
-        token = create_access_token(merchant.id)
+        # 获取商家角色信息
+        role = self.session.exec(
+            select(MerchantRole).where(MerchantRole.id == merchant.role_id)
+        ).first()
+        
+        # 如果角色不存在或被禁用，使用默认 owner 角色
+        if not role or not role.is_active:
+            role = self.session.exec(
+                select(MerchantRole).where(MerchantRole.code == "owner")
+            ).first()
+        
+        role_permissions = role.get_permissions_list() if role else []
+        role_code = role.code if role else "owner"
+        
+        # 生成 JWT Token（包含角色信息）
+        token = create_access_token(
+            merchant_id=merchant.id,
+            role_code=role_code,
+            permissions=role_permissions
+        )
         
         return {
             "token": token,
@@ -189,7 +214,12 @@ class AuthService:
                 "id": merchant.id,
                 "name": merchant.name,
                 "phone": merchant.phone,
-                "shop_name": merchant.shop_name
+                "shop_name": merchant.shop_name,
+                "role": {
+                    "code": role_code,
+                    "name": role.name if role else "店主",
+                    "permissions": role_permissions
+                }
             }
         }
 

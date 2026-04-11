@@ -93,7 +93,6 @@ function CategoryIcon({ categoryId, active = false, compact = false }) {
 const PriceQuery = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
   const [activeCategoryId, setActiveCategoryId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddedToast, setShowAddedToast] = useState(false)
@@ -123,8 +122,6 @@ const PriceQuery = () => {
         }
       } catch (error) {
         console.error('Failed to fetch data:', error)
-      } finally {
-        setLoading(false)
       }
     }
     fetchData()

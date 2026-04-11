@@ -2,11 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getOrdersByUserId } from '../api/orders'
 
-const merchantContact = {
-  phoneLabel: '400-820-5520',
-  href: 'tel:4008205520'
-}
-
 const filterTabs = [
   { key: 'all', label: '全部' },
   { key: 'preparing', label: '待取货' },
@@ -91,18 +86,6 @@ function formatDateLabel(value) {
   return `${date.getMonth() + 1}月${date.getDate()}日`
 }
 
-function formatPickupWindow(value) {
-  const center = parseDateTime(value)
-  if (center.getTime() === 0) return value
-
-  const start = new Date(center.getTime() - 60 * 60 * 1000)
-  const end = new Date(center.getTime() + 60 * 60 * 1000)
-  const sameDay = start.toDateString() === end.toDateString()
-  const dayLabel = sameDay ? `${start.getMonth() + 1}月${start.getDate()}日` : `${start.getMonth() + 1}月${start.getDate()}日 - ${end.getMonth() + 1}月${end.getDate()}日`
-
-  return `${dayLabel} ${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - ${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`
-}
-
 function getOrderTitle(order) {
   if (!order?.items?.length) return '海鲜订单'
   if (order.items.length === 1) return order.items[0].name
@@ -165,7 +148,6 @@ function EmptyState() {
 }
 
 function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
-  const config = statusConfig[order.status] || statusConfig.pending
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (

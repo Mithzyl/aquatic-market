@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import Session
 from .database import get_session
-from auth import verify_token
+from shared.auth import verify_token
 
 # HTTP Bearer 认证方案
 user_security = HTTPBearer(auto_error=False)

@@ -18,7 +18,7 @@ def get_orders(
     session: Session = Depends(get_session)
 ):
     """获取订单列表，必须指定商家ID（防止数据泄露）"""
-    from models import Order
+    from shared.models import Order
     orders = session.exec(
         select(Order).where(Order.merchant_id == merchant_id)
     ).all()

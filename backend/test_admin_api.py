@@ -25,8 +25,8 @@ os.environ["VERIFY_CODE_DEMO_MODE"] = "true"
 os.environ["DEMO_VERIFY_CODE"] = "123456"
 
 # 导入模块
-from models import Merchant, Product, Order, OrderItem, Category
-from auth import create_access_token
+from shared.models import Merchant, Product, Order, OrderItem, Category
+from shared.auth import create_access_token
 from routes.merchant_routes import router as merchant_router, get_session as merchant_get_session
 
 # 创建独立的测试应用

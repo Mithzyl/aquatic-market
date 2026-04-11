@@ -5,7 +5,7 @@ from typing import List, Optional
 from datetime import datetime
 from fastapi import HTTPException, status
 from sqlmodel import Session, select
-from models import Order, OrderItem, Product
+from shared.models import Order, OrderItem, Product
 
 from schemas.order import OrderCreateRequest
 

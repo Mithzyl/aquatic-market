@@ -1,5 +1,5 @@
 """
-数据库配置模块
+Database Module - 数据库配置模块
 统一管理数据库连接、引擎和会话
 支持 RBAC：启动时初始化默认角色
 """
@@ -42,7 +42,7 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
     
     # 初始化默认角色（RBAC）
-    from shared.models import MerchantRole
+    from .models import MerchantRole
     with Session(engine) as session:
         MerchantRole.init_default_roles(session)
 

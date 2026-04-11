@@ -4,7 +4,7 @@ Product Service - 商品业务逻辑层
 import json
 from typing import List, Optional
 from sqlmodel import Session, select
-from models import Product, Category
+from shared.models import Product, Category
 
 
 class ProductService:

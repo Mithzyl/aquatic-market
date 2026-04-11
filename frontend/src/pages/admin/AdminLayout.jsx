@@ -66,6 +66,7 @@ function AdminNavIcon({ type, isActive }) {
 function AdminHeader() {
   const { merchant } = useAdminAuth()
   const shopName = merchant?.shop_name || '商家后台'
+  const roleName = merchant?.role?.name || ''
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-[#fbf6ef] safe-area-top">
@@ -87,12 +88,20 @@ function AdminHeader() {
               </svg>
             </div>
             {/* 店铺名称 */}
-            <span
-              className="text-base font-semibold text-[#2c241b] truncate max-w-[180px]"
-              style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
-            >
-              {shopName}
-            </span>
+            <div className="flex flex-col">
+              <span
+                className="text-base font-semibold text-[#2c241b] truncate max-w-[180px]"
+                style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
+              >
+                {shopName}
+              </span>
+              {/* 角色标签 */}
+              {roleName && (
+                <span className="text-xs text-[#8b755d] -mt-0.5">
+                  {roleName}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

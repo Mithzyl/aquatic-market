@@ -12,9 +12,9 @@ from sqlmodel import SQLModel, create_engine, Session, select
 os.environ["DATABASE_URL"] = "sqlite:///./test_user_api.db"
 os.environ["JWT_SECRET"] = "test-secret-key-for-jwt-testing-min-32-chars"
 
-from models import Merchant, Product, Order, OrderItem
+from shared.models import Merchant, Product, Order, OrderItem
 from main import app
-from auth import create_access_token
+from shared.auth import create_access_token
 
 # 创建测试数据库引擎
 TEST_DATABASE_URL = "sqlite:///./test_user_api.db"

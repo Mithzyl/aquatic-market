@@ -1,5 +1,6 @@
 """
 Merchant Schema - 商家端请求/响应数据结构
+支持 RBAC 权限管理：角色信息响应结构
 """
 from typing import List, Optional
 from datetime import datetime
@@ -11,6 +12,13 @@ class LoginRequest(BaseModel):
     code: Optional[str] = None
     phone: Optional[str] = None
     verify_code: Optional[str] = None
+
+
+class RoleInfo(BaseModel):
+    """角色信息"""
+    code: str = PydanticField(..., description="角色代码：owner/admin/staff")
+    name: str = PydanticField(..., description="角色名称")
+    permissions: List[str] = PydanticField(default=[], description="权限列表")
 
 
 class LoginResponse(BaseModel):
@@ -25,6 +33,7 @@ class MerchantInfo(BaseModel):
     name: str
     phone: str
     shop_name: str
+    role: Optional[RoleInfo] = None
 
 
 class ProductCreate(BaseModel):

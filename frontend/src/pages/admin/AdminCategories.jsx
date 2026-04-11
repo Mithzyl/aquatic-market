@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getProducts } from '../../api/admin'
-import { getCategories } from '../../api/products'
+import { getProducts, getCategories } from '../../api/admin'
 
 // 品类图标组件
 function CategoryIcon({ categoryId, className = 'h-10 w-10' }) {
@@ -127,6 +126,15 @@ function ErrorState({ message, onRetry }) {
   )
 }
 
+// 品类描述映射
+const CATEGORY_DESCRIPTIONS = {
+  shrimp: '鲜活现捞',
+  crab: '肥美到店',
+  fish: '刺身精选',
+  shell: '净选即烹',
+  lobster: '宴请招牌'
+}
+
 // 品类卡片组件
 function CategoryCard({ category, productCount, onClick }) {
   return (
@@ -187,21 +195,25 @@ function AdminCategories() {
       ])
       const products = response.products || response || []
 
-      // 统计每个品类的商品数量
+      // 统计每个品类的商品数量（使用 slug 作为品类标识）
       const counts = {}
       products.forEach(product => {
-        const categoryId = product.category
-        if (categoryId) {
-          counts[categoryId] = (counts[categoryId] || 0) + 1
+        const categorySlug = product.category
+        if (categorySlug) {
+          counts[categorySlug] = (counts[categorySlug] || 0) + 1
         }
       })
 
       setProductCounts(counts)
 
-      // 合并品类信息：使用 API 返回的品类列表，并添加商品数量
+      // 合并品类信息：将后端格式转换为前端期望格式
+      // 后端 admin API: { id: number, slug: string, name: string, icon: string, order: number }
+      // 前端期望: { id: string (slug), name: string, description: string, productCount: number }
       const categoriesWithCounts = categoriesData.map(cat => ({
-        ...cat,
-        productCount: counts[cat.id] || 0
+        id: cat.slug || String(cat.id), // 使用 slug 作为 id，兼容 CategoryIcon
+        name: cat.name,
+        description: CATEGORY_DESCRIPTIONS[cat.slug] || '精选品类',
+        productCount: counts[cat.slug] || 0
       }))
 
       // 按商品数量降序排序
