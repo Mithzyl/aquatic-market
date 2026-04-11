@@ -4,9 +4,11 @@ Merchant Service - 商家端业务逻辑层
 import json
 import os
 import warnings
+from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import List, Optional
 from sqlmodel import Session, select, col
+import threading
 
 from models import Merchant, Product, Order, OrderItem, Category
 from auth import create_access_token
@@ -15,6 +17,26 @@ from auth import create_access_token
 # 有效订单状态列表
 VALID_ORDER_STATUS = ["pending", "confirmed", "ready", "completed", "cancelled"]
 
+# 订单状态流转规则（安全建议 #7）
+VALID_STATUS_TRANSITIONS = {
+    "pending": ["confirmed", "cancelled"],
+    "confirmed": ["ready", "cancelled"],
+    "ready": ["completed", "cancelled"],
+    "completed": [],
+    "cancelled": []
+}
+
+# 登录限流器（Critical #3）
+_login_attempts = defaultdict(list)
+_login_lock = threading.Lock()
+
+
+def reset_login_rate_limit():
+    """重置登录限流器（仅用于测试）"""
+    global _login_attempts
+    with _login_lock:
+        _login_attempts.clear()
+
 
 class AuthService:
     """认证服务类"""
@@ -22,7 +44,30 @@ class AuthService:
     def __init__(self, session: Session):
         self.session = session
     
-    def login(self, code: Optional[str] = None, phone: Optional[str] = None, verify_code: Optional[str] = None) -> dict:
+    @staticmethod
+    def check_login_rate_limit(ip: str) -> bool:
+        """
+        检查登录限流，每IP每分钟最多5次（Critical #3）
+        
+        Args:
+            ip: 客户端IP地址
+            
+        Returns:
+            bool: True 表示允许登录，False 表示被限流
+        """
+        with _login_lock:
+            now = datetime.utcnow()
+            # 清理1分钟前的记录
+            _login_attempts[ip] = [
+                t for t in _login_attempts[ip] 
+                if now - t < timedelta(minutes=1)
+            ]
+            if len(_login_attempts[ip]) >= 5:
+                return False
+            _login_attempts[ip].append(now)
+            return True
+    
+    def login(self, code: Optional[str] = None, phone: Optional[str] = None, verify_code: Optional[str] = None, client_ip: Optional[str] = None) -> dict:
         """
         商家登录
         
@@ -30,23 +75,58 @@ class AuthService:
         1. 微信授权登录：提供 code 参数
         2. 手机号+验证码登录：提供 phone 和 verify_code 参数
         
+        安全修复：
+        - Critical #1: 微信授权登录添加演示模式警告
+        - Critical #2: 自动创建商家添加环境变量控制
+        - Critical #3: 登录接口添加限流
+        
         Returns:
             dict: 包含 token 和 merchant 信息
         """
         merchant = None
         
+        # 检查登录限流（Critical #3）
+        if client_ip and not self.check_login_rate_limit(client_ip):
+            raise ValueError("登录请求过于频繁，请1分钟后重试")
+        
         if code:
-            # 微信授权登录 - 演示实现
+            # 微信授权登录 - 安全修复（Critical #1）
+            demo_mode = os.getenv("WECHAT_DEMO_MODE", "false").lower() == "true"
+            
+            if demo_mode:
+                # 演示模式：使用code模拟openid（仅开发测试）
+                warnings.warn(
+                    "演示模式已启用！微信授权未对接真实API，生产环境必须禁用 WECHAT_DEMO_MODE "
+                    "并对接微信 jscode2session 接口。攻击者可伪造任意商家身份！",
+                    UserWarning
+                )
+                openid = f"demo_{code}"
+            else:
+                # 生产模式：必须调用微信API获取真实openid
+                # TODO: 对接 https://api.weixin.qq.com/sns/jscode2session
+                # 需要配置：WECHAT_APPID, WECHAT_SECRET
+                raise ValueError("生产环境必须对接微信授权API，请配置 WECHAT_DEMO_MODE=false 并实现微信登录")
+            
             merchant = self.session.exec(
-                select(Merchant).where(Merchant.wechat_openid == code)
+                select(Merchant).where(Merchant.wechat_openid == openid)
             ).first()
             
             if not merchant:
-                # 自动创建新商家（演示用）
+                # 自动创建商家 - 安全修复（Critical #2）
+                auto_create = os.getenv("AUTO_CREATE_MERCHANT", "false").lower() == "true"
+                if not auto_create:
+                    raise ValueError("商家账号不存在，请联系管理员注册")
+                
+                # 演示模式：自动创建新商家
+                warnings.warn(
+                    "自动创建商家模式已启用！生产环境必须禁用 AUTO_CREATE_MERCHANT "
+                    "并通过管理后台手动注册商家。",
+                    UserWarning
+                )
                 merchant = Merchant(
                     name="新商家",
                     phone="",
-                    wechat_openid=code,
+                    wechat_openid=openid,
                     shop_name="我的店铺"
                 )
                 self.session.add(merchant)
@@ -78,7 +158,16 @@ class AuthService:
             ).first()
             
             if not merchant:
-                # 自动创建新商家（演示用）
+                # 自动创建商家 - 安全修复（Critical #2）
+                auto_create = os.getenv("AUTO_CREATE_MERCHANT", "false").lower() == "true"
+                if not auto_create:
+                    raise ValueError("商家账号不存在，请联系管理员注册")
+                
+                warnings.warn(
+                    "自动创建商家模式已启用！生产环境必须禁用 AUTO_CREATE_MERCHANT "
+                    "并通过管理后台手动注册商家。",
+                    UserWarning
+                )
                 merchant = Merchant(
                     name="新商家",
                     phone=phone,
@@ -260,90 +349,67 @@ class RevenueService:
         self.session = session
     
     def get_stats(self, merchant_id: int) -> dict:
-        """获取今日/本周/本月收益统计"""
+        """
+        获取今日/本周/本月收益统计
+        
+        性能优化（#6）：合并为单次查询，内存分组统计
+        原实现执行6次独立查询，现优化为1次查询
+        """
         now = datetime.utcnow()
         
-        # 今日统计
+        # 计算时间边界
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_orders = self.session.exec(
+        yesterday_start = today_start - timedelta(days=1)
+        week_start = today_start - timedelta(days=now.weekday())
+        last_week_start = week_start - timedelta(days=7)
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        last_month_start = (month_start - timedelta(days=1)).replace(day=1)
+        
+        # 计算查询起始时间（取最早需要的时间点）
+        query_start = min(last_week_start, last_month_start)
+        
+        # 单次查询：获取最近两个月所有订单
+        all_orders = self.session.exec(
             select(Order).where(
                 Order.merchant_id == merchant_id,
-                Order.created_at >= today_start
+                Order.created_at >= query_start
             )
         ).all()
+        
+        # 内存中按时间段分组统计
+        today_orders = [o for o in all_orders if o.created_at >= today_start]
+        yesterday_orders = [o for o in all_orders if yesterday_start <= o.created_at < today_start]
+        week_orders = [o for o in all_orders if o.created_at >= week_start]
+        last_week_orders = [o for o in all_orders if last_week_start <= o.created_at < week_start]
+        month_orders = [o for o in all_orders if o.created_at >= month_start]
+        last_month_orders = [o for o in all_orders if last_month_start <= o.created_at < month_start]
+        
+        # 计算统计值
         today_amount = sum(order.total_amount for order in today_orders)
         today_count = len(today_orders)
-        
-        # 昨日统计（用于计算同比）
-        yesterday_start = today_start - timedelta(days=1)
-        yesterday_orders = self.session.exec(
-            select(Order).where(
-                Order.merchant_id == merchant_id,
-                Order.created_at >= yesterday_start,
-                Order.created_at < today_start
-            )
-        ).all()
         yesterday_amount = sum(order.total_amount for order in yesterday_orders)
         
-        # 今日同比增长率
+        week_amount = sum(order.total_amount for order in week_orders)
+        week_count = len(week_orders)
+        last_week_amount = sum(order.total_amount for order in last_week_orders)
+        
+        month_amount = sum(order.total_amount for order in month_orders)
+        month_count = len(month_orders)
+        last_month_amount = sum(order.total_amount for order in last_month_orders)
+        
+        # 计算同比增长率
         today_growth = 0.0
         if yesterday_amount > 0:
             today_growth = round((today_amount - yesterday_amount) / yesterday_amount * 100, 2)
         elif today_amount > 0:
             today_growth = 100.0
         
-        # 本周统计（周一到今天）
-        week_start = today_start - timedelta(days=now.weekday())
-        week_orders = self.session.exec(
-            select(Order).where(
-                Order.merchant_id == merchant_id,
-                Order.created_at >= week_start
-            )
-        ).all()
-        week_amount = sum(order.total_amount for order in week_orders)
-        week_count = len(week_orders)
-        
-        # 上周统计（用于计算同比）
-        last_week_start = week_start - timedelta(days=7)
-        last_week_orders = self.session.exec(
-            select(Order).where(
-                Order.merchant_id == merchant_id,
-                Order.created_at >= last_week_start,
-                Order.created_at < week_start
-            )
-        ).all()
-        last_week_amount = sum(order.total_amount for order in last_week_orders)
-        
-        # 本周同比增长率
         week_growth = 0.0
         if last_week_amount > 0:
             week_growth = round((week_amount - last_week_amount) / last_week_amount * 100, 2)
         elif week_amount > 0:
             week_growth = 100.0
         
-        # 本月统计
-        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        month_orders = self.session.exec(
-            select(Order).where(
-                Order.merchant_id == merchant_id,
-                Order.created_at >= month_start
-            )
-        ).all()
-        month_amount = sum(order.total_amount for order in month_orders)
-        month_count = len(month_orders)
-        
-        # 上月统计（用于计算同比）
-        last_month_start = (month_start - timedelta(days=1)).replace(day=1)
-        last_month_orders = self.session.exec(
-            select(Order).where(
-                Order.merchant_id == merchant_id,
-                Order.created_at >= last_month_start,
-                Order.created_at < month_start
-            )
-        ).all()
-        last_month_amount = sum(order.total_amount for order in last_month_orders)
-        
-        # 本月同比增长率
         month_growth = 0.0
         if last_month_amount > 0:
             month_growth = round((month_amount - last_month_amount) / last_month_amount * 100, 2)
@@ -376,7 +442,11 @@ class OrderService:
         self.session = session
     
     def get_orders(self, merchant_id: int, date: Optional[str] = None) -> List[dict]:
-        """获取订单列表"""
+        """
+        获取订单列表
+        
+        性能优化（#5）：批量查询订单明细，避免N+1问题
+        """
         query = select(Order).where(Order.merchant_id == merchant_id)
         
         if date:
@@ -395,13 +465,24 @@ class OrderService:
         query = query.order_by(col(Order.created_at).desc())
         orders = self.session.exec(query).all()
         
-        # 获取订单明细
+        # 性能优化：批量查询所有订单的明细，避免N+1问题
+        if not orders:
+            return []
+        
+        order_ids = [o.id for o in orders]
+        all_items = self.session.exec(
+            select(OrderItem).where(col(OrderItem.order_id).in_(order_ids))
+        ).all()
+        
+        # 在内存中组装订单明细
+        items_by_order = defaultdict(list)
+        for item in all_items:
+            items_by_order[item.order_id].append(item)
+        
+        # 构建响应
         result = []
         for order in orders:
-            items = self.session.exec(
-                select(OrderItem).where(OrderItem.order_id == order.id)
-            ).all()
-            
+            items = items_by_order.get(order.id, [])
             order_dict = {
                 "id": order.id,
                 "customer_name": order.customer_name,
@@ -427,7 +508,11 @@ class OrderService:
         return result
     
     def update_order_status(self, merchant_id: int, order_id: int, status: str) -> Optional[dict]:
-        """更新订单状态（仅允许更新自己店铺的订单）"""
+        """
+        更新订单状态（仅允许更新自己店铺的订单）
+        
+        安全修复（#7）：添加订单状态流转规则验证
+        """
         # 查询订单，确保属于当前商家
         order = self.session.exec(
             select(Order).where(
@@ -442,6 +527,10 @@ class OrderService:
         # 验证状态值
         if status not in VALID_ORDER_STATUS:
             raise ValueError(f"无效的订单状态，有效状态：{', '.join(VALID_ORDER_STATUS)}")
+        
+        # 安全修复：验证状态流转是否合法
+        if status not in VALID_STATUS_TRANSITIONS.get(order.status, []):
+            raise ValueError(f"订单状态不能从 {order.status} 变为 {status}")
         
         # 更新状态
         order.status = status

@@ -1,8 +1,9 @@
 """
 Merchant Routes - 商家端路由定义
 """
+import os
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel import Session
 
 from config.database import get_session
@@ -35,20 +36,33 @@ router = APIRouter(prefix="/api/merchant", tags=["商家端"])
 # ============== 认证相关 API ==============
 
 @router.post("/login", response_model=LoginResponse)
-def login(request: LoginRequest, session: Session = Depends(get_session)):
+def login(request: LoginRequest, http_request: Request, session: Session = Depends(get_session)):
     """
     商家登录
     
     支持两种登录方式：
     1. 微信授权登录：提供 code 参数
     2. 手机号+验证码登录：提供 phone 和 verify_code 参数
+    
+    安全修复：
+    - 登录限流：每IP每分钟最多5次尝试（Critical #3）
+    - 微信授权：演示模式需启用环境变量（Critical #1）
+    - 自动创建：默认禁止，需启用环境变量（Critical #2）
     """
+    # 获取客户端 IP（支持代理场景）
+    client_ip = http_request.headers.get("X-Forwarded-For", "")
+    if client_ip:
+        client_ip = client_ip.split(",")[0].strip()
+    else:
+        client_ip = http_request.client.host if http_request.client else "unknown"
+    
     service = AuthService(session)
     try:
         result = service.login(
             code=request.code,
             phone=request.phone,
-            verify_code=request.verify_code
+            verify_code=request.verify_code,
+            client_ip=client_ip
         )
         return LoginResponse(
             token=result["token"],
@@ -56,10 +70,20 @@ def login(request: LoginRequest, session: Session = Depends(get_session)):
         )
     except ValueError as e:
         error_msg = str(e)
-        # 服务未启用返回 503，其他业务错误返回 400
-        if "暂未开放" in error_msg or "暂未配置" in error_msg:
+        # 服务未启用返回 503，限流返回 429，其他业务错误返回 400
+        if "暂未开放" in error_msg or "暂未配置" in error_msg or "生产环境必须" in error_msg:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=error_msg
+            )
+        if "过于频繁" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=error_msg
+            )
+        if "商家账号不存在" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail=error_msg
             )
         raise HTTPException(

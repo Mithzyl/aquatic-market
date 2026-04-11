@@ -1,6 +1,12 @@
 """
 商家端 API 测试
 测试商家登录、商品管理、品类管理、收益统计、商家信息等 API
+
+安全修复说明：
+- Critical #1: 微信授权登录需要 WECHAT_DEMO_MODE=true
+- Critical #2: 自动创建商家需要 AUTO_CREATE_MERCHANT=true
+- Critical #3: 登录限流已启用
+- #7: 订单状态流转规则已启用
 """
 import pytest
 import os
@@ -11,6 +17,12 @@ from sqlmodel import SQLModel, create_engine, Session, select
 
 # 设置测试环境变量（使用 JWT_SECRET）
 os.environ["JWT_SECRET"] = "test-secret-key-for-jwt-testing-min-32-chars"
+
+# 安全修复：设置演示模式环境变量
+os.environ["WECHAT_DEMO_MODE"] = "true"
+os.environ["AUTO_CREATE_MERCHANT"] = "true"
+os.environ["VERIFY_CODE_DEMO_MODE"] = "true"
+os.environ["DEMO_VERIFY_CODE"] = "123456"
 
 # 导入模块
 from models import Merchant, Product, Order, OrderItem, Category
@@ -50,6 +62,10 @@ def setup_database():
 @pytest.fixture
 def clean_session():
     """每个测试前清理数据库"""
+    # 重置登录限流器
+    from services.merchant_service import reset_login_rate_limit
+    reset_login_rate_limit()
+    
     with Session(test_engine) as session:
         # 删除所有数据
         for item in session.exec(select(OrderItem)).all():
@@ -168,40 +184,43 @@ class TestAdminLogin:
         assert merchant1_id == merchant2_id
     
     def test_login_with_phone_success(self, client):
-        """测试手机号验证码登录 - 安全修复后返回 503（服务未启用）"""
-        # P0 安全修复：生产模式下验证码登录服务未启用
-        # 测试期望返回 503 Service Unavailable
+        """测试手机号验证码登录 - 演示模式下返回 200"""
+        # 安全修复：VERIFY_CODE_DEMO_MODE=true 时允许演示登录
+        # 演示模式下使用正确的验证码可以登录成功
         response = client.post("/api/merchant/login", json={
             "phone": "13800138888",
-            "verify_code": "123456"
+            "verify_code": "123456"  # DEMO_VERIFY_CODE
         })
         
-        assert response.status_code == 503
-        assert "验证码登录服务暂未开放" in response.json()["detail"]
+        assert response.status_code == 200
+        data = response.json()
+        assert "token" in data
+        assert "merchant" in data
     
     def test_login_with_phone_create_new_merchant(self, client):
-        """测试手机号验证码登录 - 安全修复后返回 503（服务未启用）"""
-        # P0 安全修复：生产模式下验证码登录服务未启用
-        # 测试期望返回 503 Service Unavailable
+        """测试手机号验证码登录自动创建新商家 - 演示模式"""
+        # 安全修复：AUTO_CREATE_MERCHANT=true 时允许自动创建
         response = client.post("/api/merchant/login", json={
             "phone": "13800139999",
             "verify_code": "123456"
         })
         
-        assert response.status_code == 503
-        assert "验证码登录服务暂未开放" in response.json()["detail"]
+        assert response.status_code == 200
+        data = response.json()
+        assert "token" in data
+        assert "merchant" in data
+        assert data["merchant"]["name"] == "新商家"
     
     def test_login_with_invalid_verify_code(self, client):
-        """测试错误的验证码 - 安全修复后返回 503（服务未启用）"""
-        # P0 安全修复：生产模式下验证码登录服务未启用
-        # 无论验证码是否正确，都返回 503 Service Unavailable
+        """测试错误的验证码 - 演示模式下返回 400"""
+        # 演示模式下验证码错误会返回 400
         response = client.post("/api/merchant/login", json={
             "phone": "13800137777",
             "verify_code": "000000"  # 错误验证码
         })
         
-        assert response.status_code == 503
-        assert "验证码登录服务暂未开放" in response.json()["detail"]
+        assert response.status_code == 400
+        assert "验证码错误" in response.json()["detail"]
     
     def test_login_without_credentials(self, client):
         """测试缺少登录凭证"""
@@ -665,9 +684,9 @@ class TestOrderStatusUpdate:
         if response.status_code != 200:
             # 如果失败，手动创建订单
             with Session(test_engine) as session:
-                # 获取商家ID
+                # 获取商家ID - 安全修复后 openid 格式为 demo_{code}
                 merchant = session.exec(
-                    select(Merchant).where(Merchant.wechat_openid == "test_merchant_code_001")
+                    select(Merchant).where(Merchant.wechat_openid == "demo_test_merchant_code_001")
                 ).first()
                 
                 order = Order(
@@ -711,9 +730,22 @@ class TestOrderStatusUpdate:
         assert data["id"] == order_id
     
     def test_update_order_status_to_ready(self, client, auth_header, test_order_with_items):
-        """测试更新订单状态为 ready"""
+        """测试更新订单状态为 ready - 需要先经过 confirmed"""
         order_id = test_order_with_items["id"]
         
+        # 安全修复 #7：状态流转规则验证
+        # pending -> confirmed -> ready
+        
+        # 第一步：pending -> confirmed
+        response1 = client.put(
+            f"/api/merchant/orders/{order_id}/status",
+            json={"status": "confirmed"},
+            headers=auth_header
+        )
+        assert response1.status_code == 200
+        assert response1.json()["status"] == "confirmed"
+        
+        # 第二步：confirmed -> ready
         response = client.put(
             f"/api/merchant/orders/{order_id}/status",
             json={"status": "ready"},
@@ -724,9 +756,29 @@ class TestOrderStatusUpdate:
         assert response.json()["status"] == "ready"
     
     def test_update_order_status_to_completed(self, client, auth_header, test_order_with_items):
-        """测试更新订单状态为 completed"""
+        """测试更新订单状态为 completed - 需要先经过 confirmed 和 ready"""
         order_id = test_order_with_items["id"]
         
+        # 安全修复 #7：状态流转规则验证
+        # pending -> confirmed -> ready -> completed
+        
+        # 第一步：pending -> confirmed
+        response1 = client.put(
+            f"/api/merchant/orders/{order_id}/status",
+            json={"status": "confirmed"},
+            headers=auth_header
+        )
+        assert response1.status_code == 200
+        
+        # 第二步：confirmed -> ready
+        response2 = client.put(
+            f"/api/merchant/orders/{order_id}/status",
+            json={"status": "ready"},
+            headers=auth_header
+        )
+        assert response2.status_code == 200
+        
+        # 第三步：ready -> completed
         response = client.put(
             f"/api/merchant/orders/{order_id}/status",
             json={"status": "completed"},
@@ -777,12 +829,14 @@ class TestOrderStatusUpdate:
         """测试更新其他商家订单状态（数据隔离）"""
         order_id = test_order_with_items["id"]
         
+        # 其他商家尝试更新订单状态，应该返回 404（订单不存在或不属于当前商家）
         response = client.put(
             f"/api/merchant/orders/{order_id}/status",
             json={"status": "confirmed"},
             headers=other_auth_header
         )
         
+        # 数据隔离验证：其他商家无法找到该订单
         assert response.status_code == 404
         assert "订单不存在" in response.json()["detail"]
     
@@ -823,6 +877,53 @@ class TestOrderStatusUpdate:
         )
         
         assert response.status_code == 422  # Validation error
+    
+    def test_order_status_transition_invalid(self, client, auth_header, test_order_with_items):
+        """测试订单状态流转规则 - 非法跳转（#7）"""
+        order_id = test_order_with_items["id"]
+        
+        # pending -> completed 是非法的（必须经过 confirmed 和 ready）
+        response = client.put(
+            f"/api/merchant/orders/{order_id}/status",
+            json={"status": "completed"},
+            headers=auth_header
+        )
+        
+        assert response.status_code == 400
+        assert "不能从" in response.json()["detail"]
+    
+    def test_order_status_transition_from_completed_blocked(self, client, auth_header, test_order_with_items):
+        """测试从 completed 状态无法再转换（#7）"""
+        order_id = test_order_with_items["id"]
+        
+        # 先按正确流程转到 completed
+        client.put(f"/api/merchant/orders/{order_id}/status", json={"status": "confirmed"}, headers=auth_header)
+        client.put(f"/api/merchant/orders/{order_id}/status", json={"status": "ready"}, headers=auth_header)
+        client.put(f"/api/merchant/orders/{order_id}/status", json={"status": "completed"}, headers=auth_header)
+        
+        # 从 completed 无法再转换到任何状态
+        response = client.put(
+            f"/api/merchant/orders/{order_id}/status",
+            json={"status": "cancelled"},
+            headers=auth_header
+        )
+        
+        assert response.status_code == 400
+        assert "不能从 completed" in response.json()["detail"]
+    
+    def test_order_cancellation_allowed_from_pending(self, client, auth_header, test_order_with_items):
+        """测试从 pending 状态可以取消（#7）"""
+        order_id = test_order_with_items["id"]
+        
+        # pending -> cancelled 是合法的
+        response = client.put(
+            f"/api/merchant/orders/{order_id}/status",
+            json={"status": "cancelled"},
+            headers=auth_header
+        )
+        
+        assert response.status_code == 200
+        assert response.json()["status"] == "cancelled"
 
 
 # ============== 数据隔离综合测试 ==============
@@ -893,6 +994,28 @@ class TestDataIsolation:
         
         # 两个商家的信息应该是不同的
         assert merchant1["id"] != merchant2["id"]
+
+
+# ============== 安全修复测试 ==============
+
+class TestSecurityFixes:
+    """安全修复测试"""
+    
+    def test_login_rate_limit(self, client):
+        """测试登录限流（Critical #3）"""
+        # 重置限流器
+        from services.merchant_service import reset_login_rate_limit
+        reset_login_rate_limit()
+        
+        # 连续5次登录尝试应该成功
+        for i in range(5):
+            response = client.post("/api/merchant/login", json={"code": f"rate_limit_test_{i}"})
+            assert response.status_code == 200
+        
+        # 第6次应该被限流（返回 429）
+        response = client.post("/api/merchant/login", json={"code": "rate_limit_blocked"})
+        assert response.status_code == 429
+        assert "过于频繁" in response.json()["detail"]
 
 
 # ============== Token 验证测试 ==============
