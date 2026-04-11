@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../App'
-import { retailCategories, retailProducts } from '../data/products'
+import { retailCategories } from '../data/products'
+import { getProducts } from '../api/products'
 
 const categoryStories = {
   shrimp: {
@@ -91,6 +92,8 @@ function CategoryIcon({ categoryId, active = false, compact = false }) {
 }
 
 const PriceQuery = () => {
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
   const [activeCategoryId, setActiveCategoryId] = useState(retailCategories[0].id)
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddedToast, setShowAddedToast] = useState(false)
@@ -104,6 +107,20 @@ const PriceQuery = () => {
   const scrollReleaseTimerRef = useRef(null)
   const summaryHideTimerRef = useRef(null)
   const cartPreviewRef = useRef(null)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getProducts()
+        setProducts(data)
+      } catch (error) {
+        console.error('Failed to fetch products:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
 
   useEffect(() => {
     if (!showAddedToast) return undefined
@@ -165,16 +182,16 @@ const PriceQuery = () => {
   const keywordFilteredProducts = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase()
 
-    return retailProducts.filter((product) => {
+    return products.filter((product) => {
       if (!normalizedQuery) return true
 
       return (
         product.name.toLowerCase().includes(normalizedQuery) ||
-        product.categoryName.toLowerCase().includes(normalizedQuery) ||
+        (product.category_name && product.category_name.toLowerCase().includes(normalizedQuery)) ||
         product.description.toLowerCase().includes(normalizedQuery)
       )
     })
-  }, [searchQuery])
+  }, [searchQuery, products])
 
   const groupedProducts = useMemo(
     () =>
@@ -457,7 +474,7 @@ const PriceQuery = () => {
                                     <div className="flex h-[56px] w-full flex-col items-center justify-center text-center">
                                       <div className="flex items-baseline justify-center gap-1">
                                         <span className="text-[28px] font-bold leading-none text-[#e0682e]">¥{product.price}</span>
-                                        <span className="text-[15px] text-[#b5a18a] line-through">¥{product.originalPrice}</span>
+                                        <span className="text-[15px] text-[#b5a18a] line-through">¥{product.original_price}</span>
                                       </div>
                                     </div>
                                   </div>
@@ -475,7 +492,7 @@ const PriceQuery = () => {
                                       </div>
 
                                       <div className="mt-2 flex flex-wrap gap-1.5">
-                                        {product.badges.map((badge) => (
+                                        {(product.badges || []).map((badge) => (
                                           <span
                                             key={badge}
                                             className="rounded-full bg-[#fff5ea] px-2 py-1 text-[10px] font-medium text-[#d67635]"

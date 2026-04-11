@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useCart } from '../App'
-import { retailProductsById } from '../data/products'
+import { getProductById } from '../api/products'
 
 const fallbackImage = 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?w=1200&h=1200&fit=crop'
 
@@ -37,18 +37,12 @@ function ProductDetail() {
     const fetchProduct = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`http://localhost:8000/products/${id}`)
+        const data = await getProductById(id)
         if (!mounted) return
-
-        if (response.ok) {
-          const data = await response.json()
-          setProduct(data)
-        } else {
-          setProduct(retailProductsById[id] || retailProductsById[1])
-        }
+        setProduct(data)
       } catch (error) {
         if (mounted) {
-          setProduct(retailProductsById[id] || retailProductsById[1])
+          setProduct(null)
         }
       } finally {
         if (mounted) {
@@ -199,7 +193,7 @@ function ProductDetail() {
           <div className="absolute bottom-0 left-0 right-0 px-5 pb-6">
             <div className="flex flex-wrap items-center gap-2 text-white">
               <span className="rounded-full bg-[rgba(255,244,230,0.18)] px-3 py-1 text-xs font-semibold backdrop-blur">
-                {product.categoryName || '海鲜鲜选'}
+                {product.category_name || '海鲜鲜选'}
               </span>
               {product.tag && (
                 <span className="rounded-full bg-[rgba(231,122,63,0.9)] px-3 py-1 text-xs font-semibold text-white shadow-[0_10px_20px_rgba(231,122,63,0.22)]">
@@ -229,8 +223,8 @@ function ProductDetail() {
                 <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#c88d55]">今日鲜选</div>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className="text-[38px] font-bold leading-none text-[#df6f33]">¥{product.price}</span>
-                  {product.originalPrice && (
-                    <span className="text-base text-[#b49f88] line-through">¥{product.originalPrice}</span>
+                  {product.original_price && (
+                    <span className="text-base text-[#b49f88] line-through">¥{product.original_price}</span>
                   )}
                 </div>
               </div>

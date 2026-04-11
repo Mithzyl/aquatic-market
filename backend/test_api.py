@@ -27,11 +27,9 @@ def get_test_session():
         yield session
 
 
-# 覆盖依赖
-from admin_routes import get_session as admin_get_session
-from main import get_session as main_get_session
-app.dependency_overrides[admin_get_session] = get_test_session
-app.dependency_overrides[main_get_session] = get_test_session
+# 覆盖依赖 - 使用统一的 get_session
+from config.database import get_session as config_get_session
+app.dependency_overrides[config_get_session] = get_test_session
 
 
 @pytest.fixture(scope="module", autouse=True)

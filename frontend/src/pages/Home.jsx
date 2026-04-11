@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { retailCategories, retailProducts } from '../data/products'
+import { retailCategories } from '../data/products'
+import { getProducts } from '../api/products'
 
 // CategoryIcon 组件（复用 PriceQuery.jsx 的实现）
 function CategoryIcon({ categoryId }) {
@@ -53,9 +54,6 @@ function CategoryIcon({ categoryId }) {
   return null
 }
 
-const heroProduct = retailProducts[0]
-const showcaseProducts = retailProducts.slice(0, 3)
-
 const serviceHighlights = [
   { title: '门店现挑', description: '鲜活现捞，支持代处理和冷链打包。', stat: '30 min' },
   { title: '今日早市', description: '上午档到货批次更新，价格更适合家用。', stat: '9 折起' },
@@ -63,6 +61,34 @@ const serviceHighlights = [
 ]
 
 const Home = () => {
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getProducts()
+        setProducts(data)
+      } catch (error) {
+        console.error('Failed to fetch products:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
+
+  const heroProduct = products[0] || null
+  const showcaseProducts = products.slice(0, 3)
+
+  if (loading || !heroProduct) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #f6efe4 0%, #f8f4ee 26%, #fbf8f3 60%, #f2ebe0 100%)' }}>
+        <p className="text-[#7d6a53]">加载中...</p>
+      </div>
+    )
+  }
+
   return (
     <div
       className="min-h-screen"
@@ -205,13 +231,13 @@ const Home = () => {
                     <span className="rounded-full bg-[#fff1e5] px-2 py-1 text-[10px] font-semibold text-[#d67635]">
                       {product.tag}
                     </span>
-                    <span className="text-[11px] text-[#8f7658]">{product.categoryName}</span>
+                    <span className="text-[11px] text-[#8f7658]">{product.category_name}</span>
                   </div>
                   <h3 className="mt-2 text-lg font-semibold text-[#2c241c]">{product.name}</h3>
                   <p className="mt-1 text-xs leading-5 text-[#7d6a53]">{product.description}</p>
                   <div className="mt-3 flex items-baseline gap-2">
                     <span className="text-xl font-bold text-[#e0682e]">¥{product.price}</span>
-                    <span className="text-xs text-[#b5a18a] line-through">¥{product.originalPrice}</span>
+                    <span className="text-xs text-[#b5a18a] line-through">¥{product.original_price}</span>
                   </div>
                 </div>
               </Link>
