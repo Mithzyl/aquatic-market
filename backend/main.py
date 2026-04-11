@@ -15,7 +15,7 @@ from config.database import create_db_and_tables
 # 导入路由
 from routes.product_routes import router as product_router
 from routes.order_routes import router as order_router
-from admin_routes import router as admin_router
+from routes.merchant_routes import router as merchant_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -45,7 +45,7 @@ def on_startup():
 # 注册路由
 app.include_router(product_router)
 app.include_router(order_router)
-app.include_router(admin_router)
+app.include_router(merchant_router)
 
 
 # ============== 根路径 ==============
