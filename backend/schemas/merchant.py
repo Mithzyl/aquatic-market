@@ -89,8 +89,9 @@ class ProductResponse(BaseModel):
 
 
 class CategoryResponse(BaseModel):
-    """品类响应"""
+    """品类响应 - 商家端"""
     id: int
+    slug: str
     name: str
     icon: str
     order: int

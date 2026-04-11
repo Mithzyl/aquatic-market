@@ -6,6 +6,17 @@ from datetime import datetime
 from pydantic import BaseModel, Field as PydanticField
 
 
+class CategoryResponse(BaseModel):
+    """分类响应模型 - 用户端，与前端 retailCategories 结构兼容"""
+    id: str  # 使用 slug 作为字符串 id，与前端兼容
+    name: str
+    icon: str
+    order: int
+    
+    class Config:
+        from_attributes = True
+
+
 class ProductResponse(BaseModel):
     """商品响应模型 - 与前端字段命名一致"""
     id: int

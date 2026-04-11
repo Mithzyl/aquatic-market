@@ -1,7 +1,7 @@
 """
 Schemas 模块 - 请求/响应数据结构定义
 """
-from .product import ProductResponse, ProductCreate, ProductUpdate
+from .product import ProductResponse, ProductCreate, ProductUpdate, CategoryResponse
 from .order import OrderCreateRequest, OrderItemRequest, OrderResponse
 from .merchant import (
     LoginRequest,
@@ -11,7 +11,7 @@ from .merchant import (
     ProductUpdate,
     ProductStatusUpdate,
     ProductResponse,
-    CategoryResponse,
+    CategoryResponse as MerchantCategoryResponse,
     RevenueStats,
     MerchantUpdate,
     OrderStatusUpdate,
@@ -22,6 +22,7 @@ __all__ = [
     "ProductResponse",
     "ProductCreate",
     "ProductUpdate",
+    "CategoryResponse",
     # Order
     "OrderCreateRequest",
     "OrderItemRequest",
@@ -31,7 +32,7 @@ __all__ = [
     "LoginResponse",
     "MerchantInfo",
     "ProductStatusUpdate",
-    "CategoryResponse",
+    "MerchantCategoryResponse",
     "RevenueStats",
     "MerchantUpdate",
     "OrderStatusUpdate",

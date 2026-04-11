@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getProducts } from '../../api/admin'
-import { retailCategories } from '../../data/products'
+import { getCategories } from '../../api/products'
 
 // 品类图标组件
 function CategoryIcon({ categoryId, className = 'h-10 w-10' }) {
@@ -180,8 +180,11 @@ function AdminCategories() {
     setError(null)
 
     try {
-      // 获取商品列表
-      const response = await getProducts()
+      // 获取商品列表和品类列表
+      const [response, categoriesData] = await Promise.all([
+        getProducts(),
+        getCategories()
+      ])
       const products = response.products || response || []
 
       // 统计每个品类的商品数量
@@ -195,8 +198,8 @@ function AdminCategories() {
 
       setProductCounts(counts)
 
-      // 合并品类信息：使用预定义的品类列表，并添加商品数量
-      const categoriesWithCounts = retailCategories.map(cat => ({
+      // 合并品类信息：使用 API 返回的品类列表，并添加商品数量
+      const categoriesWithCounts = categoriesData.map(cat => ({
         ...cat,
         productCount: counts[cat.id] || 0
       }))

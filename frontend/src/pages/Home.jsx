@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { retailCategories } from '../data/products'
-import { getProducts } from '../api/products'
+import { getProducts, getCategories } from '../api/products'
 
 // CategoryIcon 组件（复用 PriceQuery.jsx 的实现）
 function CategoryIcon({ categoryId }) {
@@ -62,20 +61,25 @@ const serviceHighlights = [
 
 const Home = () => {
   const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getProducts()
-        setProducts(data)
+        const [productsData, categoriesData] = await Promise.all([
+          getProducts(),
+          getCategories()
+        ])
+        setProducts(productsData)
+        setCategories(categoriesData)
       } catch (error) {
-        console.error('Failed to fetch products:', error)
+        console.error('Failed to fetch data:', error)
       } finally {
         setLoading(false)
       }
     }
-    fetchProducts()
+    fetchData()
   }, [])
 
   const heroProduct = products[0] || null
@@ -186,7 +190,7 @@ const Home = () => {
           </div>
 
           <div className="mt-4 grid grid-cols-5 gap-2">
-            {retailCategories.map((category) => (
+            {categories.map((category) => (
               <Link
                 key={category.id}
                 to="/price-query"
