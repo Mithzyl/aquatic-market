@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../App'
-import { retailCategories } from '../data/products'
-import { getProducts } from '../api/products'
+import { getProducts, getCategories } from '../api/products'
 
 const categoryStories = {
   shrimp: {
@@ -93,8 +92,9 @@ function CategoryIcon({ categoryId, active = false, compact = false }) {
 
 const PriceQuery = () => {
   const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
-  const [activeCategoryId, setActiveCategoryId] = useState(retailCategories[0].id)
+  const [activeCategoryId, setActiveCategoryId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddedToast, setShowAddedToast] = useState(false)
   const [showSummaryBar, setShowSummaryBar] = useState(false)
@@ -109,17 +109,25 @@ const PriceQuery = () => {
   const cartPreviewRef = useRef(null)
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getProducts()
-        setProducts(data)
+        const [productsData, categoriesData] = await Promise.all([
+          getProducts(),
+          getCategories()
+        ])
+        setProducts(productsData)
+        setCategories(categoriesData)
+        // 设置默认选中的分类
+        if (categoriesData.length > 0) {
+          setActiveCategoryId(categoriesData[0].id)
+        }
       } catch (error) {
-        console.error('Failed to fetch products:', error)
+        console.error('Failed to fetch data:', error)
       } finally {
         setLoading(false)
       }
     }
-    fetchProducts()
+    fetchData()
   }, [])
 
   useEffect(() => {
@@ -195,28 +203,28 @@ const PriceQuery = () => {
 
   const groupedProducts = useMemo(
     () =>
-      retailCategories
+      categories
         .map((category) => ({
           ...category,
           products: keywordFilteredProducts.filter((product) => product.category === category.id)
         }))
         .filter((category) => category.products.length > 0),
-    [keywordFilteredProducts]
+    [keywordFilteredProducts, categories]
   )
 
   useEffect(() => {
-    if (!groupedProducts.length) return
+    if (!groupedProducts.length || !categories.length) return
 
     const hasActiveCategory = groupedProducts.some((category) => category.id === activeCategoryId)
-    if (!hasActiveCategory) {
+    if (!hasActiveCategory && groupedProducts.length > 0) {
       setActiveCategoryId(groupedProducts[0].id)
     }
-  }, [activeCategoryId, groupedProducts])
+  }, [activeCategoryId, groupedProducts, categories])
 
   const activeCategory =
     groupedProducts.find((category) => category.id === activeCategoryId) ||
-    retailCategories.find((category) => category.id === activeCategoryId) ||
-    retailCategories[0]
+    categories.find((category) => category.id === activeCategoryId) ||
+    categories[0]
 
   const activeStory = categoryStories[activeCategory.id] || categoryStories.shrimp
 
@@ -358,7 +366,7 @@ const PriceQuery = () => {
         <div className="flex min-h-0 flex-1 overflow-hidden rounded-[30px] border border-[#eadfce] bg-[#fffaf3] shadow-[0_22px_48px_rgba(107,75,36,0.08)]">
           <aside className="w-[108px] border-r border-[#eadfce] bg-[#f5ede1]">
             <div className="flex h-full flex-col gap-2 overflow-y-auto px-2 py-4 scrollbar-hide">
-              {retailCategories.map((category) => {
+              {categories.map((category) => {
                 const isActive = category.id === activeCategoryId
                 const categoryCount = getCategoryCount(category.id)
 

@@ -4,7 +4,7 @@ Product Service - 商品业务逻辑层
 import json
 from typing import List, Optional
 from sqlmodel import Session, select
-from models import Product
+from models import Product, Category
 
 
 class ProductService:
@@ -84,3 +84,36 @@ class ProductService:
             "badges": badges_list,
             "is_active": product.is_active
         }
+
+
+class CategoryService:
+    """分类服务类 - 用户端"""
+    
+    def __init__(self, session: Session):
+        self.session = session
+    
+    def get_categories(self, merchant_id: Optional[int] = None) -> List[dict]:
+        """
+        获取分类列表
+        
+        Args:
+            merchant_id: 可选的商家ID筛选
+            
+        Returns:
+            分类列表，id 使用 slug 字段（字符串），与前端 retailCategories 兼容
+        """
+        query = select(Category).order_by(Category.order)
+        if merchant_id:
+            query = query.where(Category.merchant_id == merchant_id)
+        
+        categories = self.session.exec(query).all()
+        
+        return [
+            {
+                "id": cat.slug or str(cat.id),  # 使用 slug 作为字符串 id，兼容前端
+                "name": cat.name,
+                "icon": cat.icon,
+                "order": cat.order
+            }
+            for cat in categories
+        ]

@@ -72,6 +72,7 @@ class Category(SQLModel, table=True):
     """品类模型 - 支持商家数据隔离"""
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     merchant_id: int = Field(default=1, foreign_key="merchant.id", index=True)
+    slug: str = Field(default="", max_length=50, index=True)  # 字符串标识符，如 'shrimp'
     name: str = Field(..., max_length=50)
     icon: str = Field(default="", max_length=100)
     order: int = Field(default=0, ge=0)
