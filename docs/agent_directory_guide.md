@@ -40,13 +40,26 @@
   - 读取目录与命令说明
   - 追加新的协作文档
 
-### 原型目录
-- 路径: `/Users/mith/Desktop/project/sales/原型`
-- 用途: 设计参考图、原型截图、视觉对照材料。
+### 测试目录
+- 路径: `/Users/mith/Desktop/project/sales/tests`
+- 用途: 测试脚本、测试证据、测试报告。
+- 适用岗位: `QA`、`DevOps`、`Visual QA`、`UAT`
+- 子目录:
+  - `tests/e2e/scripts/`: E2E 测试脚本
+  - `tests/e2e/evidence/`: E2E 测试证据
+  - `tests/visual_qa/scripts/`: Visual QA 测试脚本
+  - `tests/visual_qa/evidence/`: Visual QA 测试证据
+  - `tests/debug/`: 调试脚本
+  - `tests/reports/`: 测试报告
+
+### 归档目录
+- 路径: `/Users/mith/Desktop/project/sales/archives`
+- 用途: 原型、历史产物、压缩包归档。
 - 适用岗位: `FE`、`Visual QA`、`UAT`
-- 常用操作:
-  - 对照视觉稿
-  - 对比浏览器截图是否偏差明显
+- 子目录:
+  - `archives/prototypes/`: 设计原型图片（原 原型/ 目录）
+  - `archives/dogfood-output/`: Dogfood 测试输出
+  - `archives/packages/`: 压缩包文件
 
 ## 推荐命令矩阵
 

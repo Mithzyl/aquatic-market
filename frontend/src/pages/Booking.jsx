@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../App'
+import { createOrder } from '../api/orders'
 
 function StepperIcon({ type }) {
   if (type === 'minus') {
@@ -60,23 +61,20 @@ function Booking() {
     setSubmitting(true)
     try {
       const orderData = {
+        user_id: 1,
+        merchant_id: 1,
         customer_name: customerName,
         customer_phone: customerPhone,
         pickup_time: pickupTime,
-        items: cartItems,
+        items: cartItems.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity
+        })),
         total_amount: totalAmount,
         status: 'pending'
       }
 
-      const response = await fetch('http://localhost:8000/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
-      })
-
-      if (!response.ok) {
-        throw new Error('submit failed')
-      }
+      await createOrder(orderData)
 
       setShowSuccess(true)
       clearCart()

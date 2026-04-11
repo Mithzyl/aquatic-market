@@ -1,63 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getOrdersByUserId } from '../api/orders'
 
 const merchantContact = {
   phoneLabel: '400-820-5520',
   href: 'tel:4008205520'
 }
-
-const mockOrders = [
-  {
-    id: 'DD2026040201',
-    items: [
-      { name: '三文鱼刺身', quantity: 2, price: 88 },
-      { name: '鲜活龙虾', quantity: 1, price: 198 }
-    ],
-    customerName: '张三',
-    customerPhone: '138****8000',
-    pickupTime: '2026-04-03 10:00',
-    totalAmount: 374,
-    status: 'pending',
-    createdAt: '2026-04-02 09:00'
-  },
-  {
-    id: 'DD2026040202',
-    items: [
-      { name: '鲍鱼', quantity: 3, price: 68 }
-    ],
-    customerName: '李四',
-    customerPhone: '139****9000',
-    pickupTime: '2026-04-03 14:00',
-    totalAmount: 204,
-    status: 'preparing',
-    createdAt: '2026-04-02 10:00'
-  },
-  {
-    id: 'DD2026040203',
-    items: [
-      { name: '帝王蟹', quantity: 1, price: 398 },
-      { name: '扇贝', quantity: 2, price: 38 }
-    ],
-    customerName: '王五',
-    customerPhone: '137****7000',
-    pickupTime: '2026-04-02 16:00',
-    totalAmount: 474,
-    status: 'completed',
-    createdAt: '2026-04-02 11:00'
-  },
-  {
-    id: 'DD2026040204',
-    items: [
-      { name: '金枪鱼', quantity: 1, price: 128 }
-    ],
-    customerName: '赵六',
-    customerPhone: '136****6000',
-    pickupTime: '2026-04-01 18:00',
-    totalAmount: 128,
-    status: 'completed',
-    createdAt: '2026-04-01 15:00'
-  }
-]
 
 const filterTabs = [
   { key: 'all', label: '全部' },
@@ -229,7 +177,7 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
           <div className="min-w-[132px] text-right">
             <div className="text-[11px] uppercase tracking-[0.16em] text-[#aa9277]">{getOrderActionText(order.status)}</div>
             <div className="mt-1 text-sm font-semibold text-[#2f281f]">订单号 {order.id}</div>
-            <div className="mt-1 text-xs text-[#8f775d]">下单日期 {formatDateLabel(order.createdAt)}</div>
+            <div className="mt-1 text-xs text-[#8f775d]">下单日期 {formatDateLabel(order.created_at)}</div>
           </div>
         </div>
 
@@ -240,7 +188,7 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
           >
             {getOrderTitle(order)}
           </h2>
-          <div className="text-[36px] font-bold text-[#df6f33]">¥{order.totalAmount}</div>
+          <div className="text-[36px] font-bold text-[#df6f33]">¥{order.total_amount}</div>
         </div>
 
         <button
@@ -302,11 +250,11 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[#9a846c]">完成时间</span>
-                    <span className="font-semibold text-[#2f281f]">{formatDateTimeLabel(order.pickupTime)}</span>
+                    <span className="font-semibold text-[#2f281f]">{formatDateTimeLabel(order.pickup_time)}</span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[#9a846c]">支付金额</span>
-                    <span className="font-semibold text-[#df6f33]">¥{order.totalAmount}</span>
+                    <span className="font-semibold text-[#df6f33]">¥{order.total_amount}</span>
                   </div>
                 </div>
               </div>
@@ -318,11 +266,11 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
                 <div className="space-y-3 text-sm text-[#6f5e4b]">
                   <div>
                     <div className="text-[11px] text-[#9a846c]">收货人</div>
-                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customerName}</div>
+                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customer_name}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-[#9a846c]">联系电话</div>
-                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customerPhone}</div>
+                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customer_phone}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-[#9a846c]">收货状态</div>
@@ -350,15 +298,13 @@ function OrderManagement() {
 
     const fetchOrders = async () => {
       try {
-        const response = await fetch('http://localhost:8000/orders')
-        const data = await response.json()
-
+        const data = await getOrdersByUserId(1)
         if (mounted) {
-          setOrders(Array.isArray(data) && data.length ? data : mockOrders)
+          setOrders(Array.isArray(data) ? data : [])
         }
       } catch (error) {
         if (mounted) {
-          setOrders(mockOrders)
+          setOrders([])
         }
       } finally {
         if (mounted) {
@@ -375,7 +321,7 @@ function OrderManagement() {
   }, [])
 
   const sortedOrders = useMemo(() => {
-    return [...orders].sort((a, b) => parseDateTime(b.createdAt).getTime() - parseDateTime(a.createdAt).getTime())
+    return [...orders].sort((a, b) => parseDateTime(b.created_at).getTime() - parseDateTime(a.created_at).getTime())
   }, [orders])
 
   const filteredOrders = useMemo(() => {
