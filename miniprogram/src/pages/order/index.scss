@@ -1,0 +1,252 @@
+.order-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(180deg, rgba(255,242,221,0.84), rgba(245,238,228,0.96) 28%, #f7f2ea 62%, #efe6db 100%);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: #7d6a53;
+}
+
+.search-bar {
+  padding: 16px;
+  background: rgba(250,246,239,0.94);
+  border-bottom: 1px solid #eadfce;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 28px;
+  padding: 16px;
+  shadow: 0 18px 40px rgba(120,93,53,0.08);
+}
+
+.search-icon {
+  margin-right: 12px;
+  color: #9f896f;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 14px;
+  color: #2f281f;
+}
+
+.category-nav {
+  display: flex;
+  flex-direction: row;
+  padding: 16px;
+  background: #f5ede1;
+  border-right: 1px solid #eadfce;
+  overflow-x: auto;
+}
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  padding: 12px 8px;
+  border-radius: 24px;
+  margin-right: 8px;
+}
+
+.category-item.active {
+  background: #fff;
+  shadow: 0 14px 28px rgba(96,72,39,0.12);
+}
+
+.category-icon {
+  font-size: 20px;
+}
+
+.category-name {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 8px;
+  color: #85735e;
+}
+
+.category-item.active .category-name {
+  color: #2f281f;
+}
+
+.product-list {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
+
+.product-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 12px;
+  margin-bottom: 12px;
+  shadow: 0 12px 28px rgba(120,93,53,0.08);
+}
+
+.product-image {
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
+  background: #f6efe5;
+}
+
+.product-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-tag {
+  display: inline-flex;
+  background: #51351f;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.product-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: #2c241c;
+  margin-top: 8px;
+}
+
+.product-unit {
+  font-size: 12px;
+  color: #8a7258;
+  margin-top: 4px;
+}
+
+.product-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.price-current {
+  font-size: 28px;
+  font-weight: 700;
+  color: #e0682e;
+}
+
+.price-original {
+  font-size: 15px;
+  color: #b5a18a;
+  text-decoration: line-through;
+}
+
+.product-actions {
+  display: flex;
+  align-items: center;
+}
+
+.add-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background: #1f4034;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  shadow: 0 12px 24px rgba(31,64,52,0.25);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff3e9;
+  border-radius: 24px;
+  padding: 8px;
+}
+
+.stepper-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: #fff;
+  color: #855326;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  shadow: 0 4px 10px rgba(120,93,53,0.08);
+}
+
+.stepper-btn.plus {
+  background: #2f6b56;
+  color: #fff;
+  shadow: 0 8px 16px rgba(47,107,86,0.22);
+}
+
+.stepper-value {
+  min-width: 20px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6b4a2b;
+}
+
+.cart-bar {
+  position: fixed;
+  bottom: calc(50px + env(safe-area-inset-bottom));
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,251,245,0.98);
+  border: 1px solid #e5d8c8;
+  border-radius: 999px;
+  padding: 8px;
+  shadow: 0 18px 32px rgba(84,61,33,0.14);
+}
+
+.cart-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-count {
+  background: #9bc44c;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.cart-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2e241a;
+}
+
+.checkout-btn {
+  background: #2d2a27;
+  color: #fff;
+  padding: 16px 24px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  shadow: 0 14px 30px rgba(35,31,28,0.22);
+}

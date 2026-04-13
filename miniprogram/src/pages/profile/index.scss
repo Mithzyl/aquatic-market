@@ -1,0 +1,96 @@
+.profile-page {
+  background: radial-gradient(ellipse at top, rgba(255,242,221,0.84) 0%, rgba(245,238,228,0.96) 50%, #f7f2ea 100%);
+  min-height: 100vh;
+  padding: 48px 16px;
+  padding-bottom: calc(50px + env(safe-area-inset-bottom));
+}
+
+.user-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-wrapper {
+  width: 120px;
+  height: 120px;
+  border-radius: 60px;
+  border: 4px solid #f3e8d8;
+  overflow: hidden;
+  shadow: 0 10px 30px rgba(105,77,44,0.12);
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+}
+
+.user-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2f281f;
+  margin-top: 24px;
+}
+
+.contact-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 48px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 16px;
+  shadow: 0 10px 20px rgba(130,96,59,0.05);
+}
+
+.contact-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background: #fff8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.contact-info {
+  flex: 1;
+}
+
+.contact-label {
+  font-size: 12px;
+  color: #9a8a78;
+}
+
+.contact-phone {
+  font-size: 16px;
+  font-weight: 500;
+  color: #2f281f;
+  margin-top: 4px;
+}
+
+.call-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: #e8f5e9;
+  color: #2f6b56;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.tips {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 48px;
+}
+
+.tips-text {
+  font-size: 12px;
+  color: #9a8a78;
+  margin-bottom: 8px;
+}
