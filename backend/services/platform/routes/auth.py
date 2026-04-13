@@ -26,8 +26,8 @@ from shared.auth import (
     create_admin_token,
     verify_admin_token,
     get_current_admin,
-    SECRET_KEY,
 )
+import bcrypt
 
 router = APIRouter()
 security = HTTPBearer()
@@ -73,14 +73,13 @@ class ChangePasswordRequest(BaseModel):
 # ============== 辅助函数 ==============
 
 def hash_password(password: str) -> str:
-    """密码哈希"""
-    import hashlib
-    return hashlib.sha256(f"{password}{SECRET_KEY}".encode()).hexdigest()
+    """密码哈希 - 使用 bcrypt"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """验证密码"""
-    return hash_password(plain_password) == hashed_password
+    """验证密码 - 使用 bcrypt 恒定时间比较，防止时序攻击"""
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
 # ============== API 端点 ==============

@@ -69,6 +69,14 @@ else:
 # 启动时创建数据库表
 @app.on_event("startup")
 def on_startup():
+    # 生产环境必须设置 JWT_SECRET，否则拒绝启动
+    jwt_secret = os.getenv("JWT_SECRET")
+    environment = os.getenv("ENVIRONMENT", "development")
+    if environment == "production" and not jwt_secret:
+        raise RuntimeError(
+            "JWT_SECRET 环境变量未设置！生产环境必须配置 JWT_SECRET，服务拒绝启动。"
+            "请在 .env 文件或环境变量中设置 JWT_SECRET。"
+        )
     create_db_and_tables()
 
 # 注册路由

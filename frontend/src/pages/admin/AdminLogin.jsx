@@ -41,7 +41,7 @@ function AdminLogin() {
     setVerifyCode(value)
   }
 
-  // 发送验证码（模拟 - 演示环境固定为 123456）
+  // 发送验证码（模拟）
   const handleSendCode = async () => {
     if (!validatePhone(phone)) {
       setInputError('请输入正确的手机号')
@@ -55,7 +55,7 @@ function AdminLogin() {
     setTimeout(() => {
       setIsSendingCode(false)
       setCodeSent(true)
-      console.log('[AdminLogin] 验证码已发送（模拟）: 123456')
+      console.log('[AdminLogin] 验证码已发送（模拟）')
     }, 1000)
   }
 
@@ -248,12 +248,14 @@ function AdminLogin() {
         </div>
       </div>
 
-      {/* 底部提示 - 演示环境固定验证码 */}
-      <div className="pb-6 text-center">
-        <p className="text-xs text-[#b5a18a]">
-          测试验证码: 123456
-        </p>
-      </div>
+      {/* 开发环境提示 - 生产构建时此块会被 tree-shake 移除 */}
+      {import.meta.env.DEV && (
+        <div className="pb-6 text-center">
+          <p className="text-xs text-[#b5a18a]">
+            当前为开发环境，请使用测试验证码登录
+          </p>
+        </div>
+      )}
     </div>
   )
 }

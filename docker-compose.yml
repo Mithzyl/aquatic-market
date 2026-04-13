@@ -17,7 +17,7 @@ services:
     environment:
       - SERVICE_TYPE=merchant
       - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/merchant.db}
-      - JWT_SECRET=${JWT_SECRET:-dev-secret-key}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
       - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
     volumes:
       - ./backend/shared:/app/shared:ro
@@ -44,7 +44,7 @@ services:
     environment:
       - SERVICE_TYPE=customer
       - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/customer.db}
-      - JWT_SECRET=${JWT_SECRET:-dev-secret-key}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
       - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
     volumes:
       - ./backend/shared:/app/shared:ro
@@ -71,7 +71,7 @@ services:
     environment:
       - SERVICE_TYPE=platform
       - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/platform.db}
-      - JWT_SECRET=${JWT_SECRET:-dev-secret-key}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
       - CORS_ORIGINS=http://localhost:5173,http://localhost:5175
     volumes:
       - ./backend/shared:/app/shared:ro

@@ -186,12 +186,14 @@ function PlatformLogin() {
             </button>
           </form>
 
-          {/* 测试账号提示 */}
-          <div className="mt-6 text-center">
-            <p className="text-xs text-slate-500">
-              测试账号: admin / admin123
-            </p>
-          </div>
+          {/* 开发环境提示 - 生产构建时此块会被 tree-shake 移除 */}
+          {import.meta.env.DEV && (
+            <div className="mt-6 text-center">
+              <p className="text-xs text-slate-500">
+                当前为开发环境，请使用测试账号登录
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
