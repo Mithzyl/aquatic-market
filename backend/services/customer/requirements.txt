@@ -1,0 +1,30 @@
+# Customer Service Dependencies
+# 用户端服务依赖
+
+# FastAPI 核心
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+python-multipart>=0.0.6
+
+# 数据库
+sqlmodel>=0.0.8
+pymysql>=1.1.0
+
+# 认证
+PyJWT>=2.8.0
+passlib>=1.7.4
+bcrypt>=4.1.0
+
+# 环境配置
+python-dotenv>=1.0.0
+
+# 数据验证
+pydantic>=2.0.0
+
+# 日志
+loguru>=0.7.0
+
+# 测试
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.24.0

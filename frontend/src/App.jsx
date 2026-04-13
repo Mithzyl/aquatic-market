@@ -13,6 +13,12 @@ import AdminRevenue from './pages/admin/AdminRevenue'
 import AdminCategories from './pages/admin/AdminCategories'
 import AdminSettings from './pages/admin/AdminSettings'
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
+// 平台后台页面
+import PlatformLogin from './pages/platform/PlatformLogin'
+import PlatformLayout from './pages/platform/PlatformLayout'
+import PlatformDashboard from './pages/platform/PlatformDashboard'
+import PlatformMerchants from './pages/platform/PlatformMerchants'
+import { PlatformAuthProvider, usePlatformAuth } from './contexts/PlatformAuthContext'
 
 const CartContext = createContext()
 
@@ -26,6 +32,19 @@ function AdminRouteGuard({ children }) {
   if (!isAuthenticated) {
     // 未登录则跳转到登录页，保存当前路径
     return <Navigate to="/admin" state={{ from: location.pathname }} replace />
+  }
+
+  return children
+}
+
+// 平台后台路由守卫
+function PlatformRouteGuard({ children }) {
+  const { isAuthenticated } = usePlatformAuth()
+  const location = useLocation()
+
+  if (!isAuthenticated) {
+    // 未登录则跳转到登录页
+    return <Navigate to="/platform/login" state={{ from: location.pathname }} replace />
   }
 
   return children
@@ -227,10 +246,50 @@ function AdminShell() {
   )
 }
 
+// 平台后台 Shell（独立路由，侧边栏布局）
+function PlatformShell() {
+  return (
+    <PlatformAuthProvider>
+      <Routes>
+        {/* 登录页 */}
+        <Route path="login" element={<PlatformLogin />} />
+        {/* 布局页 */}
+        <Route element={<PlatformLayout />}>
+          {/* Dashboard */}
+          <Route
+            path="dashboard"
+            element={
+              <PlatformRouteGuard>
+                <PlatformDashboard />
+              </PlatformRouteGuard>
+            }
+          />
+          {/* 商家管理 */}
+          <Route
+            path="merchants"
+            element={
+              <PlatformRouteGuard>
+                <PlatformMerchants />
+              </PlatformRouteGuard>
+            }
+          />
+          {/* 默认跳转到 Dashboard */}
+          <Route
+            path=""
+            element={<Navigate to="/platform/dashboard" replace />}
+          />
+        </Route>
+      </Routes>
+    </PlatformAuthProvider>
+  )
+}
+
 function App() {
   return (
     <Router>
       <Routes>
+        {/* 平台后台路由 */}
+        <Route path="/platform/*" element={<PlatformShell />} />
         {/* 管理端路由 */}
         <Route path="/admin/*" element={<AdminShell />} />
         {/* 用户端路由 */}
