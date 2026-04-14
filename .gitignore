@@ -82,3 +82,5 @@ agent/
 skills/
 
 docs/*
+
+./qoder/*
