@@ -81,4 +81,4 @@ agent/
 # Skills archives
 skills/
 
-docs/
+docs/*
