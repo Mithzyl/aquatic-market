@@ -160,9 +160,10 @@ class Product(SQLModel, table=True):
 # ============== 订单模型 ==============
 
 class Order(SQLModel, table=True):
-    """订单模型 - 支持商家数据隔离"""
+    """订单模型 - 支持商家数据隔离和用户关联"""
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     merchant_id: int = Field(default=1, foreign_key="merchant.id", index=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id", index=True, description="用户ID")
     customer_name: str = Field(..., max_length=100)
     customer_phone: str = Field(..., max_length=20)
     pickup_time: datetime = Field(...)

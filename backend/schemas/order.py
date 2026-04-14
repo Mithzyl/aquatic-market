@@ -15,6 +15,7 @@ class OrderItemRequest(BaseModel):
 class OrderCreateRequest(BaseModel):
     """用户端创建订单请求"""
     merchant_id: int = PydanticField(default=1, description="商家ID")
+    user_id: Optional[int] = PydanticField(default=None, description="用户ID，从Token自动获取")
     customer_name: str = PydanticField(..., max_length=100, description="客户姓名")
     customer_phone: str = PydanticField(..., max_length=20, description="客户电话")
     pickup_time: datetime = PydanticField(..., description="取货时间")
@@ -39,6 +40,7 @@ class OrderResponse(BaseModel):
     """订单响应"""
     id: int
     merchant_id: int
+    user_id: Optional[int] = None
     customer_name: str
     customer_phone: str
     pickup_time: datetime

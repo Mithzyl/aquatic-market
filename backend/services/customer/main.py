@@ -31,6 +31,7 @@ from shared.database import create_db_and_tables
 from routes.products import router as products_router
 from routes.orders import router as orders_router
 from routes.categories import router as categories_router
+from routes.auth import router as auth_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -140,6 +141,7 @@ def read_root():
 
 # ============== 注册路由 ==============
 
+app.include_router(auth_router, prefix="/api/customer", tags=["用户认证"])
 app.include_router(products_router, prefix="/api/customer", tags=["商品管理"])
 app.include_router(orders_router, prefix="/api/customer", tags=["订单管理"])
 app.include_router(categories_router, prefix="/api/customer", tags=["分类管理"])

@@ -1,12 +1,62 @@
 // app.js - 小程序入口文件
+const auth = require('./services/auth')
+const config = require('./utils/config')
+
 App({
   globalData: {
     // 购物车数据
     cartItems: [],
-    // API 基地址
-    apiBase: 'http://localhost:8000',
-    // 用户信息
-    userInfo: null
+    // 用户信息（从Storage同步）
+    userInfo: null,
+    // 默认商家ID（从配置或用户信息获取）
+    defaultMerchantId: 1
+  },
+
+  onLaunch() {
+    // 检查登录状态
+    this.checkLoginStatus()
+    // 恢复购物车数据
+    this.restoreCart()
+  },
+
+  checkLoginStatus() {
+    if (auth.isLoggedIn()) {
+      // 已登录，恢复用户信息
+      this.globalData.userInfo = auth.getCurrentUser()
+      this.globalData.defaultMerchantId = this.globalData.userInfo?.default_merchant_id || 1
+    } else {
+      // 未登录，尝试自动登录
+      this.autoLogin()
+    }
+  },
+
+  async autoLogin() {
+    try {
+      // 尝试微信登录
+      const data = await auth.wxLogin()
+      this.globalData.userInfo = {
+        id: data.user_id,
+        phone: data.phone,
+        nickname: data.nickname,
+        avatar_url: data.avatar_url
+      }
+      this.globalData.defaultMerchantId = data.default_merchant_id || 1
+      console.log('自动登录成功:', data.user_id)
+    } catch (error) {
+      console.log('自动登录失败:', error.message)
+      // 不强制登录，允许用户浏览商品
+    }
+  },
+
+  restoreCart() {
+    const savedCart = wx.getStorageSync('cartItems')
+    if (savedCart && Array.isArray(savedCart)) {
+      this.globalData.cartItems = savedCart
+    }
+  },
+
+  saveCart() {
+    wx.setStorageSync('cartItems', this.globalData.cartItems)
   },
 
   // 计算购物车总件数
@@ -29,6 +79,7 @@ App({
       cartItems.push({ ...product, quantity })
     }
     this.globalData.cartItems = [...cartItems]
+    this.saveCart()
     return this.globalData.cartItems
   },
 
@@ -44,11 +95,39 @@ App({
       cartItems[index].quantity = newQuantity
     }
     this.globalData.cartItems = [...cartItems]
+    this.saveCart()
     return this.globalData.cartItems
   },
 
   // 清空购物车
   clearCart() {
     this.globalData.cartItems = []
+    this.saveCart()
+  },
+
+  // 获取用户ID（用于订单等需要认证的操作）
+  getUserId() {
+    return auth.getUserId()
+  },
+
+  // 检查是否需要登录
+  requireLogin(callback) {
+    if (auth.isLoggedIn()) {
+      callback()
+    } else {
+      wx.showModal({
+        title: '请先登录',
+        content: '下单和查看订单需要登录，是否立即登录？',
+        success: (res) => {
+          if (res.confirm) {
+            this.autoLogin().then(() => {
+              if (auth.isLoggedIn()) {
+                callback()
+              }
+            })
+          }
+        }
+      })
+    }
   }
 })

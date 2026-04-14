@@ -16,6 +16,12 @@ class OrderService:
     def __init__(self, session: Session):
         self.session = session
     
+    def get_orders_by_user(self, user_id: int) -> List[Order]:
+        """获取用户的所有订单"""
+        return self.session.exec(
+            select(Order).where(Order.user_id == user_id).order_by(Order.created_at.desc())
+        ).all()
+    
     def get_orders_by_merchant(self, merchant_id: int) -> List[Order]:
         """获取商家的所有订单"""
         return self.session.exec(
@@ -34,16 +40,13 @@ class OrderService:
             select(OrderItem).where(OrderItem.order_id == order_id)
         ).all()
     
-    def create_order(self, order_data: OrderCreateRequest) -> dict:
+    def create_order(self, order_data: OrderCreateRequest, user_id: Optional[int] = None) -> dict:
         """
         创建订单（包含订单明细）- 事务性操作
         
-        整个订单创建流程在一个事务中完成：
-        1. 验证商品存在性和库存
-        2. 创建订单主表
-        3. 创建订单明细
-        4. 扣减库存
-        5. 统一提交事务
+        Args:
+            order_data: 订单创建请求
+            user_id: 用户ID（从认证Token获取）
         """
         now = datetime.utcnow()
         
@@ -88,6 +91,7 @@ class OrderService:
             # 创建订单主表
             order = Order(
                 merchant_id=order_data.merchant_id,
+                user_id=user_id or order_data.user_id,  # 优先使用Token中的user_id
                 customer_name=order_data.customer_name,
                 customer_phone=order_data.customer_phone,
                 pickup_time=order_data.pickup_time,
@@ -123,6 +127,7 @@ class OrderService:
             return {
                 "id": order.id,
                 "merchant_id": order.merchant_id,
+                "user_id": order.user_id,
                 "customer_name": order.customer_name,
                 "customer_phone": order.customer_phone,
                 "pickup_time": order.pickup_time,
@@ -142,12 +147,24 @@ class OrderService:
                 detail=f"订单创建失败: {str(e)}"
             )
     
+    def get_orders_with_items_by_user(self, user_id: int) -> List[dict]:
+        """获取用户订单列表，包含完整的订单明细"""
+        orders = self.session.exec(
+            select(Order).where(Order.user_id == user_id).order_by(Order.created_at.desc())
+        ).all()
+        
+        return self._build_orders_response(orders)
+    
     def get_orders_with_items(self, merchant_id: int) -> List[dict]:
-        """获取订单列表，包含完整的订单明细"""
+        """获取商家订单列表，包含完整的订单明细"""
         orders = self.session.exec(
             select(Order).where(Order.merchant_id == merchant_id).order_by(Order.created_at.desc())
         ).all()
         
+        return self._build_orders_response(orders)
+    
+    def _build_orders_response(self, orders: List[Order]) -> List[dict]:
+        """构建订单响应数据（内部方法）"""
         if not orders:
             return []
         
@@ -188,6 +205,7 @@ class OrderService:
             result.append({
                 "id": order.id,
                 "merchant_id": order.merchant_id,
+                "user_id": order.user_id,
                 "customer_name": order.customer_name,
                 "customer_phone": order.customer_phone,
                 "pickup_time": order.pickup_time,

@@ -1,6 +1,6 @@
 // pages/order-list/index.js - 订单管理页
-const { getOrdersByUserId } = require('../../services/order')
-const { formatDate } = require('../../utils/format')
+const { getMyOrders } = require('../../services/order')
+const auth = require('../../services/auth')
 const config = require('../../utils/config')
 
 Page({
@@ -19,17 +19,62 @@ Page({
     expandedOrderId: null
   },
 
-  onLoad() { this.fetchOrders() },
-  onShow() { this.fetchOrders() },
-  onPullDownRefresh() { this.fetchOrders().then(() => wx.stopPullDownRefresh()) },
+  onLoad() {
+    // 检查登录状态
+    if (!auth.isLoggedIn()) {
+      wx.showModal({
+        title: '请先登录',
+        content: '查看订单需要登录，是否立即登录？',
+        success: (res) => {
+          if (res.confirm) {
+            const app = getApp()
+            app.autoLogin().then(() => {
+              if (auth.isLoggedIn()) {
+                this.fetchOrders()
+              } else {
+                wx.showToast({ title: '登录失败', icon: 'none' })
+                this.setData({ loading: false, orders: [] })
+              }
+            })
+          } else {
+            this.setData({ loading: false, orders: [] })
+          }
+        }
+      })
+    } else {
+      this.fetchOrders()
+    }
+  },
+  
+  onShow() {
+    // 每次显示页面时刷新订单（如果已登录）
+    if (auth.isLoggedIn()) {
+      this.fetchOrders()
+    }
+  },
+  
+  onPullDownRefresh() {
+    if (auth.isLoggedIn()) {
+      this.fetchOrders().then(() => wx.stopPullDownRefresh())
+    } else {
+      wx.stopPullDownRefresh()
+    }
+  },
 
   async fetchOrders() {
     try {
-      const data = await getOrdersByUserId(1)
+      // 使用新的认证API，不再硬编码user_id
+      const data = await getMyOrders()
       const orders = Array.isArray(data) ? data : []
       this.setData({ orders }, () => this.filterOrders())
     } catch (error) {
       console.error('Failed to fetch orders:', error)
+      if (error.message && error.message.includes('未授权')) {
+        wx.showToast({ title: '请先登录', icon: 'none' })
+        auth.logout()
+      } else {
+        wx.showToast({ title: '加载失败', icon: 'none' })
+      }
       this.setData({ orders: [], loading: false })
     }
   },
