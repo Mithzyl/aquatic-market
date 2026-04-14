@@ -1,8 +1,11 @@
-// frontend/src/api/orders.js - 订单API（商家端）
+// frontend/src/api/orders.js - 订单API
 import { API_BASE_URL } from './config.js'
 
+// 用户端API地址（端口8002）
+const CUSTOMER_API_BASE = 'http://localhost:8002'
+
 /**
- * 创建订单
+ * 创建订单（商家端）
  * @param {object} orderData - 订单数据
  */
 export async function createOrder(orderData) {
@@ -33,7 +36,23 @@ export async function getOrders(params = {}) {
 }
 
 /**
- * 更新订单状态
+ * 获取用户订单列表（用户端）
+ * @param {number|string} userId - 用户ID
+ */
+export async function getOrdersByUserId(userId) {
+  const token = localStorage.getItem('customer_token')
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  
+  const response = await fetch(`${CUSTOMER_API_BASE}/api/customer/orders/me`, {
+    headers
+  })
+  if (!response.ok) throw new Error('Failed to fetch orders')
+  return response.json()
+}
+
+/**
+ * 更新订单状态（商家端）
  * @param {number|string} orderId - 订单ID
  * @param {string} status - 新状态
  */

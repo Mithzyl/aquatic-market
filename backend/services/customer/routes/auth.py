@@ -89,7 +89,10 @@ def wechat_login(
     
     if not user:
         # 创建新用户
+        # 为微信用户生成唯一的临时phone值（避免空字符串冲突）
+        temp_phone = f"wx_{request.code}"  # 使用wechat_openid作为临时phone
         user = User(
+            phone=temp_phone,
             wechat_openid=mock_openid,
             nickname=request.nickname or "微信用户",
             avatar_url=request.avatar_url or "",
