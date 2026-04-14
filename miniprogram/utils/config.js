@@ -1,10 +1,10 @@
-// utils/config.js - 配置常量
+// utils/config.js - 配置常量（用户端服务端口8002）
 const config = {
-  // API 基地址
-  apiBase: 'http://localhost:8000',
-
-  // API 路径前缀
-  apiPrefix: '',
+  // API 基地址：用户端服务
+  apiBase: 'http://localhost:8002',
+  
+  // API 路径前缀：用户端路由
+  apiPrefix: '/api/customer',
 
   // Token 存储 Key
   tokenKey: 'customer_token',

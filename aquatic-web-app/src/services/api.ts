@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+// API配置：用户端服务端口8002，路由前缀/api/customer
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002/api/customer';
 
 export const api = {
   // Products

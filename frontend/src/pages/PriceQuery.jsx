@@ -223,7 +223,10 @@ const PriceQuery = () => {
     categories.find((category) => category.id === activeCategoryId) ||
     categories[0]
 
-  const activeStory = categoryStories[activeCategory.id] || categoryStories.shrimp
+  // 安全访问：activeCategory可能为undefined（当categories为空时）
+  const activeStory = activeCategory 
+    ? (categoryStories[activeCategory.id] || categoryStories.shrimp) 
+    : categoryStories.shrimp
 
   const getQuantity = (productId) => {
     const cartItem = cartItems.find((item) => item.id === productId)

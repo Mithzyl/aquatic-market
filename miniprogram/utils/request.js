@@ -20,7 +20,7 @@ function request(url, options = {}) {
     }
 
     wx.request({
-      url: config.apiBase + url,
+      url: config.apiBase + config.apiPrefix + url,
       method: options.method || 'GET',
       data: options.data,
       header,
