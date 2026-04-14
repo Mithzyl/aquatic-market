@@ -1,0 +1,58 @@
+<!-- pages/order-list/index.wxml -->
+<view class="page-container">
+  <view class="header">
+    <view class="header-card">
+      <view class="header-top">
+        <view>
+          <view class="header-badge"><view class="header-badge-dot"></view><text>My Orders</text></view>
+          <text class="header-title">我的订单</text>
+        </view>
+        <view class="header-action" bindtap="onGoToOrder"><text>继续下单</text></view>
+      </view>
+      <view class="stats-grid" wx:if="{{!loading}}">
+        <view class="stat-card"><text class="stat-label">待取货</text><text class="stat-value stat-ready">{{orderStats.readyCount}}</text></view>
+        <view class="stat-card"><text class="stat-label">待确认</text><text class="stat-value stat-pending">{{orderStats.pendingCount}}</text></view>
+        <view class="stat-card"><text class="stat-label">历史订单</text><text class="stat-value stat-completed">{{orderStats.completedCount}}</text></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="filter-section">
+    <view class="filter-tabs">
+      <view wx:for="{{filterTabs}}" wx:key="key" class="filter-tab {{activeFilter === item.key ? 'filter-tab-active' : ''}}" bindtap="onFilterChange" data-key="{{item.key}}">
+        <text>{{item.label}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-container"><view class="loading-spinner"></view><text class="loading-text">加载中...</text></view>
+  <view wx:elif="{{filteredOrders.length === 0}}" class="empty-state">
+    <view class="empty-icon">📋</view>
+    <text class="empty-title">当前没有这类订单</text>
+    <text class="empty-desc">切换筛选看看其他状态，或回到下单页继续选购鲜货。</text>
+    <view class="empty-btn" bindtap="onGoToOrder">去下单</view>
+  </view>
+  <view wx:else class="order-list">
+    <view class="order-card" wx:for="{{filteredOrders}}" wx:key="id">
+      <view class="order-header">
+        <view class="order-status-badge" style="background: {{item.status === 'preparing' ? '#1f7a55' : item.status === 'pending' ? '#f4b54a' : '#ebe7e1'}}; color: {{item.status === 'preparing' ? '#fff' : item.status === 'pending' ? '#4c3414' : '#786553'}}">
+          <text>{{item.status === 'preparing' ? '待取货' : item.status === 'pending' ? '已下单' : item.status === 'completed' ? '已领取' : '已取消'}}</text>
+        </view>
+        <view class="order-meta"><text class="order-id">订单号 {{item.id}}</text><text class="order-date">{{item.created_at}}</text></view>
+      </view>
+      <view class="order-body">
+        <text class="order-title">{{item.items && item.items.length === 1 ? item.items[0].name : (item.items ? item.items[0].name + '等' + item.items.length + '款鲜货' : '海鲜订单')}}</text>
+        <text class="order-amount">¥{{item.total_amount}}</text>
+      </view>
+      <view class="order-expand" bindtap="onToggleExpand" data-id="{{item.id}}">
+        <text>订单明细</text><text class="order-expand-icon">{{expandedOrderId === item.id ? '▲' : '▼'}}</text>
+      </view>
+      <view wx:if="{{expandedOrderId === item.id && item.items}}" class="order-items">
+        <view class="order-item" wx:for="{{item.items}}" wx:key="name" wx:for-item="lineItem">
+          <text class="order-item-name">{{lineItem.name}}</text>
+          <view class="order-item-meta"><text>x{{lineItem.quantity}}</text><text>¥{{lineItem.price * lineItem.quantity}}</text></view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

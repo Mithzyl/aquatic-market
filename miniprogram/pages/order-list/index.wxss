@@ -1,0 +1,41 @@
+/* pages/order-list/index.wxss */
+.page-container { min-height: 100vh; background: radial-gradient(circle at top, rgba(255,242,221,0.84), rgba(245,238,228,0.96) 28%, #f7f2ea 62%, #efe6db 100%); padding-bottom: calc(env(safe-area-inset-bottom) + 40rpx); }
+.header { position: sticky; top: 0; z-index: 30; border-bottom: 2rpx solid #eadfce; background: rgba(250,246,239,0.94); backdrop-filter: blur(8px); padding: 24rpx 32rpx; padding-top: env(safe-area-inset-top); }
+.header-card { background: #ffffff; border-radius: 60rpx; padding: 40rpx; box-shadow: 0 36rpx 80rpx rgba(120,93,53,0.08); }
+.header-top { display: flex; align-items: flex-start; justify-content: space-between; }
+.header-badge { display: flex; align-items: center; gap: 16rpx; background: #fff4e6; border-radius: 48rpx; padding: 8rpx 24rpx; }
+.header-badge-dot { width: 16rpx; height: 16rpx; border-radius: 50%; background: #ff7e45; }
+.header-badge text { font-size: 24rpx; font-weight: 600; color: #bb6c25; }
+.header-title { font-size: 64rpx; font-weight: 700; color: #2f281f; margin-top: 24rpx; font-family: 'Noto Serif SC', serif; }
+.header-action { background: #f6f0e7; border-radius: 44rpx; padding: 16rpx 24rpx; font-size: 28rpx; font-weight: 600; color: #574533; }
+.stats-grid { display: flex; gap: 24rpx; margin-top: 40rpx; }
+.stat-card { flex: 1; border-radius: 48rpx; background: #ffffff; padding: 32rpx; box-shadow: 0 20rpx 40rpx rgba(130,96,59,0.05); }
+.stat-label { font-size: 22rpx; text-transform: uppercase; letter-spacing: 0.16em; color: #aa9277; }
+.stat-value { font-size: 56rpx; font-weight: 700; line-height: 1; margin-top: 16rpx; }
+.stat-ready { color: #1f7a55; }
+.stat-pending { color: #d78622; }
+.stat-completed { color: #7b6854; }
+.filter-section { padding: 24rpx 32rpx; }
+.filter-tabs { display: flex; gap: 16rpx; }
+.filter-tab { flex-shrink: 0; border-radius: 48rpx; padding: 24rpx 32rpx; font-size: 28rpx; font-weight: 500; background: #f5ede1; color: #7d6a53; }
+.filter-tab-active { background: #1f4034; color: #ffffff; box-shadow: 0 28rpx 56rpx rgba(31,64,52,0.22); }
+.order-list { padding: 0 32rpx; }
+.order-card { border-radius: 68rpx; border: 2rpx solid #eadfce; background: #fffaf3; margin-bottom: 32rpx; padding: 40rpx; box-shadow: 0 40rpx 80rpx rgba(105,77,44,0.08); }
+.order-header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 32rpx; }
+.order-status-badge { display: inline-flex; align-items: center; gap: 16rpx; border-radius: 48rpx; padding: 24rpx 32rpx; }
+.order-meta { text-align: right; }
+.order-id { font-size: 28rpx; font-weight: 600; color: #2f281f; }
+.order-date { font-size: 24rpx; color: #8f775d; margin-top: 8rpx; }
+.order-body { display: flex; align-items: baseline; justify-content: space-between; gap: 32rpx; margin-top: 40rpx; }
+.order-title { font-size: 56rpx; font-weight: 700; color: #2f281f; line-height: 1.1; font-family: 'Noto Serif SC', serif; }
+.order-amount { font-size: 72rpx; font-weight: 700; color: #df6f33; }
+.order-expand { display: flex; align-items: center; gap: 8rpx; margin-top: 24rpx; font-size: 28rpx; font-weight: 500; color: #7d6a53; }
+.order-items { margin-top: 32rpx; }
+.order-item { display: flex; align-items: center; justify-content: space-between; gap: 24rpx; border-radius: 48rpx; background: #ffffff; padding: 32rpx; margin-bottom: 16rpx; }
+.order-item-name { font-size: 28rpx; font-weight: 600; color: #2f281f; }
+.order-item-meta { display: flex; align-items: center; gap: 16rpx; font-size: 28rpx; font-weight: 600; color: #2f281f; }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120rpx 48rpx; text-align: center; }
+.empty-icon { font-size: 128rpx; }
+.empty-title { font-size: 56rpx; font-weight: 700; color: #2f281f; margin-top: 40rpx; }
+.empty-desc { font-size: 28rpx; color: #7d6a53; margin-top: 16rpx; line-height: 1.6; }
+.empty-btn { margin-top: 48rpx; height: 96rpx; display: flex; align-items: center; justify-content: center; border-radius: 96rpx; background: #1f4034; padding: 0 48rpx; font-size: 28rpx; font-weight: 600; color: #ffffff; }

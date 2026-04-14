@@ -1,0 +1,107 @@
+<!-- pages/index/index.wxml - 首页模板 -->
+<view class="page-container">
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <block wx:else>
+    <!-- Hero Banner -->
+    <view class="hero-section" wx:if="{{heroProduct}}">
+      <image class="hero-bg" src="{{heroProduct.image}}" mode="aspectFill" />
+      <view class="hero-overlay"></view>
+      <view class="hero-content">
+        <view class="hero-tag">NEW RETAIL SEAFOOD</view>
+        <view class="hero-text">
+          <text class="hero-subtitle">柳州鲜选海产店</text>
+          <text class="hero-title">当日直采的\n海鲜零售首页</text>
+          <text class="hero-desc">把门店鲜度、今日活动和招牌商品先讲清楚，再进入具体分类下单。</text>
+        </view>
+        <view class="hero-actions">
+          <view class="hero-btn-primary" bindtap="onGoToOrder">进入下单</view>
+          <view class="hero-btn-outline" bindtap="onGoToOrders">查看订单</view>
+        </view>
+        <view class="hero-spotlight">
+          <view class="hero-spotlight-info">
+            <text class="hero-spotlight-label">Today Spotlight</text>
+            <text class="hero-spotlight-name">{{heroProduct.name}}</text>
+          </view>
+          <view class="hero-spotlight-price-card">
+            <text class="hero-spotlight-price-label">早市价</text>
+            <text class="hero-spotlight-price">¥{{heroProduct.price}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Service Highlights -->
+    <view class="service-section">
+      <view class="service-grid">
+        <view class="service-card" wx:for="{{serviceHighlights}}" wx:key="title">
+          <text class="service-stat">{{item.stat}}</text>
+          <text class="service-title">{{item.title}}</text>
+          <text class="service-desc">{{item.description}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Category Section -->
+    <view class="category-section">
+      <view class="category-header">
+        <view>
+          <text class="section-label">Category Preview</text>
+          <text class="section-title">从主力类目进入下单</text>
+        </view>
+        <view class="category-link" bindtap="onGoToPriceQuery">
+          <text class="category-link-text">去下单</text>
+        </view>
+      </view>
+      <view class="category-grid">
+        <view class="category-item" wx:for="{{categories}}" wx:key="id" bindtap="onGoToPriceQuery">
+          <view class="category-icon-wrapper">
+            <text class="category-icon-emoji">{{item.icon}}</text>
+          </view>
+          <text class="category-name">{{item.name}}</text>
+          <text class="category-desc">{{item.description}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Top Picks -->
+    <view class="picks-section">
+      <view class="picks-header">
+        <view>
+          <text class="section-label">Top Picks</text>
+          <text class="section-title">今日热卖商品</text>
+        </view>
+        <view class="category-link" bindtap="onGoToPriceQuery">
+          <text class="category-link-text">去下单</text>
+        </view>
+      </view>
+      <view class="picks-list">
+        <view class="pick-card" wx:for="{{showcaseProducts}}" wx:key="id" bindtap="onGoToProduct" data-id="{{item.id}}">
+          <view class="pick-image-wrapper">
+            <image class="pick-image" src="{{item.image}}" mode="aspectFill" />
+            <view class="pick-tag" wx:if="{{item.tag}}">
+              <text>{{item.tag}}</text>
+            </view>
+          </view>
+          <view class="pick-info">
+            <view class="pick-meta">
+              <view class="pick-category-tag" wx:if="{{item.category_name}}">
+                <text>{{item.category_name}}</text>
+              </view>
+            </view>
+            <text class="pick-name">{{item.name}}</text>
+            <text class="pick-desc">{{item.description}}</text>
+            <view class="pick-price-row">
+              <text class="pick-price">¥{{item.price}}</text>
+              <text class="pick-original-price" wx:if="{{item.original_price}}">¥{{item.original_price}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

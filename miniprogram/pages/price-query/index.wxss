@@ -1,0 +1,54 @@
+/* pages/price-query/index.wxss */
+.page-container { display: flex; flex-direction: column; height: 100vh; background: radial-gradient(circle at top, rgba(255,242,221,0.84), rgba(245,238,228,0.96) 28%, #f7f2ea 62%, #efe6db 100%); }
+.header { background: rgba(250,246,239,0.94); border-bottom: 2rpx solid #eadfce; padding: 24rpx 32rpx; padding-top: env(safe-area-inset-top); }
+.header-card { background: #ffffff; border-radius: 56rpx; padding: 32rpx; box-shadow: 0 36rpx 80rpx rgba(120,93,53,0.08); }
+.header-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24rpx; }
+.header-badge { display: flex; align-items: center; gap: 12rpx; background: #fff4e6; border-radius: 48rpx; padding: 8rpx 24rpx; }
+.header-badge-dot { width: 16rpx; height: 16rpx; border-radius: 50%; background: #ff7e45; }
+.header-badge text { font-size: 24rpx; font-weight: 600; color: #bb6c25; }
+.header-title { font-size: 48rpx; font-weight: 700; color: #2f281f; margin-top: 16rpx; display: block; }
+.header-orders { background: #f6f0e7; border-radius: 32rpx; padding: 16rpx 24rpx; }
+.header-orders text { font-size: 24rpx; font-weight: 600; color: #574533; }
+.search-bar { position: relative; display: flex; align-items: center; }
+.search-icon-text { position: absolute; left: 32rpx; font-size: 32rpx; z-index: 1; }
+.search-input { width: 100%; height: 96rpx; border-radius: 96rpx; background: #f7f1e8; padding-left: 96rpx; padding-right: 96rpx; font-size: 28rpx; color: #2f281f; }
+.search-clear { position: absolute; right: 32rpx; width: 48rpx; height: 48rpx; border-radius: 50%; background: #d8c6b1; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24rpx; }
+.content-area { flex: 1; display: flex; padding: 24rpx 32rpx; min-height: 0; }
+.content-card { display: flex; flex: 1; min-height: 0; border-radius: 60rpx; border: 2rpx solid #eadfce; background: #fffaf3; overflow: hidden; box-shadow: 0 44rpx 96rpx rgba(107,75,36,0.08); }
+.category-sidebar { width: 216rpx; border-right: 2rpx solid #eadfce; background: #f5ede1; }
+.category-item { display: flex; flex-direction: column; align-items: center; padding: 24rpx 16rpx; margin: 8rpx; border-radius: 48rpx; }
+.category-item-active { background: #ffffff; box-shadow: 0 28rpx 56rpx rgba(96,72,39,0.12); }
+.category-icon-box { width: 80rpx; height: 80rpx; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f1e6d7; font-size: 36rpx; }
+.category-icon-active { background: #fff1e6; }
+.category-label { font-size: 24rpx; font-weight: 600; margin-top: 8rpx; color: #2f281f; }
+.product-area { flex: 1; padding: 24rpx; }
+.product-section { margin-bottom: 48rpx; }
+.product-section-header { display: flex; align-items: center; gap: 16rpx; margin-bottom: 24rpx; }
+.product-section-name { font-size: 34rpx; font-weight: 600; color: #2c241c; }
+.product-section-count { background: #f7f1e8; border-radius: 24rpx; padding: 4rpx 16rpx; font-size: 22rpx; color: #8f7558; }
+.product-list { display: flex; flex-direction: column; gap: 24rpx; }
+.product-card { display: flex; align-items: stretch; gap: 24rpx; background: #ffffff; border-radius: 48rpx; padding: 24rpx; box-shadow: 0 24rpx 56rpx rgba(120,93,53,0.08); }
+.product-image-box { position: relative; width: 192rpx; height: 192rpx; border-radius: 40rpx; overflow: hidden; background: #f6efe5; flex-shrink: 0; }
+.product-image { width: 100%; height: 100%; }
+.product-tag { position: absolute; left: 16rpx; top: 16rpx; background: #51351f; color: #fff; border-radius: 24rpx; padding: 4rpx 16rpx; font-size: 22rpx; font-weight: 600; }
+.product-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+.product-name { font-size: 34rpx; font-weight: 600; color: #2c241c; }
+.product-unit { font-size: 24rpx; color: #8a7258; margin-top: 4rpx; }
+.product-desc { font-size: 24rpx; color: #7d6a53; margin-top: 8rpx; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.product-price-row { display: flex; align-items: baseline; gap: 12rpx; margin-top: 12rpx; }
+.product-price { font-size: 56rpx; font-weight: 700; color: #e0682e; }
+.product-original-price { font-size: 28rpx; color: #b5a18a; text-decoration: line-through; }
+.product-action { display: flex; align-items: center; padding-left: 16rpx; }
+.add-btn { width: 80rpx; height: 80rpx; border-radius: 50%; background: #1f4034; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 36rpx; font-weight: 600; box-shadow: 0 24rpx 48rpx rgba(31,64,52,0.25); }
+.cart-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; padding: 24rpx 32rpx; padding-bottom: calc(24rpx + env(safe-area-inset-bottom)); background: linear-gradient(180deg, rgba(251,246,239,0), rgba(251,246,239,0.94) 20%, #fbf6ef 100%); }
+.cart-bar-inner { display: flex; align-items: center; gap: 24rpx; border-radius: 60rpx; border: 2rpx solid #e5d8c8; background: rgba(255,251,245,0.98); padding: 20rpx; box-shadow: 0 36rpx 64rpx rgba(84,61,33,0.14); }
+.cart-bar-info { display: flex; align-items: center; gap: 16rpx; flex: 1; }
+.cart-icon-box { position: relative; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #f2e4d2; font-size: 40rpx; color: #6c4a2d; }
+.cart-badge { position: absolute; top: -8rpx; right: -8rpx; min-width: 36rpx; height: 36rpx; border-radius: 36rpx; background: #9bc44c; color: #fff; font-size: 22rpx; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 8rpx; }
+.cart-total-price { font-size: 48rpx; font-weight: 700; color: #2e241a; }
+.cart-checkout-btn { height: 104rpx; display: flex; align-items: center; justify-content: center; border-radius: 999rpx; background: #2d2a27; padding: 0 48rpx; font-size: 28rpx; font-weight: 600; color: #ffffff; box-shadow: 0 28rpx 60rpx rgba(35,31,28,0.22); }
+.toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1f4034; color: #ffffff; padding: 24rpx 48rpx; border-radius: 60rpx; font-size: 28rpx; font-weight: 600; z-index: 9999; box-shadow: 0 32rpx 64rpx rgba(31,64,52,0.32); }
+.empty-products { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120rpx 48rpx; text-align: center; }
+.empty-icon-box { font-size: 96rpx; }
+.empty-title { font-size: 36rpx; font-weight: 600; color: #2c241c; margin-top: 32rpx; }
+.empty-desc { font-size: 28rpx; color: #7d6a53; margin-top: 16rpx; line-height: 1.6; }

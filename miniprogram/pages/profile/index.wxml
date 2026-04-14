@@ -1,0 +1,20 @@
+<!-- pages/profile/index.wxml -->
+<view class="page-container">
+  <view class="profile-header">
+    <view class="avatar-wrapper">
+      <image class="avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" mode="aspectFill" />
+    </view>
+    <text class="user-name">{{userInfo.name}}</text>
+  </view>
+
+  <view class="contact-card">
+    <view class="contact-item" bindtap="onCallPhone">
+      <view class="contact-icon"><text class="contact-icon-emoji">📞</text></view>
+      <view class="contact-info">
+        <text class="contact-label">联系手机</text>
+        <text class="contact-value">{{userInfo.phone}}</text>
+      </view>
+      <view class="contact-action"><text>→</text></view>
+    </view>
+  </view>
+</view>
