@@ -5,7 +5,8 @@
     "pages/product-detail/index",
     "pages/booking/index",
     "pages/order-list/index",
-    "pages/profile/index"
+    "pages/profile/index",
+    "pages/login/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#fbf6ef",

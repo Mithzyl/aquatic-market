@@ -1,0 +1,177 @@
+/* pages/login/index.wxss - 用户登录页样式 */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(ellipse at top, rgba(255, 242, 221, 0.84) 0%, rgba(245, 238, 228, 0.96) 50%, #f7f2ea 100%);
+  padding: 0 48rpx;
+  padding-top: 160rpx;
+}
+
+/* Hero 区域 */
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 80rpx;
+}
+
+.logo-wrapper {
+  margin-bottom: 48rpx;
+}
+
+.logo-circle {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: #1f4034;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 20rpx 60rpx rgba(31, 64, 52, 0.24);
+}
+
+.logo-icon {
+  width: 80rpx;
+  height: 80rpx;
+}
+
+.brand-name {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #2c241b;
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  margin-bottom: 16rpx;
+}
+
+.brand-slogan {
+  font-size: 26rpx;
+  color: #7d6a53;
+}
+
+/* 表单区域 */
+.form-section {
+  width: 100%;
+}
+
+.form-item {
+  margin-bottom: 32rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #5a4d3d;
+  margin-bottom: 16rpx;
+}
+
+.input-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.input-field {
+  flex: 1;
+  height: 96rpx;
+  padding: 0 32rpx;
+  border-radius: 24rpx;
+  border: 2rpx solid #eadfce;
+  background: #ffffff;
+  font-size: 28rpx;
+  color: #2c241b;
+}
+
+.input-field::placeholder {
+  color: #b5a18a;
+}
+
+.input-field-full {
+  width: 100%;
+}
+
+.code-btn {
+  min-width: 200rpx;
+  height: 96rpx;
+  padding: 0 24rpx;
+  border-radius: 24rpx;
+  background: #fff4e8;
+  color: #1f4034;
+  font-size: 26rpx;
+  font-weight: 500;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.code-btn:active {
+  background: #ffe8d6;
+  transform: scale(0.98);
+}
+
+.code-btn-sent {
+  background: #e8dfd0;
+  color: #7d6a53;
+}
+
+.code-btn[disabled] {
+  opacity: 0.5;
+}
+
+/* 错误提示 */
+.error-section {
+  padding: 24rpx 0;
+  text-align: center;
+}
+
+.error-text {
+  font-size: 26rpx;
+  color: #d67635;
+}
+
+/* 登录按钮 */
+.login-btn {
+  width: 100%;
+  height: 112rpx;
+  border-radius: 24rpx;
+  background: #1f4034;
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+  margin-top: 32rpx;
+  box-shadow: 0 28rpx 56rpx rgba(31, 64, 52, 0.24);
+}
+
+.login-btn:active {
+  background: #2a5244;
+  transform: scale(0.98);
+}
+
+.login-btn-loading {
+  background: #e8dfd0;
+  color: #7d6a53;
+  box-shadow: none;
+}
+
+.login-btn[disabled] {
+  opacity: 0.5;
+}
+
+/* 底部区域 */
+.footer-section {
+  margin-top: 48rpx;
+  text-align: center;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.footer-link {
+  font-size: 26rpx;
+  color: #7d6a53;
+}
+
+.footer-link:active {
+  color: #5a4d3d;
+}

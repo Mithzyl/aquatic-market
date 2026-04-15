@@ -1,12 +1,22 @@
 import React from 'react'
-
-// 模拟用户数据，实际项目中应从 Context 或 API 获取
-const mockUser = {
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
-  name: '柳州鲜选会员'
-}
+import { useNavigate } from 'react-router-dom'
+import { useCustomerAuth } from '../contexts/CustomerAuthContext'
 
 const My = () => {
+  const navigate = useNavigate()
+  const { user, logout } = useCustomerAuth()
+
+  // 处理登出
+  const handleLogout = () => {
+    logout()
+    navigate('/', { replace: true })
+  }
+
+  // 用户信息（从 Context 获取）
+  const userName = user?.name || '柳州鲜选会员'
+  const userPhone = user?.phone || '未绑定手机'
+  const userAvatar = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}`
+
   return (
     <div
       className="min-h-screen"
@@ -24,8 +34,8 @@ const My = () => {
             style={{ borderColor: '#f3e8d8' }}
           >
             <img
-              src={mockUser.avatar}
-              alt={mockUser.name}
+              src={userAvatar}
+              alt={userName}
               className="h-full w-full object-cover"
             />
           </div>
@@ -38,8 +48,13 @@ const My = () => {
               fontFamily: '"Noto Serif SC", "Songti SC", serif'
             }}
           >
-            {mockUser.name}
+            {userName}
           </h1>
+
+          {/* 用户手机号 */}
+          <p className="mt-2 text-sm text-[#7d6a53]">
+            {userPhone}
+          </p>
         </div>
 
         {/* 联系信息卡片 */}
@@ -85,6 +100,16 @@ const My = () => {
               </svg>
             </a>
           </div>
+        </div>
+
+        {/* 登出按钮 */}
+        <div className="mt-8">
+          <button
+            onClick={handleLogout}
+            className="w-full h-12 rounded-xl bg-[#f5ede1] text-[#7d6a53] font-medium text-sm hover:bg-[#ebe3d7] active:scale-[0.98] transition-all"
+          >
+            退出登录
+          </button>
         </div>
       </div>
     </div>

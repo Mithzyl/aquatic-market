@@ -120,10 +120,12 @@ App({
         content: '下单和查看订单需要登录，是否立即登录？',
         success: (res) => {
           if (res.confirm) {
-            this.autoLogin().then(() => {
-              if (auth.isLoggedIn()) {
-                callback()
-              }
+            // 跳转到登录页面
+            const pages = getCurrentPages()
+            const currentPage = pages[pages.length - 1]
+            const currentPath = currentPage ? `/${currentPage.route}` : ''
+            wx.navigateTo({
+              url: `/pages/login/index${currentPath ? '?from=' + encodeURIComponent(currentPath) : ''}`
             })
           }
         }

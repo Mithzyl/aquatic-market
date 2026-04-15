@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCustomerAuth } from '../contexts/CustomerAuthContext'
 import { getOrdersByUserId } from '../api/orders'
 
 const filterTabs = [
@@ -270,6 +271,7 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
 
 function OrderManagement() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useCustomerAuth()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState('all')
@@ -279,8 +281,14 @@ function OrderManagement() {
     let mounted = true
 
     const fetchOrders = async () => {
+      // 只有登录状态才获取订单
+      if (!isAuthenticated) {
+        setLoading(false)
+        return
+      }
+
       try {
-        const data = await getOrdersByUserId(1)
+        const data = await getOrdersByUserId()
         if (mounted) {
           setOrders(Array.isArray(data) ? data : [])
         }
@@ -300,7 +308,7 @@ function OrderManagement() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [isAuthenticated])
 
   const sortedOrders = useMemo(() => {
     return [...orders].sort((a, b) => parseDateTime(b.created_at).getTime() - parseDateTime(a.created_at).getTime())

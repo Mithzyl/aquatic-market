@@ -27,20 +27,15 @@ Page({
         content: '查看订单需要登录，是否立即登录？',
         success: (res) => {
           if (res.confirm) {
-            const app = getApp()
-            app.autoLogin().then(() => {
-              if (auth.isLoggedIn()) {
-                this.fetchOrders()
-              } else {
-                wx.showToast({ title: '登录失败', icon: 'none' })
-                this.setData({ loading: false, orders: [] })
-              }
+            wx.navigateTo({
+              url: '/pages/login/index?from=' + encodeURIComponent('/pages/order-list/index')
             })
           } else {
             this.setData({ loading: false, orders: [] })
           }
         }
       })
+      this.setData({ loading: false })
     } else {
       this.fetchOrders()
     }

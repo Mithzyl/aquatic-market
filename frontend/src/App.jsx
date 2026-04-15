@@ -6,6 +6,7 @@ import Booking from './pages/Booking'
 import PriceQuery from './pages/PriceQuery'
 import OrderManagement from './pages/OrderManagement'
 import My from './pages/My'
+import CustomerLogin from './pages/CustomerLogin'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminProducts from './pages/admin/AdminProducts'
@@ -19,6 +20,8 @@ import PlatformLayout from './pages/platform/PlatformLayout'
 import PlatformDashboard from './pages/platform/PlatformDashboard'
 import PlatformMerchants from './pages/platform/PlatformMerchants'
 import { PlatformAuthProvider, usePlatformAuth } from './contexts/PlatformAuthContext'
+// 用户端认证
+import { CustomerAuthProvider, useCustomerAuth } from './contexts/CustomerAuthContext'
 
 const CartContext = createContext()
 
@@ -45,6 +48,19 @@ function PlatformRouteGuard({ children }) {
   if (!isAuthenticated) {
     // 未登录则跳转到登录页
     return <Navigate to="/platform/login" state={{ from: location.pathname }} replace />
+  }
+
+  return children
+}
+
+// 用户端路由守卫
+function CustomerRouteGuard({ children }) {
+  const { isAuthenticated } = useCustomerAuth()
+  const location = useLocation()
+
+  if (!isAuthenticated) {
+    // 未登录则跳转到用户端登录页，保存当前路径
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />
   }
 
   return children
@@ -178,7 +194,7 @@ function AppShell() {
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const hideGlobalNav = location.pathname === '/booking' || location.pathname.startsWith('/product/')
+  const hideGlobalNav = location.pathname === '/booking' || location.pathname.startsWith('/product/') || location.pathname === '/login'
 
   return (
     <CartContext.Provider value={{ cartItems, addToCart, updateQuantity, removeFromCart, clearCart, totalItems, totalPrice }}>
@@ -189,8 +205,23 @@ function AppShell() {
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/booking" element={<Booking />} />
             <Route path="/price-query" element={<PriceQuery />} />
-            <Route path="/order-management" element={<OrderManagement />} />
-            <Route path="/my" element={<My />} />
+            <Route path="/login" element={<CustomerLogin />} />
+            <Route
+              path="/order-management"
+              element={
+                <CustomerRouteGuard>
+                  <OrderManagement />
+                </CustomerRouteGuard>
+              }
+            />
+            <Route
+              path="/my"
+              element={
+                <CustomerRouteGuard>
+                  <My />
+                </CustomerRouteGuard>
+              }
+            />
           </Routes>
         </main>
 
@@ -293,7 +324,14 @@ function App() {
         {/* 管理端路由 */}
         <Route path="/admin/*" element={<AdminShell />} />
         {/* 用户端路由 */}
-        <Route path="/*" element={<AppShell />} />
+        <Route
+          path="/*"
+          element={
+            <CustomerAuthProvider>
+              <AppShell />
+            </CustomerAuthProvider>
+          }
+        />
       </Routes>
     </Router>
   )

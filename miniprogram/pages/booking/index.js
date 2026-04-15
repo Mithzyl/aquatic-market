@@ -24,13 +24,8 @@ Page({
         content: '下单需要登录，是否立即登录？',
         success: (res) => {
           if (res.confirm) {
-            app.autoLogin().then(() => {
-              if (auth.isLoggedIn()) {
-                this.updateCartInfo()
-              } else {
-                wx.showToast({ title: '登录失败', icon: 'none' })
-                setTimeout(() => wx.switchTab({ url: '/pages/index/index' }), 1500)
-              }
+            wx.navigateTo({
+              url: '/pages/login/index?from=' + encodeURIComponent('/pages/booking/index')
             })
           } else {
             wx.switchTab({ url: '/pages/index/index' })

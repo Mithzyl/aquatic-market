@@ -4,7 +4,17 @@
 .avatar-wrapper { width: 240rpx; height: 240rpx; border-radius: 50%; overflow: hidden; border: 8rpx solid #f3e8d8; box-shadow: 0 20rpx 60rpx rgba(105,77,44,0.12); }
 .avatar { width: 100%; height: 100%; }
 .user-name { margin-top: 48rpx; font-size: 48rpx; font-weight: 700; color: #2f281f; font-family: 'Noto Serif SC', serif; }
-.contact-card { margin: 96rpx 32rpx 0; border-radius: 48rpx; background: #ffffff; padding: 32rpx; box-shadow: 0 20rpx 40rpx rgba(130,96,59,0.05); }
+.user-phone { margin-top: 16rpx; font-size: 28rpx; color: #7d6a53; }
+
+/* 登录/退出按钮区域 */
+.auth-section { margin: 48rpx 32rpx 0; }
+.auth-btn { width: 100%; height: 96rpx; border-radius: 48rpx; font-size: 32rpx; font-weight: 600; border: none; }
+.auth-btn-login { background: #1f4034; color: #ffffff; box-shadow: 0 28rpx 56rpx rgba(31, 64, 52, 0.24); }
+.auth-btn-login:active { background: #2a5244; transform: scale(0.98); }
+.auth-btn-logout { background: #ffffff; color: #7d6a53; border: 2rpx solid #eadfce; }
+.auth-btn-logout:active { background: #f7f2ea; }
+
+.contact-card { margin: 48rpx 32rpx 0; border-radius: 48rpx; background: #ffffff; padding: 32rpx; box-shadow: 0 20rpx 40rpx rgba(130,96,59,0.05); }
 .contact-item { display: flex; align-items: center; gap: 24rpx; }
 .contact-icon { width: 80rpx; height: 80rpx; border-radius: 50%; background: #fff8f0; display: flex; align-items: center; justify-content: center; }
 .contact-icon-emoji { font-size: 40rpx; }

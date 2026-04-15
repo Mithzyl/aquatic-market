@@ -37,9 +37,9 @@ export async function getOrders(params = {}) {
 
 /**
  * 获取用户订单列表（用户端）
- * @param {number|string} userId - 用户ID
+ * 通过 token 获取当前用户的订单，不需要 userId 参数
  */
-export async function getOrdersByUserId(userId) {
+export async function getOrdersByUserId() {
   const token = localStorage.getItem('customer_token')
   const headers = { 'Content-Type': 'application/json' }
   if (token) headers['Authorization'] = `Bearer ${token}`

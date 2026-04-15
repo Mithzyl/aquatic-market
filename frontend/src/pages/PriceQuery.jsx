@@ -415,7 +415,7 @@ const PriceQuery = () => {
 
               <div className="mt-3 flex items-center gap-2 text-xs text-[#8f6f46]">
                 <span className="rounded-full bg-white px-2.5 py-1 font-semibold shadow-sm">
-                  {activeCategory.name}
+                  {activeCategory?.name || '加载中...'}
                 </span>
                 <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">
                   {keywordFilteredProducts.length} 款可选
