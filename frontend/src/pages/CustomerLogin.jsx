@@ -105,7 +105,16 @@ function CustomerLogin() {
       const data = await response.json()
 
       // 登录成功，调用 CustomerAuthContext.login() 存储 Token
-      login(data.token, data.user)
+      // 后端返回 user_id, phone, nickname 等字段，需要构造 user 对象
+      const userInfo = {
+        id: data.user_id,
+        phone: data.phone,
+        name: data.nickname,
+        nickname: data.nickname,
+        avatar_url: data.avatar_url,
+        default_merchant_id: data.default_merchant_id
+      }
+      login(data.token, userInfo)
 
       console.log('[CustomerLogin] 登录成功，等待自动跳转')
 
