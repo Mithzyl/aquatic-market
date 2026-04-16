@@ -139,6 +139,7 @@ Page({
       wx.setStorageSync(config.userKey, {
         id: data.user_id,
         phone: data.phone,
+        name: data.nickname,
         nickname: data.nickname,
         avatar_url: data.avatar_url,
         default_merchant_id: data.default_merchant_id

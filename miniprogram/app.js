@@ -8,8 +8,8 @@ App({
     cartItems: [],
     // 用户信息（从Storage同步）
     userInfo: null,
-    // 商家ID（从 API 配置动态获取）
-    merchantId: null
+    // 默认商家ID（从配置或用户信息获取）
+    defaultMerchantId: 1
   },
 
   onLaunch() {
@@ -23,6 +23,7 @@ App({
     if (auth.isLoggedIn()) {
       // 已登录，恢复用户信息
       this.globalData.userInfo = auth.getCurrentUser()
+      this.globalData.defaultMerchantId = this.globalData.userInfo?.default_merchant_id || 1
     } else {
       // 未登录，尝试自动登录
       this.autoLogin()
@@ -39,6 +40,7 @@ App({
         nickname: data.nickname,
         avatar_url: data.avatar_url
       }
+      this.globalData.defaultMerchantId = data.default_merchant_id || 1
       console.log('自动登录成功:', data.user_id)
     } catch (error) {
       console.log('自动登录失败:', error.message)
