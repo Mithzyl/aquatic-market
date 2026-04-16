@@ -1,0 +1,181 @@
+# 三容器部署架构 - Docker Compose 配置
+# 商家端服务 (merchant) + 用户端服务 (customer) + 平台后台服务 (platform)
+
+version: '3.8'
+
+services:
+  # ==================== 后端服务 ====================
+  
+  # 商家端后端服务 (端口 8001)
+  merchant-service:
+    build:
+      context: ./backend
+      dockerfile: services/merchant/Dockerfile
+    container_name: merchant-api
+    ports:
+      - "8001:8001"
+    environment:
+      - SERVICE_TYPE=merchant
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/merchant.db}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+    volumes:
+      - ./backend/shared:/app/shared:ro
+      - ./backend/config:/app/config:ro
+      - ./backend/services:/app/services:ro
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sales-network
+    restart: unless-stopped
+
+  # 用户端后端服务 (端口 8002)
+  customer-service:
+    build:
+      context: ./backend
+      dockerfile: services/customer/Dockerfile
+    container_name: customer-api
+    ports:
+      - "8002:8002"
+    environment:
+      - SERVICE_TYPE=customer
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/customer.db}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+    volumes:
+      - ./backend/shared:/app/shared:ro
+      - ./backend/config:/app/config:ro
+      - ./backend/services:/app/services:ro
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sales-network
+    restart: unless-stopped
+
+  # 平台后台后端服务 (端口 8003)
+  platform-service:
+    build:
+      context: ./backend
+      dockerfile: services/platform/Dockerfile
+    container_name: platform-api
+    ports:
+      - "8003:8003"
+    environment:
+      - SERVICE_TYPE=platform
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/platform.db}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:5175
+    volumes:
+      - ./backend/shared:/app/shared:ro
+      - ./backend/config:/app/config:ro
+      - ./backend/services:/app/services:ro
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sales-network
+    restart: unless-stopped
+
+  # ==================== 前端服务 ====================
+  
+  # 商家端前端 (端口 5173)
+  merchant-web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: merchant-web
+    ports:
+      - "5173:80"
+    environment:
+      - API_BASE_URL=http://merchant-service:8001
+      - PLATFORM_API_URL=http://platform-service:8003
+    depends_on:
+      - merchant-service
+      - platform-service
+    networks:
+      - sales-network
+    restart: unless-stopped
+
+  # 用户端前端 (端口 3000)
+  customer-web:
+    build:
+      context: ./aquatic-web-app
+      dockerfile: Dockerfile
+    container_name: customer-web
+    ports:
+      - "3000:3000"
+    environment:
+      - API_BASE_URL=http://customer-service:8002
+    depends_on:
+      - customer-service
+    networks:
+      - sales-network
+    restart: unless-stopped
+
+  # ==================== 数据库服务 ====================
+  
+  # MySQL 数据库 (可选，生产环境使用)
+  mysql:
+    image: mysql:8.0
+    container_name: sales-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root123}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-aquatic_market}
+      - MYSQL_USER=${MYSQL_USER:-aquatic_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-aquatic123}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - sales-network
+    restart: unless-stopped
+    profiles:
+      - production  # 仅在生产环境启动
+
+  # ==================== 网关服务 ====================
+  
+  # Nginx 反向代理 (可选，生产环境使用)
+  nginx:
+    image: nginx:alpine
+    container_name: sales-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - merchant-service
+      - customer-service
+      - platform-service
+    networks:
+      - sales-network
+    restart: unless-stopped
+    profiles:
+      - production  # 仅在生产环境启动
+
+# ==================== 网络配置 ====================
+networks:
+  sales-network:
+    driver: bridge
+    name: sales-network
+
+# ==================== 数据卷配置 ====================
+volumes:
+  mysql-data:
+    name: sales-mysql-data
+  data:
+    name: sales-data

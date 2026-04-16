@@ -1,0 +1,77 @@
+<!-- pages/product-detail/index.wxml - 商品详情页 -->
+<view class="page-container" wx:if="{{!loading && product}}">
+  <view class="product-image-section">
+    <image class="product-hero-image" src="{{product.image || fallbackImage}}" mode="aspectFill" />
+    <view class="product-image-overlay"></view>
+    <view class="product-image-tags" wx:if="{{product.category_name || product.tag}}">
+      <view class="product-category-tag" wx:if="{{product.category_name}}">{{product.category_name || '海鲜鲜选'}}</view>
+      <view class="product-hot-tag" wx:if="{{product.tag}}">{{product.tag}}</view>
+    </view>
+    <view class="product-image-info">
+      <text class="product-hero-name">{{product.name}}</text>
+      <text class="product-hero-desc">{{product.unit ? product.unit + ' · ' : ''}}{{product.description}}</text>
+    </view>
+  </view>
+
+  <view class="product-detail-card">
+    <view class="product-price-section">
+      <view class="product-price-info">
+        <text class="product-price-label">今日鲜选</text>
+        <view class="product-price-row">
+          <text class="product-price-value">¥{{product.price}}</text>
+          <text class="product-original-price" wx:if="{{product.original_price}}">¥{{product.original_price}}</text>
+        </view>
+      </view>
+      <view class="product-stock-card">
+        <text class="product-stock-label">门店现货</text>
+        <text class="product-stock-value">{{product.stock || 99}} 件</text>
+      </view>
+    </view>
+
+    <view class="product-badges" wx:if="{{product.badges && product.badges.length > 0}}">
+      <view class="product-badge" wx:for="{{product.badges}}" wx:key="*this">{{item}}</view>
+    </view>
+
+    <view class="product-desc-section">
+      <text class="section-label">商品介绍</text>
+      <text class="product-desc-text">{{product.description}}</text>
+    </view>
+
+    <view class="product-specs">
+      <view class="spec-item"><text class="spec-label">规格</text><text class="spec-value">{{product.unit || '门店称重'}}</text></view>
+      <view class="spec-item"><text class="spec-label">到店服务</text><text class="spec-value">保鲜处理</text></view>
+      <view class="spec-item"><text class="spec-label">推荐方式</text><text class="spec-value">{{product.badges && product.badges[0] ? product.badges[0] : '门店推荐'}}</text></view>
+    </view>
+
+    <view class="quantity-section">
+      <view class="quantity-info">
+        <text class="section-label">选择数量</text>
+        <text class="quantity-hint">按份加入已选，门店会按当前规格为你留货。</text>
+      </view>
+      <view class="stepper">
+        <view class="stepper-btn stepper-btn-minus" bindtap="onDecrease">−</view>
+        <text class="stepper-count">{{quantity}}</text>
+        <view class="stepper-btn stepper-btn-plus" bindtap="onIncrease">＋</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="bottom-bar-content">
+      <view class="bottom-btn-outline" bindtap="onAddToCart">加入已选</view>
+      <view class="bottom-btn-primary" bindtap="onBuyNow">立即下单 ¥{{product.price * quantity}}</view>
+    </view>
+  </view>
+</view>
+
+<view wx:if="{{loading}}" class="loading-container">
+  <view class="loading-spinner"></view>
+  <text class="loading-text">正在准备商品详情...</text>
+</view>
+
+<view wx:if="{{!loading && !product}}" class="empty-state">
+  <view class="empty-icon"></view>
+  <text class="empty-title">商品已下架</text>
+  <text class="empty-desc">当前没有找到这款商品，可以回到下单页继续挑选。</text>
+  <view class="empty-btn" bindtap="onGoBack">返回下单页</view>
+</view>

@@ -1,89 +1,94 @@
-from fastapi import FastAPI
-from sqlmodel import SQLModel, create_engine, Session
-from models import Product, Order, OrderItem
-from datetime import datetime
+"""
+海鲜零售预订系统 - 主入口
+FastAPI 应用配置和路由注册
+"""
 import os
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from fastapi import Depends
 
 # 加载环境变量
 load_dotenv()
 
-# 数据库连接
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./aquatic_market.db")
-# 移除 connect_args，因为 MySQL 连接器不支持 check_same_thread 参数
-engine = create_engine(DATABASE_URL)
+# 导入配置
+from config.database import create_db_and_tables
 
-# 创建数据库表
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+# 导入路由
+from routes.product_routes import router as product_router
+from routes.order_routes import router as order_router
+from routes.merchant_routes import router as merchant_router
+from routes.category_routes import router as category_router
+from routes.admin_routes import router as admin_router  # 路径别名：/api/admin/*
 
-# 初始化 FastAPI 应用
-app = FastAPI(title="海鲜零售预订系统", description="提供商品查询、价格查询、预订下单、订单管理等功能")
+# 创建 FastAPI 应用
+app = FastAPI(
+    title="海鲜零售预订系统",
+    description="提供商品查询、价格查询、预订下单、订单管理等功能"
+)
+
+# 配置 CORS 中间件 - 安全修复（Critical #4）
+environment = os.getenv("ENVIRONMENT", "development")
+
+if environment == "production":
+    # 生产环境：严格 CORS 配置
+    allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+    allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
+    
+    if not allowed_origins:
+        # 如果未配置 ALLOWED_ORIGINS，使用默认安全配置
+        import warnings
+        warnings.warn(
+            "生产环境未配置 ALLOWED_ORIGINS，CORS 将拒绝所有跨域请求。"
+            "请设置环境变量 ALLOWED_ORIGINS=https://your-domain.com",
+            UserWarning
+        )
+        allowed_origins = []
+    
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Accept"],
+    )
+else:
+    # 开发环境：宽松 CORS 配置（仅限本地开发端口）
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:5173",
+            "http://localhost:5175",
+            "http://localhost:5176",
+            "http://localhost:5177"
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # 启动时创建数据库表
 @app.on_event("startup")
 def on_startup():
+    # 生产环境必须设置 JWT_SECRET，否则拒绝启动
+    jwt_secret = os.getenv("JWT_SECRET")
+    environment = os.getenv("ENVIRONMENT", "development")
+    if environment == "production" and not jwt_secret:
+        raise RuntimeError(
+            "JWT_SECRET 环境变量未设置！生产环境必须配置 JWT_SECRET，服务拒绝启动。"
+            "请在 .env 文件或环境变量中设置 JWT_SECRET。"
+        )
     create_db_and_tables()
 
-from fastapi import Depends
+# 注册路由
+app.include_router(product_router)
+app.include_router(order_router)
+app.include_router(merchant_router)
+app.include_router(category_router)
+app.include_router(admin_router)  # 注册 /api/admin/* 路径别名
 
-# 依赖项：获取数据库会话
-def get_session():
-    with Session(engine) as session:
-        yield session
 
-# 商品相关接口
-@app.get("/products", tags=["商品"])
-def get_products(session: Session = Depends(get_session)):
-    products = session.query(Product).all()
-    return products
+# ============== 根路径 ==============
 
-@app.get("/products/{product_id}", tags=["商品"])
-def get_product(product_id: int, session: Session = Depends(get_session)):
-    product = session.query(Product).filter(Product.id == product_id).first()
-    return product
-
-@app.post("/products", tags=["商品"])
-def create_product(product: Product, session: Session = Depends(get_session)):
-    session.add(product)
-    session.commit()
-    session.refresh(product)
-    return product
-
-# 价格查询接口
-@app.get("/products/price/search", tags=["价格查询"])
-def search_products_by_price(min_price: float = 0, max_price: float = 1000, session: Session = Depends(get_session)):
-    products = session.query(Product).filter(Product.price >= min_price, Product.price <= max_price).all()
-    return products
-
-@app.get("/products/price/category", tags=["价格查询"])
-def get_products_by_category(category: str, session: Session = Depends(get_session)):
-    products = session.query(Product).filter(Product.category == category).all()
-    return products
-
-# 订单相关接口
-@app.get("/orders", tags=["订单"])
-def get_orders(session: Session = Depends(get_session)):
-    orders = session.query(Order).all()
-    return orders
-
-@app.get("/orders/{order_id}", tags=["订单"])
-def get_order(order_id: int, session: Session = Depends(get_session)):
-    order = session.query(Order).filter(Order.id == order_id).first()
-    return order
-
-@app.post("/orders", tags=["订单"])
-def create_order(order: Order, session: Session = Depends(get_session)):
-    # 确保 pickup_time 是 datetime 对象
-    if isinstance(order.pickup_time, str):
-        order.pickup_time = datetime.fromisoformat(order.pickup_time)
-    session.add(order)
-    session.commit()
-    session.refresh(order)
-    return order
-
-# 根路径
 @app.get("/")
 def read_root():
     return {"message": "海鲜零售预订系统 API"}

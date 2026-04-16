@@ -1,0 +1,35 @@
+/* pages/profile/index.wxss */
+.page-container { min-height: 100vh; background: radial-gradient(ellipse at top, rgba(255,242,221,0.84) 0%, rgba(245,238,228,0.96) 50%, #f7f2ea 100%); padding-top: 120rpx; padding-bottom: calc(env(safe-area-inset-bottom) + 24rpx); }
+
+/* ========== 未登录状态 ========== */
+.unauth-state { display: flex; flex-direction: column; align-items: center; padding: 0 32rpx; }
+.unauth-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 48rpx; }
+.unauth-avatar { width: 160rpx; height: 160rpx; border-radius: 50%; background: #e8e0d4; display: flex; align-items: center; justify-content: center; }
+.unauth-avatar-icon { width: 64rpx; height: 64rpx; border-radius: 50%; background: #c4b8a8; }
+.unauth-title { margin-top: 32rpx; font-size: 40rpx; font-weight: 700; color: #2f281f; font-family: 'Noto Serif SC', serif; }
+.unauth-desc { margin-top: 16rpx; font-size: 28rpx; color: #7d6a53; text-align: center; }
+
+/* ========== 已登录状态 ========== */
+.authed-state { display: flex; flex-direction: column; align-items: center; padding: 0 32rpx; }
+.profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 48rpx; }
+.avatar-wrapper { width: 240rpx; height: 240rpx; border-radius: 50%; overflow: hidden; border: 8rpx solid #f3e8d8; box-shadow: 0 20rpx 60rpx rgba(105,77,44,0.12); }
+.avatar { width: 100%; height: 100%; }
+.user-name { margin-top: 48rpx; font-size: 48rpx; font-weight: 700; color: #2f281f; font-family: 'Noto Serif SC', serif; }
+.user-phone { margin-top: 16rpx; font-size: 28rpx; color: #7d6a53; }
+
+/* ========== 登录/退出按钮 ========== */
+.auth-section { width: 100%; margin-bottom: 48rpx; }
+.auth-btn { width: 100%; height: 96rpx; border-radius: 48rpx; font-size: 32rpx; font-weight: 600; border: none; display: flex; align-items: center; justify-content: center; }
+.auth-btn-login { background: #1f4034; color: #ffffff; box-shadow: 0 28rpx 56rpx rgba(31, 64, 52, 0.24); }
+.auth-btn-login:active { background: #2a5244; transform: scale(0.98); }
+.auth-btn-logout { background: #ffffff; color: #7d6a53; border: 2rpx solid #eadfce; }
+.auth-btn-logout:active { background: #f7f2ea; }
+
+/* ========== 联系客服卡片 ========== */
+.contact-card { width: 100%; border-radius: 24rpx; background: #ffffff; padding: 24rpx 32rpx; box-shadow: 0 12rpx 32rpx rgba(130,96,59,0.06); }
+.contact-item { display: flex; align-items: center; gap: 20rpx; }
+.contact-icon { width: 64rpx; height: 64rpx; border-radius: 50%; background: #fff8f0; display: flex; align-items: center; justify-content: center; }
+.contact-info { flex: 1; }
+.contact-label { font-size: 24rpx; color: #9a8a78; }
+.contact-value { font-size: 30rpx; font-weight: 500; color: #2f281f; margin-top: 6rpx; }
+.contact-action { width: 56rpx; height: 56rpx; border-radius: 50%; background: #e8f5e9; display: flex; align-items: center; justify-content: center; color: #2f6b56; font-size: 24rpx; }

@@ -1,0 +1,55 @@
+<!-- pages/booking/index.wxml -->
+<view class="page-container">
+  <view class="main-content">
+    <view class="section-card">
+      <view class="section-header">
+        <view class="section-badge"><text class="section-badge-num">1</text> 已选商品</view>
+        <text class="section-subtitle">确认数量后可直接提交</text>
+      </view>
+      <view class="cart-list" wx:if="{{cartItems.length > 0}}">
+        <view class="cart-item" wx:for="{{cartItems}}" wx:key="id">
+          <image class="cart-item-image" src="{{item.image || fallbackImage}}" mode="aspectFill" />
+          <view class="cart-item-info">
+            <text class="cart-item-name">{{item.name}}</text>
+            <text class="cart-item-price">¥{{item.price}}</text>
+            <view class="stepper">
+              <view class="stepper-btn stepper-btn-minus" catchtap="onDecrease" data-id="{{item.id}}">−</view>
+              <text class="stepper-count">{{item.quantity}}</text>
+              <view class="stepper-btn stepper-btn-plus" catchtap="onIncrease" data-id="{{item.id}}">＋</view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-cart">
+        <text class="empty-cart-title">还没有选择商品</text>
+        <view class="empty-cart-btn" bindtap="onGoToOrderPage">去下单</view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{cartItems.length > 0}}">
+      <view class="section-header">
+        <view class="section-badge"><text class="section-badge-num">2</text> 取货信息</view>
+      </view>
+      <view class="form-group"><text class="form-label">取货人</text><input class="form-input" placeholder="请输入姓名" value="{{customerName}}" bindinput="onNameInput" /></view>
+      <view class="form-group"><text class="form-label">手机号</text><input class="form-input" type="number" placeholder="请输入手机号" value="{{customerPhone}}" bindinput="onPhoneInput" /></view>
+      <view class="form-group"><text class="form-label">到店时间</text><picker mode="time" value="{{pickupTime}}" bindchange="onPickupTimeChange"><view class="form-input picker-input">{{pickupTime || '请选择到店时间'}}</view></picker></view>
+    </view>
+
+    <view class="section-card" wx:if="{{cartItems.length > 0}}">
+      <view class="section-header">
+        <view class="section-badge"><text class="section-badge-num">3</text> 订单摘要</view>
+      </view>
+      <view class="summary-row"><text class="summary-label">商品件数</text><text class="summary-value">{{totalItems}} 件</text></view>
+      <view class="summary-row"><text class="summary-label">取货方式</text><text class="summary-value">到店自提</text></view>
+      <view class="summary-divider"></view>
+      <view class="summary-row"><text class="summary-label">合计</text><text class="summary-total-price">¥{{totalAmount}}</text></view>
+    </view>
+  </view>
+
+  <view class="bottom-bar" wx:if="{{cartItems.length > 0}}">
+    <view class="bottom-bar-content">
+      <view class="bottom-total"><text class="bottom-total-label">合计</text><text class="bottom-total-price">¥{{totalAmount}}</text></view>
+      <view class="bottom-submit-btn {{canSubmit ? '' : 'btn-disabled'}}" bindtap="handleSubmit">{{submitting ? '提交中...' : '提交订单'}}</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,53 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/price-query/index",
+    "pages/product-detail/index",
+    "pages/booking/index",
+    "pages/order-list/index",
+    "pages/profile/index",
+    "pages/login/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#fbf6ef",
+    "navigationBarTitleText": "柳州鲜选",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f7f2ea",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#8b755d",
+    "selectedColor": "#1f4034",
+    "backgroundColor": "#fbf6ef",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/images/tab-home.png",
+        "selectedIconPath": "static/images/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/price-query/index",
+        "text": "下单",
+        "iconPath": "static/images/tab-order.png",
+        "selectedIconPath": "static/images/tab-order-active.png"
+      },
+      {
+        "pagePath": "pages/order-list/index",
+        "text": "订单",
+        "iconPath": "static/images/tab-receipt.png",
+        "selectedIconPath": "static/images/tab-receipt-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "static/images/tab-user.png",
+        "selectedIconPath": "static/images/tab-user-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -1,0 +1,120 @@
+<!-- pages/price-query/index.wxml - 下单页模板 -->
+<view class="page-container">
+  <!-- 暂无商家状态 UI -->
+  <view wx:if="{{isEmptyMerchant}}" class="empty-merchant-container">
+    <view class="empty-merchant-card">
+      <!-- 图标 -->
+      <view class="empty-merchant-icon-wrapper">
+        <view class="empty-merchant-icon"></view>
+      </view>
+
+      <!-- 主标题 -->
+      <text class="empty-merchant-title">暂无商家入驻</text>
+
+      <!-- 说明文案 -->
+      <text class="empty-merchant-desc">当前平台暂无商家入驻，敬请期待优质海鲜商家上线。</text>
+
+      <!-- 联系方式（如果有） -->
+      <view wx:if="{{merchantConfig.contact_phone}}" class="empty-merchant-contact">
+        <text class="empty-merchant-contact-label">如有疑问，请联系平台</text>
+        <text class="empty-merchant-contact-phone">{{merchantConfig.contact_phone}}</text>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="empty-merchant-btn" bindtap="onRetry">稍后再来</view>
+    </view>
+  </view>
+
+  <!-- 正常内容 -->
+  <block wx:elif="{{!isEmptyMerchant}}">
+    <!-- Header -->
+    <view class="header">
+    <view class="header-card">
+      <view class="header-top">
+        <view class="header-info">
+          <view class="header-badge">
+            <view class="header-badge-dot"></view>
+            <text>自助下单</text>
+          </view>
+          <text class="header-title">左侧分类，右侧商品</text>
+        </view>
+        <view class="header-orders" bindtap="onGoToOrders">
+          <text>我的订单</text>
+        </view>
+      </view>
+      <view class="search-bar">
+        <view class="search-icon-text"></view>
+        <input class="search-input" placeholder="搜索虾类、黑虎虾、三文鱼..." value="{{searchQuery}}" bindinput="onSearchInput" />
+        <view wx:if="{{searchQuery}}" class="search-clear" bindtap="onClearSearch">✕</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Content Area -->
+  <view class="content-area">
+    <view class="content-card">
+      <!-- Category Sidebar -->
+      <scroll-view class="category-sidebar" scroll-y>
+        <view wx:for="{{categories}}" wx:key="id" class="category-item {{activeCategoryId === item.id ? 'category-item-active' : ''}}" bindtap="onCategoryClick" data-id="{{item.id}}">
+          <view class="category-icon-box {{activeCategoryId === item.id ? 'category-icon-active' : ''}}">
+            <text>{{item.icon}}</text>
+          </view>
+          <text class="category-label">{{item.name}}</text>
+        </view>
+      </scroll-view>
+
+      <!-- Product List -->
+      <scroll-view class="product-area" scroll-y>
+        <view wx:if="{{groupedProducts.length === 0}}" class="empty-products">
+          <view class="empty-icon-box"></view>
+          <text class="empty-title">没有找到对应商品</text>
+          <text class="empty-desc">试试切换分类，或搜索更短的关键词。</text>
+        </view>
+
+        <block wx:for="{{groupedProducts}}" wx:key="id" wx:for-item="group">
+          <view class="product-section">
+            <view class="product-section-header">
+              <text class="product-section-name">{{group.name}}</text>
+              <view class="product-section-count">{{group.products.length}} 款</view>
+            </view>
+            <view class="product-list">
+              <view wx:for="{{group.products}}" wx:key="id" wx:for-item="product" class="product-card" bindtap="onProductClick" data-id="{{product.id}}">
+                <view class="product-image-box">
+                  <image class="product-image" src="{{product.image}}" mode="aspectFill" />
+                  <view class="product-tag" wx:if="{{product.tag}}">{{product.tag}}</view>
+                </view>
+                <view class="product-info">
+                  <text class="product-name">{{product.name}}</text>
+                  <text class="product-unit">{{product.unit}}</text>
+                  <text class="product-desc">{{product.description}}</text>
+                  <view class="product-price-row">
+                    <text class="product-price">¥{{product.price}}</text>
+                    <text class="product-original-price" wx:if="{{product.original_price}}">¥{{product.original_price}}</text>
+                  </view>
+                </view>
+                <view class="product-action">
+                  <view class="add-btn" catchtap="onAddToCart" data-product="{{product}}">＋</view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- Cart Summary Bar -->
+  <view wx:if="{{totalItems > 0}}" class="cart-bar">
+    <view class="cart-bar-inner">
+      <view class="cart-bar-info" bindtap="onToggleCartPreview">
+        <view class="cart-icon-box"><view class="cart-badge">{{totalItems}}</view></view>
+        <text class="cart-total-price">¥{{totalPrice}}</text>
+      </view>
+      <view class="cart-checkout-btn" bindtap="onGoToBooking">去结算</view>
+    </view>
+  </view>
+
+  <!-- Toast -->
+  <view wx:if="{{showAddedToast}}" class="toast">已加入已选</view>
+  </block>
+</view>

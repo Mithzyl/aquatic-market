@@ -1,12 +1,55 @@
-import React from 'react'
-
-// 模拟用户数据，实际项目中应从 Context 或 API 获取
-const mockUser = {
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
-  name: '柳州鲜选会员'
-}
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useCustomerAuth } from '../contexts/CustomerAuthContext'
+import { CUSTOMER_API_BASE_URL } from '../api/config'
 
 const My = () => {
+  const navigate = useNavigate()
+  const { user, token, login, logout } = useCustomerAuth()
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // 页面加载时刷新用户数据
+  useEffect(() => {
+    const refreshUserData = async () => {
+      if (!token) return
+      
+      setIsRefreshing(true)
+      try {
+        const response = await fetch(`${CUSTOMER_API_BASE_URL}/api/customer/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (response.ok) {
+          const userData = await response.json()
+          // 使用现有 token 和新获取的用户数据更新 Context
+          login(token, userData)
+          console.log('[My] 用户数据已刷新:', userData)
+        } else {
+          console.error('[My] 获取用户数据失败:', response.status)
+        }
+      } catch (error) {
+        console.error('[My] 刷新用户数据出错:', error)
+      } finally {
+        setIsRefreshing(false)
+      }
+    }
+    
+    refreshUserData()
+  }, [token, login])
+
+  // 处理登出
+  const handleLogout = () => {
+    logout()
+    navigate('/', { replace: true })
+  }
+
+  // 用户信息（从 Context 获取）
+  const userName = user?.name || '柳州鲜选会员'
+  const userPhone = user?.phone || '未绑定手机'
+  const userAvatar = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}`
+
   return (
     <div
       className="min-h-screen"
@@ -16,6 +59,13 @@ const My = () => {
         paddingBottom: 'calc(var(--app-bottom-nav-space) + 12px)'
       }}
     >
+      {/* 加载状态提示 */}
+      {isRefreshing && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-full bg-[#1f4034] px-4 py-2 text-sm text-white shadow-lg">
+          正在刷新数据...
+        </div>
+      )}
+      
       <div className="mx-auto max-w-lg px-4 pt-12 pb-8">
         {/* 头像区域 */}
         <div className="flex flex-col items-center">
@@ -24,8 +74,8 @@ const My = () => {
             style={{ borderColor: '#f3e8d8' }}
           >
             <img
-              src={mockUser.avatar}
-              alt={mockUser.name}
+              src={userAvatar}
+              alt={userName}
               className="h-full w-full object-cover"
             />
           </div>
@@ -38,8 +88,13 @@ const My = () => {
               fontFamily: '"Noto Serif SC", "Songti SC", serif'
             }}
           >
-            {mockUser.name}
+            {userName}
           </h1>
+
+          {/* 用户手机号 */}
+          <p className="mt-2 text-sm text-[#7d6a53]">
+            {userPhone}
+          </p>
         </div>
 
         {/* 联系信息卡片 */}
@@ -85,6 +140,16 @@ const My = () => {
               </svg>
             </a>
           </div>
+        </div>
+
+        {/* 登出按钮 */}
+        <div className="mt-8">
+          <button
+            onClick={handleLogout}
+            className="w-full h-12 rounded-xl bg-[#f5ede1] text-[#7d6a53] font-medium text-sm hover:bg-[#ebe3d7] active:scale-[0.98] transition-all"
+          >
+            退出登录
+          </button>
         </div>
       </div>
     </div>

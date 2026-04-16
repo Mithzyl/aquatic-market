@@ -1,63 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-const merchantContact = {
-  phoneLabel: '400-820-5520',
-  href: 'tel:4008205520'
-}
-
-const mockOrders = [
-  {
-    id: 'DD2026040201',
-    items: [
-      { name: '三文鱼刺身', quantity: 2, price: 88 },
-      { name: '鲜活龙虾', quantity: 1, price: 198 }
-    ],
-    customerName: '张三',
-    customerPhone: '138****8000',
-    pickupTime: '2026-04-03 10:00',
-    totalAmount: 374,
-    status: 'pending',
-    createdAt: '2026-04-02 09:00'
-  },
-  {
-    id: 'DD2026040202',
-    items: [
-      { name: '鲍鱼', quantity: 3, price: 68 }
-    ],
-    customerName: '李四',
-    customerPhone: '139****9000',
-    pickupTime: '2026-04-03 14:00',
-    totalAmount: 204,
-    status: 'preparing',
-    createdAt: '2026-04-02 10:00'
-  },
-  {
-    id: 'DD2026040203',
-    items: [
-      { name: '帝王蟹', quantity: 1, price: 398 },
-      { name: '扇贝', quantity: 2, price: 38 }
-    ],
-    customerName: '王五',
-    customerPhone: '137****7000',
-    pickupTime: '2026-04-02 16:00',
-    totalAmount: 474,
-    status: 'completed',
-    createdAt: '2026-04-02 11:00'
-  },
-  {
-    id: 'DD2026040204',
-    items: [
-      { name: '金枪鱼', quantity: 1, price: 128 }
-    ],
-    customerName: '赵六',
-    customerPhone: '136****6000',
-    pickupTime: '2026-04-01 18:00',
-    totalAmount: 128,
-    status: 'completed',
-    createdAt: '2026-04-01 15:00'
-  }
-]
+import { useCustomerAuth } from '../contexts/CustomerAuthContext'
+import { getOrdersByUserId } from '../api/orders'
 
 const filterTabs = [
   { key: 'all', label: '全部' },
@@ -143,18 +87,6 @@ function formatDateLabel(value) {
   return `${date.getMonth() + 1}月${date.getDate()}日`
 }
 
-function formatPickupWindow(value) {
-  const center = parseDateTime(value)
-  if (center.getTime() === 0) return value
-
-  const start = new Date(center.getTime() - 60 * 60 * 1000)
-  const end = new Date(center.getTime() + 60 * 60 * 1000)
-  const sameDay = start.toDateString() === end.toDateString()
-  const dayLabel = sameDay ? `${start.getMonth() + 1}月${start.getDate()}日` : `${start.getMonth() + 1}月${start.getDate()}日 - ${end.getMonth() + 1}月${end.getDate()}日`
-
-  return `${dayLabel} ${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - ${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`
-}
-
 function getOrderTitle(order) {
   if (!order?.items?.length) return '海鲜订单'
   if (order.items.length === 1) return order.items[0].name
@@ -217,7 +149,6 @@ function EmptyState() {
 }
 
 function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
-  const config = statusConfig[order.status] || statusConfig.pending
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
@@ -229,7 +160,7 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
           <div className="min-w-[132px] text-right">
             <div className="text-[11px] uppercase tracking-[0.16em] text-[#aa9277]">{getOrderActionText(order.status)}</div>
             <div className="mt-1 text-sm font-semibold text-[#2f281f]">订单号 {order.id}</div>
-            <div className="mt-1 text-xs text-[#8f775d]">下单日期 {formatDateLabel(order.createdAt)}</div>
+            <div className="mt-1 text-xs text-[#8f775d]">下单日期 {formatDateLabel(order.created_at)}</div>
           </div>
         </div>
 
@@ -240,7 +171,7 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
           >
             {getOrderTitle(order)}
           </h2>
-          <div className="text-[36px] font-bold text-[#df6f33]">¥{order.totalAmount}</div>
+          <div className="text-[36px] font-bold text-[#df6f33]">¥{order.total_amount}</div>
         </div>
 
         <button
@@ -302,11 +233,11 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[#9a846c]">完成时间</span>
-                    <span className="font-semibold text-[#2f281f]">{formatDateTimeLabel(order.pickupTime)}</span>
+                    <span className="font-semibold text-[#2f281f]">{formatDateTimeLabel(order.pickup_time)}</span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[#9a846c]">支付金额</span>
-                    <span className="font-semibold text-[#df6f33]">¥{order.totalAmount}</span>
+                    <span className="font-semibold text-[#df6f33]">¥{order.total_amount}</span>
                   </div>
                 </div>
               </div>
@@ -318,11 +249,11 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
                 <div className="space-y-3 text-sm text-[#6f5e4b]">
                   <div>
                     <div className="text-[11px] text-[#9a846c]">收货人</div>
-                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customerName}</div>
+                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customer_name}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-[#9a846c]">联系电话</div>
-                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customerPhone}</div>
+                    <div className="mt-1 font-semibold text-[#2f281f]">{order.customer_phone}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-[#9a846c]">收货状态</div>
@@ -340,6 +271,7 @@ function OrderCard({ order, isReceiptOpen, onToggleReceipt }) {
 
 function OrderManagement() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useCustomerAuth()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState('all')
@@ -349,16 +281,20 @@ function OrderManagement() {
     let mounted = true
 
     const fetchOrders = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/orders')
-        const data = await response.json()
+      // 只有登录状态才获取订单
+      if (!isAuthenticated) {
+        setLoading(false)
+        return
+      }
 
+      try {
+        const data = await getOrdersByUserId()
         if (mounted) {
-          setOrders(Array.isArray(data) && data.length ? data : mockOrders)
+          setOrders(Array.isArray(data) ? data : [])
         }
       } catch (error) {
         if (mounted) {
-          setOrders(mockOrders)
+          setOrders([])
         }
       } finally {
         if (mounted) {
@@ -372,10 +308,10 @@ function OrderManagement() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [isAuthenticated])
 
   const sortedOrders = useMemo(() => {
-    return [...orders].sort((a, b) => parseDateTime(b.createdAt).getTime() - parseDateTime(a.createdAt).getTime())
+    return [...orders].sort((a, b) => parseDateTime(b.created_at).getTime() - parseDateTime(a.created_at).getTime())
   }, [orders])
 
   const filteredOrders = useMemo(() => {

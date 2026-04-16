@@ -1,0 +1,38 @@
+/* pages/booking/index.wxss */
+.page-container { min-height: 100vh; background: radial-gradient(circle at top, rgba(255,242,221,0.84), rgba(245,238,228,0.96) 28%, #f7f2ea 62%, #efe6db 100%); padding-bottom: 200rpx; }
+.main-content { padding: 24rpx 32rpx; }
+.section-card { border-radius: 64rpx; border: 2rpx solid #eadfce; background: #fffaf3; overflow: hidden; margin-bottom: 32rpx; box-shadow: 0 40rpx 80rpx rgba(105,77,44,0.08); }
+.section-header { border-bottom: 2rpx solid #efe4d4; background: linear-gradient(180deg, #fff8ef 0%, #fbf4e8 100%); padding: 40rpx; }
+.section-badge { display: inline-flex; align-items: center; gap: 12rpx; background: #fff3e5; border-radius: 48rpx; padding: 8rpx 24rpx; font-size: 22rpx; font-weight: 600; color: #c47b36; }
+.section-badge-num { display: flex; align-items: center; justify-content: center; width: 40rpx; height: 40rpx; border-radius: 50%; background: #e78a4b; color: #ffffff; font-size: 22rpx; }
+.section-subtitle { font-size: 28rpx; color: #7d6a53; margin-top: 16rpx; }
+.cart-list { padding: 32rpx; }
+.cart-item { display: flex; align-items: center; gap: 24rpx; border-radius: 56rpx; border: 2rpx solid #eee2d2; background: #ffffff; padding: 24rpx; margin-bottom: 24rpx; }
+.cart-item:last-child { margin-bottom: 0; }
+.cart-item-image { width: 160rpx; height: 160rpx; border-radius: 44rpx; flex-shrink: 0; }
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-name { font-size: 28rpx; font-weight: 600; color: #2f281f; }
+.cart-item-price { font-size: 56rpx; font-weight: 700; color: #df6f33; line-height: 1; margin-top: 8rpx; }
+.stepper { display: flex; align-items: center; gap: 24rpx; background: #fff3e9; border-radius: 96rpx; padding: 12rpx; margin-top: 16rpx; }
+.stepper-btn { width: 64rpx; height: 64rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28rpx; }
+.stepper-btn-minus { background: #ffffff; color: #855326; }
+.stepper-btn-plus { background: #2f6b56; color: #ffffff; }
+.stepper-count { min-width: 36rpx; text-align: center; font-size: 28rpx; font-weight: 600; color: #6b4a2b; }
+.empty-cart { text-align: center; padding: 80rpx 48rpx; }
+.empty-cart-title { font-size: 48rpx; font-weight: 700; color: #2f281f; }
+.empty-cart-btn { margin-top: 40rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: 88rpx; background: #1f4034; padding: 0 48rpx; font-size: 28rpx; font-weight: 600; color: #ffffff; }
+.form-group { margin-bottom: 32rpx; padding: 0 32rpx; }
+.form-label { font-size: 28rpx; font-weight: 500; color: #6f5e4b; margin-bottom: 16rpx; }
+.form-input { height: 104rpx; border-radius: 44rpx; border: 2rpx solid transparent; background: #f7f1e8; padding: 0 32rpx; font-size: 28rpx; color: #2f281f; }
+.picker-input { height: 104rpx; border-radius: 44rpx; background: #f7f1e8; padding: 0 32rpx; font-size: 28rpx; color: #2f281f; display: flex; align-items: center; }
+.summary-row { display: flex; align-items: center; justify-content: space-between; padding: 16rpx 40rpx; font-size: 28rpx; color: #7d6a53; }
+.summary-value { font-weight: 600; color: #2f281f; }
+.summary-divider { border-top: 2rpx solid #efe4d4; margin: 16rpx 40rpx; }
+.summary-total-price { font-size: 64rpx; font-weight: 700; color: #df6f33; }
+.bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: linear-gradient(180deg, rgba(251,246,239,0), rgba(251,246,239,0.94) 24%, #fbf6ef 100%); padding: 32rpx; padding-bottom: calc(32rpx + env(safe-area-inset-bottom)); }
+.bottom-bar-content { display: flex; align-items: center; gap: 24rpx; border-radius: 60rpx; border: 2rpx solid #eadfce; background: rgba(255,250,243,0.92); padding: 24rpx; }
+.bottom-total { flex: 1; min-width: 0; }
+.bottom-total-label { font-size: 22rpx; text-transform: uppercase; letter-spacing: 0.16em; color: #c47b36; }
+.bottom-total-price { font-size: 56rpx; font-weight: 700; color: #2f281f; line-height: 1; margin-top: 4rpx; }
+.bottom-submit-btn { height: 112rpx; display: flex; align-items: center; justify-content: center; border-radius: 44rpx; background: #1f4034; padding: 0 48rpx; font-size: 28rpx; font-weight: 600; color: #ffffff; box-shadow: 0 28rpx 56rpx rgba(31,64,52,0.24); }
+.btn-disabled { background: #e8dfd2; color: #a59481; box-shadow: none; }

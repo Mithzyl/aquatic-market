@@ -1,0 +1,50 @@
+<!-- pages/profile/index.wxml -->
+<view class="page-container">
+  <!-- 未登录状态 -->
+  <view wx:if="{{!isLoggedIn}}" class="unauth-state">
+    <view class="unauth-header">
+      <view class="unauth-avatar">
+        <view class="unauth-avatar-icon"></view>
+      </view>
+      <text class="unauth-title">欢迎使用柳州鲜选</text>
+      <text class="unauth-desc">登录后可查看订单、享受会员优惠</text>
+    </view>
+    <view class="auth-section">
+      <button class="auth-btn auth-btn-login" bindtap="onLogin">立即登录</button>
+    </view>
+    <view class="contact-card">
+      <view class="contact-item" bindtap="onCallPhone">
+        <view class="contact-icon"></view>
+        <view class="contact-info">
+          <text class="contact-label">联系客服</text>
+          <text class="contact-value">{{contactPhone}}</text>
+        </view>
+        <view class="contact-action"><text>→</text></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 已登录状态 -->
+  <view wx:if="{{isLoggedIn}}" class="authed-state">
+    <view class="profile-header">
+      <view class="avatar-wrapper">
+        <image class="avatar" src="{{userInfo.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user'}}" mode="aspectFill" />
+      </view>
+      <text class="user-name">{{userInfo.nickname || userInfo.phone || '柳州鲜选会员'}}</text>
+      <text class="user-phone" wx:if="{{userInfo.phone}}">{{userInfo.phone}}</text>
+    </view>
+    <view class="auth-section">
+      <button class="auth-btn auth-btn-logout" bindtap="onLogout">退出登录</button>
+    </view>
+    <view class="contact-card">
+      <view class="contact-item" bindtap="onCallPhone">
+        <view class="contact-icon"></view>
+        <view class="contact-info">
+          <text class="contact-label">联系客服</text>
+          <text class="contact-value">{{contactPhone}}</text>
+        </view>
+        <view class="contact-action"><text>→</text></view>
+      </view>
+    </view>
+  </view>
+</view>

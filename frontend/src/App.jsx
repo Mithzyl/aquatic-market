@@ -1,15 +1,70 @@
 import React, { useState, createContext, useContext } from 'react'
-import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import ProductDetail from './pages/ProductDetail'
 import Booking from './pages/Booking'
 import PriceQuery from './pages/PriceQuery'
 import OrderManagement from './pages/OrderManagement'
 import My from './pages/My'
+import CustomerLogin from './pages/CustomerLogin'
+import AdminLogin from './pages/admin/AdminLogin'
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminProducts from './pages/admin/AdminProducts'
+import AdminRevenue from './pages/admin/AdminRevenue'
+import AdminCategories from './pages/admin/AdminCategories'
+import AdminSettings from './pages/admin/AdminSettings'
+import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
+// 平台后台页面
+import PlatformLogin from './pages/platform/PlatformLogin'
+import PlatformLayout from './pages/platform/PlatformLayout'
+import PlatformDashboard from './pages/platform/PlatformDashboard'
+import PlatformMerchants from './pages/platform/PlatformMerchants'
+import { PlatformAuthProvider, usePlatformAuth } from './contexts/PlatformAuthContext'
+// 用户端认证
+import { CustomerAuthProvider, useCustomerAuth } from './contexts/CustomerAuthContext'
 
 const CartContext = createContext()
 
 export const useCart = () => useContext(CartContext)
+
+// 管理端路由守卫
+function AdminRouteGuard({ children }) {
+  const { isAuthenticated } = useAdminAuth()
+  const location = useLocation()
+
+  if (!isAuthenticated) {
+    // 未登录则跳转到登录页，保存当前路径
+    return <Navigate to="/admin" state={{ from: location.pathname }} replace />
+  }
+
+  return children
+}
+
+// 平台后台路由守卫
+function PlatformRouteGuard({ children }) {
+  const { isAuthenticated } = usePlatformAuth()
+  const location = useLocation()
+
+  if (!isAuthenticated) {
+    // 未登录则跳转到登录页
+    return <Navigate to="/platform/login" state={{ from: location.pathname }} replace />
+  }
+
+  return children
+}
+
+// 用户端路由守卫
+function CustomerRouteGuard({ children }) {
+  const { isAuthenticated } = useCustomerAuth()
+  const location = useLocation()
+
+  if (!isAuthenticated) {
+    // 未登录则跳转到用户端登录页，保存当前路径
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />
+  }
+
+  return children
+}
 
 const tabs = [
   { path: '/', label: '首页', icon: 'home' },
@@ -139,7 +194,7 @@ function AppShell() {
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const hideGlobalNav = location.pathname === '/booking' || location.pathname.startsWith('/product/')
+  const hideGlobalNav = location.pathname === '/booking' || location.pathname.startsWith('/product/') || location.pathname === '/login'
 
   return (
     <CartContext.Provider value={{ cartItems, addToCart, updateQuantity, removeFromCart, clearCart, totalItems, totalPrice }}>
@@ -150,8 +205,23 @@ function AppShell() {
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/booking" element={<Booking />} />
             <Route path="/price-query" element={<PriceQuery />} />
-            <Route path="/order-management" element={<OrderManagement />} />
-            <Route path="/my" element={<My />} />
+            <Route path="/login" element={<CustomerLogin />} />
+            <Route
+              path="/order-management"
+              element={
+                <CustomerRouteGuard>
+                  <OrderManagement />
+                </CustomerRouteGuard>
+              }
+            />
+            <Route
+              path="/my"
+              element={
+                <CustomerRouteGuard>
+                  <My />
+                </CustomerRouteGuard>
+              }
+            />
           </Routes>
         </main>
 
@@ -161,10 +231,108 @@ function AppShell() {
   )
 }
 
+// 管理端 Shell（独立路由，无底部导航）
+function AdminShell() {
+  return (
+    <AdminAuthProvider>
+      <Routes>
+        <Route path="" element={<AdminLogin />} />
+        <Route element={<AdminLayout />}>
+          {/* 管理端其他路由需要登录 */}
+          <Route
+            path="products"
+            element={
+              <AdminRouteGuard>
+                <AdminProducts />
+              </AdminRouteGuard>
+            }
+          />
+          <Route
+            path="categories"
+            element={
+              <AdminRouteGuard>
+                <AdminCategories />
+              </AdminRouteGuard>
+            }
+          />
+          <Route
+            path="revenue"
+            element={
+              <AdminRouteGuard>
+                <AdminRevenue />
+              </AdminRouteGuard>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <AdminRouteGuard>
+                <AdminSettings />
+              </AdminRouteGuard>
+            }
+          />
+        </Route>
+      </Routes>
+    </AdminAuthProvider>
+  )
+}
+
+// 平台后台 Shell（独立路由，侧边栏布局）
+function PlatformShell() {
+  return (
+    <PlatformAuthProvider>
+      <Routes>
+        {/* 登录页 */}
+        <Route path="login" element={<PlatformLogin />} />
+        {/* 布局页 */}
+        <Route element={<PlatformLayout />}>
+          {/* Dashboard */}
+          <Route
+            path="dashboard"
+            element={
+              <PlatformRouteGuard>
+                <PlatformDashboard />
+              </PlatformRouteGuard>
+            }
+          />
+          {/* 商家管理 */}
+          <Route
+            path="merchants"
+            element={
+              <PlatformRouteGuard>
+                <PlatformMerchants />
+              </PlatformRouteGuard>
+            }
+          />
+          {/* 默认跳转到 Dashboard */}
+          <Route
+            path=""
+            element={<Navigate to="/platform/dashboard" replace />}
+          />
+        </Route>
+      </Routes>
+    </PlatformAuthProvider>
+  )
+}
+
 function App() {
   return (
     <Router>
-      <AppShell />
+      <Routes>
+        {/* 平台后台路由 */}
+        <Route path="/platform/*" element={<PlatformShell />} />
+        {/* 管理端路由 */}
+        <Route path="/admin/*" element={<AdminShell />} />
+        {/* 用户端路由 */}
+        <Route
+          path="/*"
+          element={
+            <CustomerAuthProvider>
+              <AppShell />
+            </CustomerAuthProvider>
+          }
+        />
+      </Routes>
     </Router>
   )
 }
