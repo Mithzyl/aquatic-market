@@ -6,7 +6,32 @@
     <text class="loading-text">加载中...</text>
   </view>
 
-  <block wx:else>
+  <!-- 暂无商家状态 UI -->
+  <view wx:elif="{{isEmptyMerchant}}" class="empty-merchant-container">
+    <view class="empty-merchant-card">
+      <!-- 图标 -->
+      <view class="empty-merchant-icon-wrapper">
+        <view class="empty-merchant-icon">🏪</view>
+      </view>
+
+      <!-- 主标题 -->
+      <text class="empty-merchant-title">暂无商家入驻</text>
+
+      <!-- 说明文案 -->
+      <text class="empty-merchant-desc">当前平台暂无商家入驻，敬请期待优质海鲜商家上线。</text>
+
+      <!-- 联系方式（如果有） -->
+      <view wx:if="{{merchantConfig.contact_phone}}" class="empty-merchant-contact">
+        <text class="empty-merchant-contact-label">如有疑问，请联系平台</text>
+        <text class="empty-merchant-contact-phone">{{merchantConfig.contact_phone}}</text>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="empty-merchant-btn" bindtap="onRetry">稍后再来</view>
+    </view>
+  </view>
+
+  <block wx:elif="{{!isEmptyMerchant}}">
     <!-- Hero Banner -->
     <view class="hero-section" wx:if="{{heroProduct}}">
       <image class="hero-bg" src="{{heroProduct.image}}" mode="aspectFill" />

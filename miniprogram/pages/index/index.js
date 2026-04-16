@@ -10,18 +10,40 @@ Page({
     categories: [],
     serviceHighlights: config.serviceHighlights,
     shopName: '柳州鲜选海产店',
-    loading: true
+    loading: true,
+    isEmptyMerchant: false,
+    merchantConfig: null
   },
 
   onLoad() {
+    this.checkMerchantStatus()
     this.fetchData()
     this.loadMerchantConfig()
   },
 
   onPullDownRefresh() {
+    this.checkMerchantStatus()
     this.fetchData().then(() => {
       wx.stopPullDownRefresh()
     })
+  },
+
+  async checkMerchantStatus() {
+    try {
+      const hasMerchant = await configService.hasMerchant()
+      const merchantConfig = await configService.getConfig()
+      this.setData({
+        isEmptyMerchant: !hasMerchant,
+        merchantConfig: merchantConfig
+      })
+    } catch (error) {
+      console.error('Failed to check merchant status:', error)
+      // 如果检查失败，设置为空商家状态
+      this.setData({
+        isEmptyMerchant: true,
+        merchantConfig: configService.getEmptyConfig()
+      })
+    }
   },
 
   async loadMerchantConfig() {
@@ -51,6 +73,14 @@ Page({
       console.error('Failed to fetch data:', error)
       this.setData({ loading: false })
     }
+  },
+
+  onRetry() {
+    wx.showLoading({ title: '重新加载...' })
+    this.checkMerchantStatus()
+    this.fetchData().then(() => {
+      wx.hideLoading()
+    })
   },
 
   onGoToOrder() {

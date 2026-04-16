@@ -5,6 +5,99 @@
   padding-bottom: calc(env(safe-area-inset-bottom) + 24rpx);
 }
 
+/* 空商家状态样式 */
+.empty-merchant-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx 32rpx;
+}
+
+.empty-merchant-card {
+  width: 100%;
+  max-width: 680rpx;
+  border-radius: 68rpx;
+  background: rgba(255, 251, 245, 0.92);
+  border: 2rpx solid #eadfce;
+  box-shadow: 0 36rpx 76rpx rgba(102, 76, 42, 0.07);
+  padding: 80rpx 48rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-merchant-icon-wrapper {
+  width: 160rpx;
+  height: 160rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f6efe5;
+  box-shadow: 0 16rpx 40rpx rgba(94, 70, 38, 0.08);
+}
+
+.empty-merchant-icon {
+  font-size: 80rpx;
+  color: #b17e4b;
+}
+
+.empty-merchant-title {
+  margin-top: 48rpx;
+  font-size: 52rpx;
+  font-weight: 700;
+  color: #2c241b;
+  text-align: center;
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+}
+
+.empty-merchant-desc {
+  margin-top: 24rpx;
+  font-size: 28rpx;
+  line-height: 48rpx;
+  color: #7d6a53;
+  text-align: center;
+  max-width: 560rpx;
+}
+
+.empty-merchant-contact {
+  margin-top: 48rpx;
+  border-radius: 44rpx;
+  background: #fff4e8;
+  padding: 32rpx 40rpx;
+  text-align: center;
+}
+
+.empty-merchant-contact-label {
+  font-size: 24rpx;
+  color: #b17e4b;
+  display: block;
+}
+
+.empty-merchant-contact-phone {
+  margin-top: 16rpx;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #2c241b;
+  display: block;
+}
+
+.empty-merchant-btn {
+  margin-top: 64rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 96rpx;
+  background: #2d2a27;
+  padding: 24rpx 48rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #ffffff;
+  box-shadow: 0 28rpx 60rpx rgba(35, 31, 28, 0.22);
+}
+
 /* Hero Section */
 .hero-section {
   position: relative;

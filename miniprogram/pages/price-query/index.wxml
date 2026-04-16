@@ -1,7 +1,34 @@
 <!-- pages/price-query/index.wxml - 下单页模板 -->
 <view class="page-container">
-  <!-- Header -->
-  <view class="header">
+  <!-- 暂无商家状态 UI -->
+  <view wx:if="{{isEmptyMerchant}}" class="empty-merchant-container">
+    <view class="empty-merchant-card">
+      <!-- 图标 -->
+      <view class="empty-merchant-icon-wrapper">
+        <view class="empty-merchant-icon">🏪</view>
+      </view>
+
+      <!-- 主标题 -->
+      <text class="empty-merchant-title">暂无商家入驻</text>
+
+      <!-- 说明文案 -->
+      <text class="empty-merchant-desc">当前平台暂无商家入驻，敬请期待优质海鲜商家上线。</text>
+
+      <!-- 联系方式（如果有） -->
+      <view wx:if="{{merchantConfig.contact_phone}}" class="empty-merchant-contact">
+        <text class="empty-merchant-contact-label">如有疑问，请联系平台</text>
+        <text class="empty-merchant-contact-phone">{{merchantConfig.contact_phone}}</text>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="empty-merchant-btn" bindtap="onRetry">稍后再来</view>
+    </view>
+  </view>
+
+  <!-- 正常内容 -->
+  <block wx:elif="{{!isEmptyMerchant}}">
+    <!-- Header -->
+    <view class="header">
     <view class="header-card">
       <view class="header-top">
         <view class="header-info">
@@ -89,4 +116,5 @@
 
   <!-- Toast -->
   <view wx:if="{{showAddedToast}}" class="toast">已加入已选</view>
+  </block>
 </view>

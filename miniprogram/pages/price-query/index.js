@@ -1,6 +1,7 @@
 // pages/price-query/index.js - 下单页
 const { getProducts, getCategories } = require('../../services/product')
 const config = require('../../utils/config')
+const configService = require('../../services/config')
 const app = getApp()
 
 Page({
@@ -13,15 +14,40 @@ Page({
     showAddedToast: false,
     showCartPreview: false,
     totalItems: 0,
-    totalPrice: 0
+    totalPrice: 0,
+    isEmptyMerchant: false,
+    merchantConfig: null,
+    categoryStories: {}
   },
 
   onLoad() {
+    this.checkMerchantStatus()
     this.fetchData()
   },
 
   onShow() {
     this.updateCartInfo()
+  },
+
+  async checkMerchantStatus() {
+    try {
+      const hasMerchant = await configService.hasMerchant()
+      const merchantConfig = await configService.getConfig()
+      this.setData({
+        isEmptyMerchant: !hasMerchant,
+        merchantConfig: merchantConfig,
+        // 安全访问 categoryStories，如果为空则使用默认值
+        categoryStories: merchantConfig.category_stories || {}
+      })
+    } catch (error) {
+      console.error('Failed to check merchant status:', error)
+      // 如果检查失败，设置为空商家状态
+      this.setData({
+        isEmptyMerchant: true,
+        merchantConfig: configService.getEmptyConfig(),
+        categoryStories: {}
+      })
+    }
   },
 
   updateCartInfo() {
@@ -123,6 +149,14 @@ Page({
 
   onGoToOrders() {
     wx.switchTab({ url: '/pages/order-list/index' })
+  },
+
+  onRetry() {
+    wx.showLoading({ title: '重新加载...' })
+    this.checkMerchantStatus()
+    this.fetchData().then(() => {
+      wx.hideLoading()
+    })
   },
 
   getQuantity(productId) {
