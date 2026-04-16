@@ -481,7 +481,7 @@ const PriceQuery = () => {
 
             {groupedProducts.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center rounded-[24px] bg-white px-6 text-center shadow-[0_12px_28px_rgba(120,93,53,0.08)]">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f6efe5] text-2xl">🔎</div>
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f6efe5] text-2xl"></div>
                 <h3 className="mt-4 text-lg font-semibold text-[#2c241c]">没有找到对应商品</h3>
                 <p className="mt-2 text-sm leading-6 text-[#7d6a53]">试试切换左侧分类，或者搜索更短的关键词。</p>
               </div>

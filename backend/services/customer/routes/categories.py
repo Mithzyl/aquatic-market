@@ -33,11 +33,11 @@ def get_categories(
     
     示例响应：
     [
-        {"id": "shrimp", "name": "虾类", "icon": "🦐", "order": 1},
-        {"id": "crab", "name": "蟹类", "icon": "🦀", "order": 2},
-        {"id": "fish", "name": "鱼类", "icon": "🐟", "order": 3},
-        {"id": "shell", "name": "贝类", "icon": "🦪", "order": 4},
-        {"id": "lobster", "name": "龙虾", "icon": "🦞", "order": 5}
+        {"id": "shrimp", "name": "虾类", "icon": "", "order": 1},
+        {"id": "crab", "name": "蟹类", "icon": "", "order": 2},
+        {"id": "fish", "name": "鱼类", "icon": "", "order": 3},
+        {"id": "shell", "name": "贝类", "icon": "", "order": 4},
+        {"id": "lobster", "name": "龙虾", "icon": "", "order": 5}
     ]
     """
     service = CategoryService(session)

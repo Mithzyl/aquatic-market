@@ -81,19 +81,19 @@ INSERT INTO merchant (id, name, phone, wechat_openid, shop_name, created_at, upd
 VALUES (1, '海鲜市场', '13800138000', 'default_openid_001', '鲜活海鲜市场', '2026-04-08 13:53:29.474690', '2026-04-08 13:53:29.474701')
 ON DUPLICATE KEY UPDATE name=VALUES(name), phone=VALUES(phone), shop_name=VALUES(shop_name);
 INSERT INTO category (id, merchant_id, name, icon, `order`, created_at, updated_at)
-VALUES (1, 1, '虾类', '🦐', 1, '2026-04-08 13:53:29.482447', '2026-04-08 13:53:29.482459')
+VALUES (1, 1, '虾类', '', 1, '2026-04-08 13:53:29.482447', '2026-04-08 13:53:29.482459')
 ON DUPLICATE KEY UPDATE name=VALUES(name), icon=VALUES(icon);
 INSERT INTO category (id, merchant_id, name, icon, `order`, created_at, updated_at)
-VALUES (2, 1, '蟹类', '🦀', 2, '2026-04-08 13:53:29.484272', '2026-04-08 13:53:29.484281')
+VALUES (2, 1, '蟹类', '', 2, '2026-04-08 13:53:29.484272', '2026-04-08 13:53:29.484281')
 ON DUPLICATE KEY UPDATE name=VALUES(name), icon=VALUES(icon);
 INSERT INTO category (id, merchant_id, name, icon, `order`, created_at, updated_at)
-VALUES (3, 1, '鱼类', '🐟', 3, '2026-04-08 13:53:29.484882', '2026-04-08 13:53:29.484890')
+VALUES (3, 1, '鱼类', '', 3, '2026-04-08 13:53:29.484882', '2026-04-08 13:53:29.484890')
 ON DUPLICATE KEY UPDATE name=VALUES(name), icon=VALUES(icon);
 INSERT INTO category (id, merchant_id, name, icon, `order`, created_at, updated_at)
-VALUES (4, 1, '贝类', '🦪', 4, '2026-04-08 13:53:29.485706', '2026-04-08 13:53:29.485715')
+VALUES (4, 1, '贝类', '', 4, '2026-04-08 13:53:29.485706', '2026-04-08 13:53:29.485715')
 ON DUPLICATE KEY UPDATE name=VALUES(name), icon=VALUES(icon);
 INSERT INTO category (id, merchant_id, name, icon, `order`, created_at, updated_at)
-VALUES (5, 1, '龙虾', '🦞', 5, '2026-04-08 13:53:29.486492', '2026-04-08 13:53:29.486500')
+VALUES (5, 1, '龙虾', '', 5, '2026-04-08 13:53:29.486492', '2026-04-08 13:53:29.486500')
 ON DUPLICATE KEY UPDATE name=VALUES(name), icon=VALUES(icon);
 INSERT INTO product (id, merchant_id, name, description, price, original_price, image, category, category_name, stock, sales, unit, tag, tag_type, badges, is_active, created_at, updated_at)
 VALUES (1, 1, '基围虾', '鲜活基围虾，适合白灼与椒盐，门店现打氧保鲜。', 49.0, 58.0, 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=800&h=800&fit=crop', 'shrimp', '虾类', 117, 618, '500g/份', '招牌', 'hot', '["活鲜现挑", "白灼推荐"]', 1, '2026-04-08 13:53:29.489783', '2026-04-08 13:53:29.489793')

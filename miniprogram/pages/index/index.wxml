@@ -11,7 +11,7 @@
     <view class="empty-merchant-card">
       <!-- 图标 -->
       <view class="empty-merchant-icon-wrapper">
-        <view class="empty-merchant-icon">🏪</view>
+        <view class="empty-merchant-icon"></view>
       </view>
 
       <!-- 主标题 -->

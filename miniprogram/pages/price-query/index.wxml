@@ -5,7 +5,7 @@
     <view class="empty-merchant-card">
       <!-- 图标 -->
       <view class="empty-merchant-icon-wrapper">
-        <view class="empty-merchant-icon">🏪</view>
+        <view class="empty-merchant-icon"></view>
       </view>
 
       <!-- 主标题 -->
@@ -43,7 +43,7 @@
         </view>
       </view>
       <view class="search-bar">
-        <view class="search-icon-text">🔍</view>
+        <view class="search-icon-text"></view>
         <input class="search-input" placeholder="搜索虾类、黑虎虾、三文鱼..." value="{{searchQuery}}" bindinput="onSearchInput" />
         <view wx:if="{{searchQuery}}" class="search-clear" bindtap="onClearSearch">✕</view>
       </view>
@@ -66,7 +66,7 @@
       <!-- Product List -->
       <scroll-view class="product-area" scroll-y>
         <view wx:if="{{groupedProducts.length === 0}}" class="empty-products">
-          <view class="empty-icon-box">🔎</view>
+          <view class="empty-icon-box"></view>
           <text class="empty-title">没有找到对应商品</text>
           <text class="empty-desc">试试切换分类，或搜索更短的关键词。</text>
         </view>
@@ -107,7 +107,7 @@
   <view wx:if="{{totalItems > 0}}" class="cart-bar">
     <view class="cart-bar-inner">
       <view class="cart-bar-info" bindtap="onToggleCartPreview">
-        <view class="cart-icon-box">🛒<view class="cart-badge">{{totalItems}}</view></view>
+        <view class="cart-icon-box"><view class="cart-badge">{{totalItems}}</view></view>
         <text class="cart-total-price">¥{{totalPrice}}</text>
       </view>
       <view class="cart-checkout-btn" bindtap="onGoToBooking">去结算</view>

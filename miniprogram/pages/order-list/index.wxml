@@ -3,7 +3,7 @@
   <!-- 未登录状态：显示登录引导 -->
   <view wx:if="{{requireAuth}}" class="auth-required-state">
     <view class="auth-icon">
-      <text class="auth-icon-emoji">🔐</text>
+      <text class="auth-icon-emoji"></text>
     </view>
     <text class="auth-title">请先登录</text>
     <text class="auth-desc">登录后即可查看您的订单记录、追踪订单状态</text>
@@ -44,7 +44,7 @@
 
   <view wx:if="{{loading}}" class="loading-container"><view class="loading-spinner"></view><text class="loading-text">加载中...</text></view>
   <view wx:elif="{{filteredOrders.length === 0}}" class="empty-state">
-    <view class="empty-icon">📋</view>
+    <view class="empty-icon"></view>
     <text class="empty-title">当前没有这类订单</text>
     <text class="empty-desc">切换筛选看看其他状态，或回到下单页继续选购鲜货。</text>
     <view class="empty-btn" bindtap="onGoToOrder">去下单</view>

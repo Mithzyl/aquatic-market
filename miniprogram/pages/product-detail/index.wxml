@@ -70,7 +70,7 @@
 </view>
 
 <view wx:if="{{!loading && !product}}" class="empty-state">
-  <view class="empty-icon">😞</view>
+  <view class="empty-icon"></view>
   <text class="empty-title">商品已下架</text>
   <text class="empty-desc">当前没有找到这款商品，可以回到下单页继续挑选。</text>
   <view class="empty-btn" bindtap="onGoBack">返回下单页</view>

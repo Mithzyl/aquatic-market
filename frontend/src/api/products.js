@@ -53,8 +53,8 @@ export async function getCategories() {
   }
   
   // 数据映射：将后端格式转换为前端期望的格式
-  // 后端: { id: "shrimp", name: "虾类", icon: "🦐", order: 1 }
-  // 前端期望: { id: "shrimp", name: "虾类", shortName: "虾", icon: "🦐", description: "..." }
+  // 后端: { id: "shrimp", name: "虾类", icon: "", order: 1 }
+  // 前端期望: { id: "shrimp", name: "虾类", shortName: "虾", icon: "", description: "..." }
   return data.map(cat => ({
     id: cat.id,
     name: cat.name,
