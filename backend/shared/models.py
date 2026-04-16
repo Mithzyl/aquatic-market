@@ -289,3 +289,44 @@ class User(SQLModel, table=True):
     
     # 关联字段
     default_merchant_id: Optional[int] = Field(default=None, foreign_key="merchant.id", description="默认商家ID")
+
+
+# ============== 商家配置模型 ==============
+
+class MerchantConfig(SQLModel, table=True):
+    """商家配置模型 - 存储商家店铺配置数据"""
+    __tablename__ = "merchant_config"
+    
+    id: Optional[int] = Field(default=None, primary_key=True, index=True)
+    merchant_id: int = Field(..., foreign_key="merchant.id", unique=True, index=True, description="商家ID，一对一关联")
+    shop_name: str = Field(default="", max_length=100, description="店铺名称")
+    shop_logo: str = Field(default="", max_length=500, description="店铺Logo URL")
+    contact_phone: str = Field(default="", max_length=20, description="联系电话")
+    contact_wechat: str = Field(default="", max_length=50, description="联系微信")
+    address: str = Field(default="", max_length=200, description="店铺地址")
+    business_hours: str = Field(default="", max_length=100, description="营业时间，如 '08:00-20:00'")
+    announcement: str = Field(default="", max_length=500, description="店铺公告")
+    theme_color: str = Field(default="#1890ff", max_length=20, description="主题色")
+    enable_ordering: bool = Field(default=True, description="是否开启下单功能")
+    enable_pickup: bool = Field(default=True, description="是否开启自提功能")
+    min_order_amount: float = Field(default=0, ge=0, description="最低订单金额")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    @staticmethod
+    def get_default_config(merchant_id: int) -> "MerchantConfig":
+        """获取默认配置"""
+        return MerchantConfig(
+            merchant_id=merchant_id,
+            shop_name="",
+            shop_logo="",
+            contact_phone="",
+            contact_wechat="",
+            address="",
+            business_hours="08:00-20:00",
+            announcement="欢迎光临！",
+            theme_color="#1890ff",
+            enable_ordering=True,
+            enable_pickup=True,
+            min_order_amount=0
+        )

@@ -12,14 +12,17 @@ Admin Routes - 管理端路由别名定义
 - /api/admin/orders       -> merchant/orders 管理
 - /api/admin/profile      -> merchant/profile
 - /api/admin/merchant/info -> merchant/merchant/info
+- /api/admin/config       -> 商家配置管理
 
 认证兼容：
 - JWT 认证在两个路径下都能工作
 - 使用相同的依赖注入 get_current_merchant_id_from_token
 """
 from typing import Optional
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlmodel import Session
+from sqlmodel import Session, select
+from pydantic import BaseModel, Field as PydanticField
 
 from config.database import get_session
 from config.dependencies import get_current_merchant_id_from_token
@@ -44,6 +47,13 @@ from schemas.merchant import (
     MerchantUpdate,
     OrderStatusUpdate,
 )
+
+# 导入商家配置模型
+import sys
+from pathlib import Path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+from shared.models import MerchantConfig, Merchant
 
 router = APIRouter(prefix="/api/admin", tags=["管理端（路径别名）"])
 
@@ -312,3 +322,136 @@ def update_merchant_info(
         )
     
     return info
+
+
+# ============== 配置管理 API ==============
+
+class ConfigResponse(BaseModel):
+    """商家配置响应"""
+    id: int = PydanticField(..., description="配置ID")
+    merchant_id: int = PydanticField(..., description="商家ID")
+    shop_name: str = PydanticField(..., description="店铺名称")
+    shop_logo: str = PydanticField(default="", description="店铺Logo URL")
+    contact_phone: str = PydanticField(default="", description="联系电话")
+    contact_wechat: str = PydanticField(default="", description="联系微信")
+    address: str = PydanticField(default="", description="店铺地址")
+    business_hours: str = PydanticField(default="", description="营业时间")
+    announcement: str = PydanticField(default="", description="店铺公告")
+    theme_color: str = PydanticField(default="#1890ff", description="主题色")
+    enable_ordering: bool = PydanticField(default=True, description="是否开启下单功能")
+    enable_pickup: bool = PydanticField(default=True, description="是否开启自提功能")
+    min_order_amount: float = PydanticField(default=0, description="最低订单金额")
+    created_at: datetime = PydanticField(..., description="创建时间")
+    updated_at: datetime = PydanticField(..., description="更新时间")
+
+
+class ConfigUpdate(BaseModel):
+    """更新商家配置请求"""
+    shop_name: Optional[str] = PydanticField(None, max_length=100, description="店铺名称")
+    shop_logo: Optional[str] = PydanticField(None, max_length=500, description="店铺Logo URL")
+    contact_phone: Optional[str] = PydanticField(None, max_length=20, description="联系电话")
+    contact_wechat: Optional[str] = PydanticField(None, max_length=50, description="联系微信")
+    address: Optional[str] = PydanticField(None, max_length=200, description="店铺地址")
+    business_hours: Optional[str] = PydanticField(None, max_length=100, description="营业时间")
+    announcement: Optional[str] = PydanticField(None, max_length=500, description="店铺公告")
+    theme_color: Optional[str] = PydanticField(None, max_length=20, description="主题色")
+    enable_ordering: Optional[bool] = PydanticField(None, description="是否开启下单功能")
+    enable_pickup: Optional[bool] = PydanticField(None, description="是否开启自提功能")
+    min_order_amount: Optional[float] = PydanticField(None, ge=0, description="最低订单金额")
+
+
+@router.get("/config", response_model=ConfigResponse)
+def get_config(
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
+    session: Session = Depends(get_session)
+):
+    """
+    获取商家配置
+    
+    返回当前商家的店铺配置信息，包括店铺名称、Logo、联系方式、营业时间等。
+    如果配置不存在，会自动创建默认配置。
+    """
+    # 查询商家配置
+    config = session.exec(
+        select(MerchantConfig).where(MerchantConfig.merchant_id == merchant_id)
+    ).first()
+    
+    # 如果配置不存在，创建默认配置
+    if not config:
+        config = MerchantConfig.get_default_config(merchant_id)
+        session.add(config)
+        session.commit()
+        session.refresh(config)
+    
+    return ConfigResponse(
+        id=config.id,
+        merchant_id=config.merchant_id,
+        shop_name=config.shop_name,
+        shop_logo=config.shop_logo,
+        contact_phone=config.contact_phone,
+        contact_wechat=config.contact_wechat,
+        address=config.address,
+        business_hours=config.business_hours,
+        announcement=config.announcement,
+        theme_color=config.theme_color,
+        enable_ordering=config.enable_ordering,
+        enable_pickup=config.enable_pickup,
+        min_order_amount=config.min_order_amount,
+        created_at=config.created_at,
+        updated_at=config.updated_at
+    )
+
+
+@router.put("/config", response_model=ConfigResponse)
+def update_config(
+    update_data: ConfigUpdate,
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
+    session: Session = Depends(get_session)
+):
+    """
+    更新商家配置
+    
+    更新当前商家的店铺配置信息。只更新请求中提供的字段，其他字段保持不变。
+    如果配置不存在，会自动创建默认配置后再更新。
+    """
+    # 查询商家配置
+    config = session.exec(
+        select(MerchantConfig).where(MerchantConfig.merchant_id == merchant_id)
+    ).first()
+    
+    # 如果配置不存在，创建默认配置
+    if not config:
+        config = MerchantConfig.get_default_config(merchant_id)
+        session.add(config)
+        session.commit()
+        session.refresh(config)
+    
+    # 更新配置字段
+    update_dict = update_data.model_dump(exclude_unset=True)
+    for key, value in update_dict.items():
+        setattr(config, key, value)
+    
+    # 更新时间戳
+    config.updated_at = datetime.utcnow()
+    
+    session.add(config)
+    session.commit()
+    session.refresh(config)
+    
+    return ConfigResponse(
+        id=config.id,
+        merchant_id=config.merchant_id,
+        shop_name=config.shop_name,
+        shop_logo=config.shop_logo,
+        contact_phone=config.contact_phone,
+        contact_wechat=config.contact_wechat,
+        address=config.address,
+        business_hours=config.business_hours,
+        announcement=config.announcement,
+        theme_color=config.theme_color,
+        enable_ordering=config.enable_ordering,
+        enable_pickup=config.enable_pickup,
+        min_order_amount=config.min_order_amount,
+        created_at=config.created_at,
+        updated_at=config.updated_at
+    )

@@ -1,6 +1,7 @@
 // pages/index/index.js - 首页
 const { getProducts, getCategories } = require('../../services/product')
 const config = require('../../utils/config')
+const configService = require('../../services/config')
 
 Page({
   data: {
@@ -8,17 +9,28 @@ Page({
     showcaseProducts: [],
     categories: [],
     serviceHighlights: config.serviceHighlights,
+    shopName: '柳州鲜选海产店',
     loading: true
   },
 
   onLoad() {
     this.fetchData()
+    this.loadMerchantConfig()
   },
 
   onPullDownRefresh() {
     this.fetchData().then(() => {
       wx.stopPullDownRefresh()
     })
+  },
+
+  async loadMerchantConfig() {
+    try {
+      const shopName = await configService.getShopName()
+      this.setData({ shopName })
+    } catch (error) {
+      console.error('Failed to load merchant config:', error)
+    }
   },
 
   async fetchData() {

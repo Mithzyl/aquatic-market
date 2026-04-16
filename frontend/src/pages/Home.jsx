@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getProducts, getCategories } from '../api/products'
+import { getCustomerConfig } from '../api/config'
 
 // CategoryIcon 组件（复用 PriceQuery.jsx 的实现）
 function CategoryIcon({ categoryId }) {
@@ -53,16 +54,41 @@ function CategoryIcon({ categoryId }) {
   return null
 }
 
-const serviceHighlights = [
-  { title: '门店现挑', description: '鲜活现捞，支持代处理和冷链打包。', stat: '30 min' },
-  { title: '今日早市', description: '上午档到货批次更新，价格更适合家用。', stat: '9 折起' },
-  { title: '聚餐配货', description: '龙虾、蟹类和贝类支持多人餐组合。', stat: '48 款' }
-]
-
 const Home = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [serviceHighlights, setServiceHighlights] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isEmptyMerchant, setIsEmptyMerchant] = useState(false)
+  const [merchantConfig, setMerchantConfig] = useState(null)
+
+  // 获取配置数据（serviceHighlights）
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const configData = await getCustomerConfig()
+        // 检查是否为空商家状态
+        if (configData.is_empty) {
+          setIsEmptyMerchant(true)
+          setMerchantConfig(configData)
+          console.log('[Home] 无商家状态:', configData)
+        } else if (configData.serviceHighlights) {
+          setServiceHighlights(configData.serviceHighlights)
+          setMerchantConfig(configData)
+          console.log('[Home] 配置数据已加载:', configData.serviceHighlights)
+        }
+      } catch (error) {
+        console.error('[Home] 获取配置失败:', error)
+        // 使用默认值
+        setServiceHighlights([
+          { title: '门店现挑', description: '鲜活现捞，支持代处理和冷链打包。', stat: '30 min' },
+          { title: '今日早市', description: '上午档到货批次更新，价格更适合家用。', stat: '9 折起' },
+          { title: '聚餐配货', description: '龙虾、蟹类和贝类支持多人餐组合。', stat: '48 款' }
+        ])
+      }
+    }
+    fetchConfig()
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,10 +111,73 @@ const Home = () => {
   const heroProduct = products[0] || null
   const showcaseProducts = products.slice(0, 3)
 
-  if (loading || !heroProduct) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #f6efe4 0%, #f8f4ee 26%, #fbf8f3 60%, #f2ebe0 100%)' }}>
         <p className="text-[#7d6a53]">加载中...</p>
+      </div>
+    )
+  }
+
+  // 暂无商家状态 UI
+  if (isEmptyMerchant) {
+    return (
+      <div
+        className="min-h-screen flex flex-col"
+        style={{
+          background: 'linear-gradient(180deg, #f6efe4 0%, #f8f4ee 26%, #fbf8f3 60%, #f2ebe0 100%)',
+          fontFamily: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+          paddingBottom: 'calc(var(--app-bottom-nav-space) + 12px)'
+        }}
+      >
+        <div className="mx-auto max-w-lg px-4 pt-5 flex-1 flex flex-col">
+          {/* 空状态 Hero */}
+          <section className="flex-1 flex flex-col items-center justify-center rounded-[34px] bg-[rgba(255,251,245,0.92)] border border-[#eadfce] shadow-[0_18px_38px_rgba(102,76,42,0.07)] px-6 py-10">
+            {/* 图标 */}
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f6efe5] text-[#b17e4b] shadow-[0_8px_20px_rgba(94,70,38,0.08)]">
+              <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-4 0H5m4 0H5m14 0h2M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+
+            {/* 主标题 */}
+            <h1
+              className="mt-6 text-[26px] font-bold text-center text-[#2c241b]"
+              style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
+            >
+              暂无商家入驻
+            </h1>
+
+            {/* 说明文案 */}
+            <p className="mt-3 text-sm leading-6 text-center text-[#7d6a53] max-w-[280px]">
+              当前平台暂无商家入驻，敬请期待优质海鲜商家上线。
+            </p>
+
+            {/* 联系方式（如果有） */}
+            {merchantConfig?.contact_phone && (
+              <div className="mt-6 rounded-[22px] bg-[#fff4e8] px-5 py-4 text-center">
+                <p className="text-xs text-[#b17e4b]">如有疑问，请联系平台</p>
+                <p className="mt-2 text-lg font-semibold text-[#2c241b]">{merchantConfig.contact_phone}</p>
+              </div>
+            )}
+
+            {/* 操作按钮 */}
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-8 inline-flex items-center justify-center rounded-full bg-[#2d2a27] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(35,31,28,0.22)] transition-transform active:scale-[0.98]"
+            >
+              稍后再来
+            </button>
+          </section>
+        </div>
+      </div>
+    )
+  }
+
+  if (!heroProduct) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #f6efe4 0%, #f8f4ee 26%, #fbf8f3 60%, #f2ebe0 100%)' }}>
+        <p className="text-[#7d6a53]">暂无商品数据</p>
       </div>
     )
   }

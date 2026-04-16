@@ -62,7 +62,7 @@ function Booking() {
     try {
       const orderData = {
         user_id: 1,
-        merchant_id: 1,
+        merchant_id: 2,
         customer_name: customerName,
         customer_phone: customerPhone,
         pickup_time: pickupTime,

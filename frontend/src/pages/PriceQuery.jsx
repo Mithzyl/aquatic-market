@@ -2,34 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../App'
 import { getProducts, getCategories } from '../api/products'
-
-const categoryStories = {
-  shrimp: {
-    eyebrow: '鲜活虾类',
-    title: '今天主推基围虾和黑虎虾',
-    subtitle: '适合白灼、香煎和家庭聚餐，支持直接加选。'
-  },
-  crab: {
-    eyebrow: '肥美蟹类',
-    title: '梭子蟹与帝王蟹腿正在热卖',
-    subtitle: '时令货量充足，适合清蒸、火锅和宴请。'
-  },
-  fish: {
-    eyebrow: '刺身与家常',
-    title: '三文鱼和金鲳鱼适合今天现做',
-    subtitle: '一个适合生食，一个适合煎蒸，组合更完整。'
-  },
-  shell: {
-    eyebrow: '净选贝类',
-    title: '生蚝和北极贝做冷盘最稳',
-    subtitle: '门店支持代开壳与冷藏保鲜，聚餐更省事。'
-  },
-  lobster: {
-    eyebrow: '聚餐招牌',
-    title: '波士顿龙虾和小青龙适合多人餐',
-    subtitle: '规格稳定，适合周末聚餐和节庆宴请。'
-  }
-}
+import { getCustomerConfig } from '../api/config'
 
 const fallbackImage = 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?w=800&h=800&fit=crop'
 
@@ -93,12 +66,15 @@ function CategoryIcon({ categoryId, active = false, compact = false }) {
 const PriceQuery = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [categoryStories, setCategoryStories] = useState({})
   const [activeCategoryId, setActiveCategoryId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddedToast, setShowAddedToast] = useState(false)
   const [showSummaryBar, setShowSummaryBar] = useState(false)
   const [isSummaryClosing, setIsSummaryClosing] = useState(false)
   const [showCartPreview, setShowCartPreview] = useState(false)
+  const [isEmptyMerchant, setIsEmptyMerchant] = useState(false)
+  const [merchantConfig, setMerchantConfig] = useState(null)
   const { cartItems, addToCart, updateQuantity, totalItems, totalPrice } = useCart()
   const productScrollRef = useRef(null)
   const sectionRefs = useRef({})
@@ -106,6 +82,36 @@ const PriceQuery = () => {
   const scrollReleaseTimerRef = useRef(null)
   const summaryHideTimerRef = useRef(null)
   const cartPreviewRef = useRef(null)
+
+  // 获取配置数据（categoryStories）
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const configData = await getCustomerConfig()
+        // 检查是否为空商家状态
+        if (configData.is_empty) {
+          setIsEmptyMerchant(true)
+          setMerchantConfig(configData)
+          console.log('[PriceQuery] 无商家状态:', configData)
+        } else if (configData.categoryStories) {
+          setCategoryStories(configData.categoryStories)
+          setMerchantConfig(configData)
+          console.log('[PriceQuery] 配置数据已加载:', configData.categoryStories)
+        }
+      } catch (error) {
+        console.error('[PriceQuery] 获取配置失败:', error)
+        // 使用默认值
+        setCategoryStories({
+          shrimp: { eyebrow: '鲜活虾类', title: '今天主推基围虾和黑虎虾', subtitle: '适合白灼、香煎和家庭聚餐，支持直接加选。' },
+          crab: { eyebrow: '肥美蟹类', title: '梭子蟹与帝王蟹腿正在热卖', subtitle: '时令货量充足，适合清蒸、火锅和宴请。' },
+          fish: { eyebrow: '刺身与家常', title: '三文鱼和金鲳鱼适合今天现做', subtitle: '一个适合生食，一个适合煎蒸，组合更完整。' },
+          shell: { eyebrow: '净选贝类', title: '生蚝和北极贝做冷盘最稳', subtitle: '门店支持代开壳与冷藏保鲜，聚餐更省事。' },
+          lobster: { eyebrow: '聚餐招牌', title: '波士顿龙虾和小青龙适合多人餐', subtitle: '规格稳定，适合周末聚餐和节庆宴请。' }
+        })
+      }
+    }
+    fetchConfig()
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -223,10 +229,17 @@ const PriceQuery = () => {
     categories.find((category) => category.id === activeCategoryId) ||
     categories[0]
 
-  // 安全访问：activeCategory可能为undefined（当categories为空时）
-  const activeStory = activeCategory 
-    ? (categoryStories[activeCategory.id] || categoryStories.shrimp) 
-    : categoryStories.shrimp
+  // 默认 story 对象，防止空商家状态下 categoryStories 为空对象导致崩溃
+  const defaultStory = {
+    eyebrow: '精选推荐',
+    title: '今日精选海鲜',
+    subtitle: '新鲜到货，品质保证。'
+  }
+
+  // 安全访问：activeCategory可能为undefined（当categories为空时），categoryStories可能为空对象（空商家状态）
+  const activeStory = activeCategory
+    ? (categoryStories[activeCategory.id] || categoryStories.shrimp || defaultStory)
+    : (categoryStories.shrimp || defaultStory)
 
   const getQuantity = (productId) => {
     const cartItem = cartItems.find((item) => item.id === productId)
@@ -309,6 +322,49 @@ const PriceQuery = () => {
         fontFamily: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif'
       }}
     >
+      {/* 暂无商家状态 UI */}
+      {isEmptyMerchant ? (
+        <div className="flex-1 flex flex-col items-center justify-center px-4">
+          <div className="w-full max-w-lg rounded-[34px] bg-[rgba(255,251,245,0.92)] border border-[#eadfce] shadow-[0_18px_38px_rgba(102,76,42,0.07)] px-6 py-10">
+            {/* 图标 */}
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f6efe5] text-[#b17e4b] shadow-[0_8px_20px_rgba(94,70,38,0.08)] mx-auto">
+              <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-4 0H5m4 0H5m14 0h2M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+
+            {/* 主标题 */}
+            <h1
+              className="mt-6 text-[26px] font-bold text-center text-[#2c241b]"
+              style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
+            >
+              暂无商家入驻
+            </h1>
+
+            {/* 说明文案 */}
+            <p className="mt-3 text-sm leading-6 text-center text-[#7d6a53] max-w-[280px] mx-auto">
+              当前平台暂无商家入驻，敬请期待优质海鲜商家上线。
+            </p>
+
+            {/* 联系方式（如果有） */}
+            {merchantConfig?.contact_phone && (
+              <div className="mt-6 rounded-[22px] bg-[#fff4e8] px-5 py-4 text-center mx-auto max-w-[280px]">
+                <p className="text-xs text-[#b17e4b]">如有疑问，请联系平台</p>
+                <p className="mt-2 text-lg font-semibold text-[#2c241b]">{merchantConfig.contact_phone}</p>
+              </div>
+            )}
+
+            {/* 操作按钮 */}
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-8 inline-flex items-center justify-center rounded-full bg-[#2d2a27] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(35,31,28,0.22)] transition-transform active:scale-[0.98] mx-auto"
+            >
+              稍后再来
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
       <div className="border-b border-[#eadfce] bg-[rgba(250,246,239,0.94)] safe-area-top">
         <div className="mx-auto max-w-lg px-4 pb-4 pt-4">
           <div className="rounded-[28px] bg-white px-4 py-4 shadow-[0_18px_40px_rgba(120,93,53,0.08)]">
@@ -716,6 +772,8 @@ const PriceQuery = () => {
         <div className="fixed left-1/2 top-24 z-[120] -translate-x-1/2 rounded-full bg-[#1f4034] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(31,64,52,0.32)] animate-bounce-in">
           已加入已选
         </div>
+      )}
+        </>
       )}
     </div>
   )

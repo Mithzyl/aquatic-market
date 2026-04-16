@@ -1,11 +1,44 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
+import { API_BASE_URL } from '../../api/config'
 
 function AdminSettings() {
   const navigate = useNavigate()
-  const { merchant, logout } = useAdminAuth()
+  const { merchant, token, login, logout } = useAdminAuth()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // 页面加载时刷新商家数据
+  useEffect(() => {
+    const refreshMerchantData = async () => {
+      if (!token) return
+      
+      setIsRefreshing(true)
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/merchant/info`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (response.ok) {
+          const merchantData = await response.json()
+          // 使用现有 token 和新获取的商家数据更新 Context
+          login(token, merchantData)
+          console.log('[AdminSettings] 商家数据已刷新:', merchantData)
+        } else {
+          console.error('[AdminSettings] 获取商家数据失败:', response.status)
+        }
+      } catch (error) {
+        console.error('[AdminSettings] 刷新商家数据出错:', error)
+      } finally {
+        setIsRefreshing(false)
+      }
+    }
+    
+    refreshMerchantData()
+  }, [token, login])
 
   // 退出登录
   const handleLogout = () => {
@@ -23,6 +56,13 @@ function AdminSettings() {
 
   return (
     <div className="py-6 space-y-6">
+      {/* 加载状态提示 */}
+      {isRefreshing && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-full bg-[#2f6b56] px-4 py-2 text-sm text-white shadow-lg">
+          正在刷新数据...
+        </div>
+      )}
+      
       {/* 页面标题 */}
       <h1
         className="text-xl font-bold text-[#2c241b]"

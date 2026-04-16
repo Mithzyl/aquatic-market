@@ -1,10 +1,43 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCustomerAuth } from '../contexts/CustomerAuthContext'
+import { CUSTOMER_API_BASE_URL } from '../api/config'
 
 const My = () => {
   const navigate = useNavigate()
-  const { user, logout } = useCustomerAuth()
+  const { user, token, login, logout } = useCustomerAuth()
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // 页面加载时刷新用户数据
+  useEffect(() => {
+    const refreshUserData = async () => {
+      if (!token) return
+      
+      setIsRefreshing(true)
+      try {
+        const response = await fetch(`${CUSTOMER_API_BASE_URL}/api/customer/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (response.ok) {
+          const userData = await response.json()
+          // 使用现有 token 和新获取的用户数据更新 Context
+          login(token, userData)
+          console.log('[My] 用户数据已刷新:', userData)
+        } else {
+          console.error('[My] 获取用户数据失败:', response.status)
+        }
+      } catch (error) {
+        console.error('[My] 刷新用户数据出错:', error)
+      } finally {
+        setIsRefreshing(false)
+      }
+    }
+    
+    refreshUserData()
+  }, [token, login])
 
   // 处理登出
   const handleLogout = () => {
@@ -26,6 +59,13 @@ const My = () => {
         paddingBottom: 'calc(var(--app-bottom-nav-space) + 12px)'
       }}
     >
+      {/* 加载状态提示 */}
+      {isRefreshing && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-full bg-[#1f4034] px-4 py-2 text-sm text-white shadow-lg">
+          正在刷新数据...
+        </div>
+      )}
+      
       <div className="mx-auto max-w-lg px-4 pt-12 pb-8">
         {/* 头像区域 */}
         <div className="flex flex-col items-center">

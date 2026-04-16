@@ -1,5 +1,6 @@
 // frontend/src/api/products.js - 商品API（用户端）
 import { API_BASE_URL } from './config.js'
+import { getCustomerConfig } from './config.js'
 
 // 用户端API地址（端口8002）
 const CUSTOMER_API_BASE = 'http://localhost:8002/api/customer'
@@ -24,12 +25,32 @@ export async function getProductById(id) {
 }
 
 /**
- * 获取分类列表
+ * 获取分类列表（从配置 API 获取描述）
  */
 export async function getCategories() {
+  // 先获取分类列表
   const response = await fetch(`${CUSTOMER_API_BASE}/categories`)
   if (!response.ok) throw new Error('Failed to fetch categories')
   const data = await response.json()
+  
+  // 尝试从配置 API 获取分类描述（不传 merchantId，让后端返回默认商家配置）
+  let categoryDescriptions = {}
+  try {
+    const configData = await getCustomerConfig()
+    if (configData.categoryDescriptions) {
+      categoryDescriptions = configData.categoryDescriptions
+    }
+  } catch (error) {
+    console.error('[products.js] 获取配置失败，使用默认描述:', error)
+    // 使用默认描述
+    categoryDescriptions = {
+      shrimp: '鲜活现捞',
+      crab: '肥美到店',
+      fish: '刺身精选',
+      shell: '净选即烹',
+      lobster: '宴请招牌'
+    }
+  }
   
   // 数据映射：将后端格式转换为前端期望的格式
   // 后端: { id: "shrimp", name: "虾类", icon: "🦐", order: 1 }
@@ -39,21 +60,7 @@ export async function getCategories() {
     name: cat.name,
     shortName: cat.name.charAt(0),
     icon: cat.icon,
-    description: getCategoryDescription(cat.id),
+    description: categoryDescriptions[cat.id] || '精选品类',
     order: cat.order
   }))
-}
-
-/**
- * 品类描述映射
- */
-function getCategoryDescription(slug) {
-  const descriptions = {
-    shrimp: '鲜活现捞',
-    crab: '肥美到店',
-    fish: '刺身精选',
-    shell: '净选即烹',
-    lobster: '宴请招牌'
-  }
-  return descriptions[slug] || '精选品类'
 }

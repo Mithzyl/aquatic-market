@@ -20,7 +20,7 @@
       <view class="contact-icon"><text class="contact-icon-emoji">📞</text></view>
       <view class="contact-info">
         <text class="contact-label">联系客服</text>
-        <text class="contact-value">{{defaultPhone}}</text>
+        <text class="contact-value">{{contactPhone}}</text>
       </view>
       <view class="contact-action"><text>→</text></view>
     </view>

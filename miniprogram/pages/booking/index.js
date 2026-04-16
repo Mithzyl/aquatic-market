@@ -1,6 +1,7 @@
 // pages/booking/index.js - 预订确认页
 const { createOrder } = require('../../services/order')
 const auth = require('../../services/auth')
+const configService = require('../../services/config')
 const app = getApp()
 
 Page({
@@ -72,7 +73,15 @@ Page({
     try {
       // 从Token获取用户信息，不再硬编码
       const userId = auth.getUserId()
-      const merchantId = app.globalData.defaultMerchantId || 1
+      
+      // 从 API 配置获取商家ID
+      const merchantId = await configService.getMerchantId()
+      
+      // 检查是否有商家
+      if (!merchantId) {
+        wx.showToast({ title: '暂无商家信息，无法下单', icon: 'none' })
+        return
+      }
       
       const orderData = {
         merchant_id: merchantId,
