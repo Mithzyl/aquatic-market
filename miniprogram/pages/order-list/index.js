@@ -8,6 +8,7 @@ Page({
     orders: [],
     filteredOrders: [],
     loading: true,
+    requireAuth: false, // 是否需要登录（未登录状态）
     activeFilter: 'all',
     filterTabs: [
       { key: 'all', label: '全部' },
@@ -22,29 +23,24 @@ Page({
   onLoad() {
     // 检查登录状态
     if (!auth.isLoggedIn()) {
-      wx.showModal({
-        title: '请先登录',
-        content: '查看订单需要登录，是否立即登录？',
-        success: (res) => {
-          if (res.confirm) {
-            wx.navigateTo({
-              url: '/pages/login/index?from=' + encodeURIComponent('/pages/order-list/index')
-            })
-          } else {
-            this.setData({ loading: false, orders: [] })
-          }
-        }
-      })
-      this.setData({ loading: false })
+      // 未登录：显示"请登录"空状态 UI，不弹出 Modal
+      this.setData({ requireAuth: true, loading: false })
     } else {
       this.fetchOrders()
     }
   },
   
   onShow() {
-    // 每次显示页面时刷新订单（如果已登录）
+    // 每次显示页面时检查登录状态并刷新订单
     if (auth.isLoggedIn()) {
+      // 已登录：如果之前是未登录状态，现在需要刷新
+      if (this.data.requireAuth) {
+        this.setData({ requireAuth: false, loading: true })
+      }
       this.fetchOrders()
+    } else {
+      // 未登录：显示登录引导
+      this.setData({ requireAuth: true, loading: false, orders: [], filteredOrders: [] })
     }
   },
   
@@ -95,6 +91,13 @@ Page({
   },
 
   onGoToOrder() { wx.switchTab({ url: '/pages/price-query/index' }) },
+
+  // 跳转到登录页
+  onLogin() {
+    wx.navigateTo({
+      url: '/pages/login/index?from=' + encodeURIComponent('/pages/order-list/index')
+    })
+  },
 
   getStatusLabel(status) {
     return (config.statusConfig[status] || config.statusConfig.pending).badgeLabel

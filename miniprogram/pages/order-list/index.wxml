@@ -1,6 +1,23 @@
 <!-- pages/order-list/index.wxml -->
 <view class="page-container">
-  <view class="header">
+  <!-- 未登录状态：显示登录引导 -->
+  <view wx:if="{{requireAuth}}" class="auth-required-state">
+    <view class="auth-icon">
+      <text class="auth-icon-emoji">🔐</text>
+    </view>
+    <text class="auth-title">请先登录</text>
+    <text class="auth-desc">登录后即可查看您的订单记录、追踪订单状态</text>
+    <view class="auth-btn" bindtap="onLogin">
+      <text>立即登录</text>
+    </view>
+    <view class="auth-hint">
+      <text>还没有账号？登录时将自动为您创建</text>
+    </view>
+  </view>
+
+  <!-- 已登录状态：显示订单列表 -->
+  <block wx:else>
+    <view class="header">
     <view class="header-card">
       <view class="header-top">
         <view>
@@ -55,4 +72,5 @@
       </view>
     </view>
   </view>
+  </block>
 </view>

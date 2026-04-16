@@ -275,7 +275,7 @@ class User(SQLModel, table=True):
     
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     phone: str = Field(default="", max_length=20, unique=True, index=True, description="手机号")
-    wechat_openid: str = Field(default="", max_length=100, unique=True, description="微信OpenID")
+    wechat_openid: Optional[str] = Field(default=None, max_length=100, unique=True, description="微信OpenID")
     nickname: str = Field(default="", max_length=50, description="昵称")
     avatar_url: str = Field(default="", max_length=500, description="头像URL")
     real_name: str = Field(default="", max_length=50, description="真实姓名")
