@@ -272,7 +272,7 @@ function ProductDetail() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c88d55]">选择数量</div>
-                    <p className="mt-2 text-sm text-[#7d6a53]">按份加入已选，门店会按当前规格为你留货。</p>
+                    <p className="mt-2 text-sm text-[#7d6a53]">选择数量加入购物车，门店为您留货</p>
                   </div>
 
                   <div

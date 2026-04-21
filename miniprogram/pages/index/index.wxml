@@ -40,8 +40,8 @@
         <view class="hero-tag">NEW RETAIL SEAFOOD</view>
         <view class="hero-text">
           <text class="hero-subtitle">{{shopName}}</text>
-          <text class="hero-title">当日直采的\n海鲜零售首页</text>
-          <text class="hero-desc">把门店鲜度、今日活动和招牌商品先讲清楚，再进入具体分类下单。</text>
+          <text class="hero-title">鲜活直达\n品质海鲜</text>
+          <text class="hero-desc">新鲜直达，品质保证，今日特惠等你来选</text>
         </view>
         <view class="hero-actions">
           <view class="hero-btn-primary" bindtap="onGoToOrder">进入下单</view>
@@ -76,7 +76,7 @@
       <view class="category-header">
         <view>
           <text class="section-label">Category Preview</text>
-          <text class="section-title">从主力类目进入下单</text>
+          <text class="section-title">精选好货，立即下单</text>
         </view>
         <view class="category-link" bindtap="onGoToPriceQuery">
           <text class="category-link-text">去下单</text>

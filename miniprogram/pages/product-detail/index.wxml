@@ -46,7 +46,7 @@
     <view class="quantity-section">
       <view class="quantity-info">
         <text class="section-label">选择数量</text>
-        <text class="quantity-hint">按份加入已选，门店会按当前规格为你留货。</text>
+        <text class="quantity-hint">选择数量加入购物车，门店为您留货</text>
       </view>
       <view class="stepper">
         <view class="stepper-btn stepper-btn-minus" bindtap="onDecrease">−</view>

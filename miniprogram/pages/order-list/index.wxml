@@ -46,7 +46,7 @@
   <view wx:elif="{{filteredOrders.length === 0}}" class="empty-state">
     <view class="empty-icon"></view>
     <text class="empty-title">当前没有这类订单</text>
-    <text class="empty-desc">切换筛选看看其他状态，或回到下单页继续选购鲜货。</text>
+    <text class="empty-desc">切换筛选查看订单，或继续选购好货</text>
     <view class="empty-btn" bindtap="onGoToOrder">去下单</view>
   </view>
   <view wx:else class="order-list">

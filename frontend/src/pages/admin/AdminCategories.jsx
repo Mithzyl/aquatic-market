@@ -302,7 +302,7 @@ function AdminCategories() {
       {!loading && !error && categories.length > 0 && (
         <div className="mt-6 text-center">
           <p className="text-xs text-[#b5a18a]">
-            点击品类卡片可查看该品类下的商品
+            品类管理，一目了然
           </p>
         </div>
       )}

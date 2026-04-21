@@ -7,7 +7,7 @@
         <view class="unauth-avatar-icon"></view>
       </view>
       <text class="unauth-title">欢迎使用柳州鲜选</text>
-      <text class="unauth-desc">登录后可查看订单、享受会员优惠</text>
+      <text class="unauth-desc">登录享受会员专属优惠</text>
     </view>
     <view class="auth-section">
       <button class="auth-btn auth-btn-login" bindtap="onLogin">立即登录</button>

@@ -137,7 +137,7 @@ function EmptyState() {
       >
         当前没有这类订单
       </h2>
-      <p className="mt-2 text-sm text-[#7d6a53]">切换筛选看看其他状态，或者回到下单页继续选购鲜货。</p>
+      <p className="mt-2 text-sm text-[#7d6a53]">切换筛选查看订单，或继续选购好货</p>
       <button
         onClick={() => navigate('/price-query')}
         className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-[#1f4034] px-6 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(31,64,52,0.22)] transition-transform active:scale-95"

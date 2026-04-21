@@ -36,7 +36,7 @@
             <view class="header-badge-dot"></view>
             <text>自助下单</text>
           </view>
-          <text class="header-title">左侧分类，右侧商品</text>
+          <text class="header-title">新鲜到货，品质保证</text>
         </view>
         <view class="header-orders" bindtap="onGoToOrders">
           <text>我的订单</text>

@@ -150,7 +150,7 @@ function Booking() {
                   >
                     还没有选择商品
                   </h2>
-                  <p className="mt-2 text-sm text-[#7d6a53]">先去下单页挑选虾类、蟹类、鱼类等鲜货，再回来确认取货信息。</p>
+                  <p className="mt-2 text-sm text-[#7d6a53]">挑选新鲜好货，确认取货时间</p>
                   <button
                     onClick={() => navigate('/price-query')}
                     className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-[#1f4034] px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(31,64,52,0.24)] transition-transform active:scale-95"
@@ -173,7 +173,7 @@ function Booking() {
 
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-semibold text-[#2f281f]">{item.name}</div>
-                        <div className="mt-1 text-xs text-[#9a8268]">已加入本次订单 · 可直接调整数量</div>
+                        <div className="mt-1 text-xs text-[#9a8268]">已加入购物车 · 随时可调整</div>
                         <div className="mt-4 flex items-end justify-between gap-3">
                           <div className="text-[28px] font-bold leading-none text-[#df6f33]">¥{item.price}</div>
 
@@ -266,7 +266,7 @@ function Booking() {
                   <div className="flex items-end justify-between">
                     <div>
                       <div className="text-xs uppercase tracking-[0.16em] text-[#c47b36]">Total</div>
-                      <div className="mt-1 text-sm text-[#7d6a53]">系统会按当前价格生成订单记录</div>
+                      <div className="mt-1 text-sm text-[#7d6a53]">订单金额按当前价格计算</div>
                     </div>
                     <div className="text-[32px] font-bold leading-none text-[#df6f33]">¥{totalAmount.toFixed(2)}</div>
                   </div>

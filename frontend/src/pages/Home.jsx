@@ -212,12 +212,12 @@ const Home = () => {
                 className="mt-2 text-[30px] font-bold leading-[1.1]"
                 style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
               >
-                当日直采的
+                鲜活直达
                 <br />
-                海鲜零售首页
+                品质海鲜
               </h1>
               <p className="mt-3 text-sm leading-6 text-white/72">
-                把门店鲜度、今日活动和招牌商品先讲清楚，再进入具体分类下单。
+                新鲜直达，品质保证，今日特惠等你来选
               </p>
             </div>
 
@@ -270,7 +270,7 @@ const Home = () => {
                 className="mt-2 text-[22px] font-bold text-[#2b231a]"
                 style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
               >
-                从主力类目进入下单
+                热门推荐
               </h2>
             </div>
             <Link to="/price-query" className="text-sm font-medium text-[#2f6b56]">
