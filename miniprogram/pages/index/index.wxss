@@ -310,6 +310,31 @@
   margin-bottom: 32rpx;
 }
 
+/* Section Title Wrapper - 支持中文在上、英文在下的布局 */
+.section-title-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 中文标题 - 较大字号 */
+.section-title-cn {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #2b231a;
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  display: block;
+}
+
+/* 英文标题 - 较小字号 */
+.section-title-en {
+  font-size: 24rpx;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: #ba8752;
+  margin-top: 8rpx;
+  display: block;
+}
+
 .category-link {
   padding: 12rpx 24rpx;
   background: #f6f0e7;

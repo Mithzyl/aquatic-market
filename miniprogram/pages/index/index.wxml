@@ -74,9 +74,9 @@
     <!-- Category Section -->
     <view class="category-section">
       <view class="category-header">
-        <view>
-          <text class="section-label">Category Preview</text>
-          <text class="section-title">精选好货，立即下单</text>
+        <view class="section-title-wrapper">
+          <text class="section-title-cn">精选好货</text>
+          <text class="section-title-en">Featured Products</text>
         </view>
         <view class="category-link" bindtap="onGoToPriceQuery">
           <text class="category-link-text">去下单</text>
@@ -96,9 +96,9 @@
     <!-- Top Picks -->
     <view class="picks-section">
       <view class="picks-header">
-        <view>
-          <text class="section-label">Top Picks</text>
-          <text class="section-title">今日热卖商品</text>
+        <view class="section-title-wrapper">
+          <text class="section-title-cn">今日热卖</text>
+          <text class="section-title-en">Hot Today</text>
         </view>
         <view class="category-link" bindtap="onGoToPriceQuery">
           <text class="category-link-text">去下单</text>
