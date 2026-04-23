@@ -1,8 +1,10 @@
 // utils/config.js - 配置常量（用户端服务端口8002）
 // 注意：商家配置（店铺名称、联系电话等）已移至 services/config.js 从 API 获取
+const { config: envConfig } = require('./env')
+
 const config = {
-  // API 基地址：用户端服务
-  apiBase: 'http://localhost:8002',
+  // API 基地址：从环境配置读取
+  apiBase: envConfig.apiBase,
   
   // API 路径前缀：用户端路由
   apiPrefix: '/api/customer',

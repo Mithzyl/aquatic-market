@@ -71,6 +71,23 @@ def get_order(
     # 获取订单明细
     items = service.get_order_items(order_id)
     
+    # 从Product表获取商品名称和价格信息
+    from shared.models import Product
+    items_with_product_info = []
+    for item in items:
+        product = session.exec(
+            select(Product).where(Product.id == item.product_id)
+        ).first()
+        items_with_product_info.append({
+            "id": item.id,
+            "product_id": item.product_id,
+            "name": product.name if product else f"商品{item.product_id}",
+            "price": item.unit_price,
+            "quantity": item.quantity,
+            "unit_price": item.unit_price,
+            "subtotal": item.subtotal
+        })
+    
     return {
         "id": order.id,
         "merchant_id": order.merchant_id,
@@ -82,16 +99,7 @@ def get_order(
         "status": order.status,
         "created_at": order.created_at,
         "updated_at": order.updated_at,
-        "items": [
-            {
-                "id": item.id,
-                "product_id": item.product_id,
-                "quantity": item.quantity,
-                "unit_price": item.unit_price,
-                "subtotal": item.subtotal
-            }
-            for item in items
-        ]
+        "items": items_with_product_info
     }
 
 

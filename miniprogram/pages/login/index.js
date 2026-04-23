@@ -127,9 +127,9 @@ Page({
       console.log('[Login] 发起登录请求:', { phone })
 
       // 调用 POST /api/customer/auth/register 接口
+      // 注意：用户端注册只需手机号，不需要验证码
       const data = await post('/auth/register', {
-        phone,
-        verify_code: verifyCode
+        phone
       })
 
       console.log('[Login] 登录响应:', data)
