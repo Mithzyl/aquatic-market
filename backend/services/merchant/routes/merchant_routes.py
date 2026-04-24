@@ -49,6 +49,8 @@ from schemas.merchant import (
     ProductStatusUpdate,
     ProductResponse,
     CategoryResponse,
+    CategoryCreate,
+    CategoryUpdate,
     RevenueStats,
     MerchantUpdate,
     OrderStatusUpdate,
@@ -60,15 +62,19 @@ user_security = HTTPBearer(auto_error=False)
 
 
 def get_current_merchant_id_from_token(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(user_security)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(user_security),
+    session: Session = Depends(get_session)
 ) -> int:
     """
     获取当前商家ID（从JWT Token）
     
     用于需要认证的端点，验证请求携带的 JWT Token 并提取商家ID
     
+    F02: 商家状态管理 - 同时校验商家 is_active 状态
+    
     Raises:
         HTTPException: 401 - 缺少认证凭证或凭证无效
+        HTTPException: 403 - 商家账号已被禁用
     
     Returns:
         int: 商家ID
@@ -89,6 +95,15 @@ def get_current_merchant_id_from_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="无效的认证凭证",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # F02: 校验商家 is_active 状态
+    from shared.models import Merchant
+    merchant = session.get(Merchant, merchant_id)
+    if merchant and not merchant.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="商家账号已被禁用，请联系平台管理员"
         )
     
     return merchant_id
@@ -253,6 +268,81 @@ def get_categories(
     service = CategoryService(session)
     categories = service.get_categories(merchant_id)
     return categories
+
+
+@router.post("/categories", status_code=status.HTTP_201_CREATED, response_model=CategoryResponse)
+def create_category(
+    category_data: CategoryCreate,
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
+    session: Session = Depends(get_session)
+):
+    """
+    创建品类（F04: 品类管理）
+    
+    创建新的商品品类，属于当前商家
+    """
+    service = CategoryService(session)
+    category = service.create_category(merchant_id, category_data.model_dump())
+    return CategoryResponse(
+        id=category.id,
+        slug=category.slug,
+        name=category.name,
+        icon=category.icon,
+        order=category.order
+    )
+
+
+@router.put("/categories/{category_id}", response_model=CategoryResponse)
+def update_category(
+    category_id: int,
+    category_data: CategoryUpdate,
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
+    session: Session = Depends(get_session)
+):
+    """
+    编辑品类（F04: 品类管理）
+    
+    更新品类信息，仅允许更新自己商家的品类
+    """
+    service = CategoryService(session)
+    category = service.update_category(merchant_id, category_id, category_data.model_dump(exclude_unset=True))
+    
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="品类不存在或不属于当前商家"
+        )
+    
+    return CategoryResponse(
+        id=category.id,
+        slug=category.slug,
+        name=category.name,
+        icon=category.icon,
+        order=category.order
+    )
+
+
+@router.delete("/categories/{category_id}")
+def delete_category(
+    category_id: int,
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
+    session: Session = Depends(get_session)
+):
+    """
+    删除品类（F04: 品类管理）
+    
+    删除品类前检查是否有关联商品，如有则拒绝删除
+    """
+    service = CategoryService(session)
+    result = service.delete_category(merchant_id, category_id)
+    
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result["message"]
+        )
+    
+    return {"success": True, "message": "品类已删除"}
 
 
 # ============== 收益统计 API ==============

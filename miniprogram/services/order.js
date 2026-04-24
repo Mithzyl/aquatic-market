@@ -32,8 +32,18 @@ function getOrderById(orderId) {
   return get(`/orders/${orderId}`)
 }
 
+/**
+ * 取消订单（需要认证）
+ * 5分钟窗口期内可取消pending状态订单
+ * @param {number} orderId - 订单ID
+ */
+function cancelOrder(orderId) {
+  return post(`/orders/${orderId}/cancel`)
+}
+
 module.exports = {
   createOrder,
   getMyOrders,
-  getOrderById
+  getOrderById,
+  cancelOrder
 }

@@ -1,5 +1,5 @@
 // pages/order-list/index.js - 订单管理页
-const { getMyOrders } = require('../../services/order')
+const { getMyOrders, cancelOrder } = require('../../services/order')
 const auth = require('../../services/auth')
 const config = require('../../utils/config')
 
@@ -17,7 +17,10 @@ Page({
       { key: 'completed', label: '已完成' }
     ],
     orderStats: { readyCount: 0, pendingCount: 0, completedCount: 0 },
-    expandedOrderId: null
+    expandedOrderId: null,
+    showCancelDialog: false,
+    orderToCancel: null,
+    isCancelling: false
   },
 
   onLoad() {
@@ -72,7 +75,17 @@ Page({
 
   filterOrders() {
     const { orders, activeFilter } = this.data
-    const filteredOrders = activeFilter === 'all' ? orders : orders.filter(o => o.status === activeFilter)
+    
+    // 为每个订单计算 canCancel 属性
+    const ordersWithCanCancel = orders.map(order => ({
+      ...order,
+      canCancel: this.canCancelOrder(order)
+    }))
+    
+    const filteredOrders = activeFilter === 'all' 
+      ? ordersWithCanCancel 
+      : ordersWithCanCancel.filter(o => o.status === activeFilter)
+    
     const orderStats = {
       readyCount: orders.filter(o => o.status === 'preparing').length,
       pendingCount: orders.filter(o => o.status === 'pending').length,
@@ -96,6 +109,93 @@ Page({
   onLogin() {
     wx.navigateTo({
       url: '/pages/login/index?from=' + encodeURIComponent('/pages/order-list/index')
+    })
+  },
+
+  // 检查订单是否可以取消（pending 状态且 5 分钟内）
+  canCancelOrder(order) {
+    if (order.status !== 'pending') return false
+    
+    // 检查订单创建时间是否在 5 分钟内
+    const createdAt = new Date(order.created_at)
+    const now = new Date()
+    const diffMinutes = (now - createdAt) / (1000 * 60)
+    
+    return diffMinutes <= 5
+  },
+
+  // 点击取消订单按钮
+  onCancelOrderClick(e) {
+    const orderId = e.currentTarget.dataset.id
+    const order = this.data.orders.find(o => o.id === orderId)
+    
+    if (!order) return
+    
+    // 再次检查是否可以取消
+    if (!this.canCancelOrder(order)) {
+      wx.showToast({ title: '订单已超时或已处理', icon: 'none' })
+      return
+    }
+    
+    this.setData({
+      showCancelDialog: true,
+      orderToCancel: order
+    })
+  },
+
+  // 确认取消订单
+  async onConfirmCancel() {
+    const { orderToCancel } = this.data
+    if (!orderToCancel) return
+    
+    this.setData({ isCancelling: true })
+    
+    try {
+      await cancelOrder(orderToCancel.id)
+      
+      // 更新订单状态
+      const orders = this.data.orders.map(o => 
+        o.id === orderToCancel.id ? { ...o, status: 'cancelled' } : o
+      )
+      
+      this.setData({
+        orders,
+        showCancelDialog: false,
+        orderToCancel: null,
+        isCancelling: false
+      }, () => this.filterOrders())
+      
+      wx.showToast({ title: '订单已取消', icon: 'success' })
+    } catch (error) {
+      console.error('Failed to cancel order:', error)
+      
+      this.setData({
+        showCancelDialog: false,
+        orderToCancel: null,
+        isCancelling: false
+      })
+      
+      // 显示错误提示
+      let errorMessage = '取消失败，请稍后重试'
+      if (error.message) {
+        if (error.message.includes('超时')) {
+          errorMessage = '订单已超时，无法取消'
+        } else if (error.message.includes('已处理')) {
+          errorMessage = '订单已处理，无法取消'
+        } else if (error.message.includes('API')) {
+          errorMessage = '功能暂未开放，请联系客服'
+        }
+      }
+      
+      wx.showToast({ title: errorMessage, icon: 'none', duration: 3000 })
+    }
+  },
+
+  // 取消取消订单
+  onCancelCancel() {
+    this.setData({
+      showCancelDialog: false,
+      orderToCancel: null
     })
   },
 

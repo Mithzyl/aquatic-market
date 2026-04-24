@@ -48,3 +48,25 @@
 .auth-desc { font-size: 28rpx; color: #7d6a53; line-height: 1.6; margin-bottom: 48rpx; max-width: 600rpx; }
 .auth-btn { height: 96rpx; display: flex; align-items: center; justify-content: center; border-radius: 96rpx; background: #1f4034; padding: 0 64rpx; font-size: 32rpx; font-weight: 600; color: #ffffff; box-shadow: 0 28rpx 56rpx rgba(31,64,52,0.22); }
 .auth-hint { margin-top: 32rpx; font-size: 24rpx; color: #aa9277; }
+
+/* 取消订单按钮样式 */
+.order-cancel-btn { margin-top: 24rpx; height: 72rpx; display: flex; align-items: center; justify-content: center; border-radius: 48rpx; background: #fef2f2; border: 2rpx solid #fee2e2; font-size: 28rpx; font-weight: 600; color: #dc2626; }
+
+/* 取消订单确认对话框样式 */
+.cancel-dialog-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.cancel-dialog { width: 80%; max-width: 600rpx; background: #fffaf3; border-radius: 48rpx; border: 2rpx solid #eadfce; overflow: hidden; }
+.cancel-dialog-header { display: flex; align-items: center; justify-content: space-between; padding: 40rpx; border-bottom: 2rpx solid #eadfce; }
+.cancel-dialog-title { font-size: 36rpx; font-weight: 700; color: #2f281f; }
+.cancel-dialog-close { font-size: 48rpx; color: #8f775d; }
+.cancel-dialog-body { padding: 40rpx; }
+.cancel-dialog-warning { display: flex; align-items: flex-start; gap: 16rpx; background: #fef2f2; border-radius: 32rpx; padding: 32rpx; margin-bottom: 32rpx; }
+.cancel-dialog-warning-icon { font-size: 40rpx; color: #dc2626; }
+.cancel-dialog-warning-text { font-size: 28rpx; color: #991b1b; line-height: 1.6; }
+.cancel-dialog-order-info { display: flex; flex-direction: column; gap: 16rpx; background: #f6f0e7; border-radius: 32rpx; padding: 32rpx; }
+.cancel-dialog-order-id { font-size: 28rpx; font-weight: 600; color: #2f281f; }
+.cancel-dialog-order-amount { font-size: 28rpx; color: #7d6a53; }
+.cancel-dialog-footer { display: flex; gap: 24rpx; padding: 40rpx; border-top: 2rpx solid #eadfce; }
+.cancel-dialog-btn { flex: 1; height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: 48rpx; font-size: 32rpx; font-weight: 600; }
+.cancel-dialog-btn-cancel { background: #f5ede1; color: #7d6a53; }
+.cancel-dialog-btn-confirm { background: #dc2626; color: #ffffff; }
+.cancel-dialog-btn-disabled { opacity: 0.5; }

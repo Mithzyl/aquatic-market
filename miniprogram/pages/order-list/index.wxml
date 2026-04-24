@@ -52,8 +52,8 @@
   <view wx:else class="order-list">
     <view class="order-card" wx:for="{{filteredOrders}}" wx:key="id">
       <view class="order-header">
-        <view class="order-status-badge" style="background: {{item.status === 'preparing' ? '#1f7a55' : item.status === 'pending' ? '#f4b54a' : '#ebe7e1'}}; color: {{item.status === 'preparing' ? '#fff' : item.status === 'pending' ? '#4c3414' : '#786553'}}">
-          <text>{{item.status === 'preparing' ? '待取货' : item.status === 'pending' ? '已下单' : item.status === 'completed' ? '已领取' : '已取消'}}</text>
+        <view class="order-status-badge" style="background: {{item.status === 'preparing' ? '#1f7a55' : item.status === 'pending' ? '#f4b54a' : item.status === 'cancelled' ? '#dc2626' : '#ebe7e1'}}; color: {{item.status === 'preparing' ? '#fff' : item.status === 'pending' ? '#4c3414' : item.status === 'cancelled' ? '#fff' : '#786553'}}">
+          <text>{{item.status === 'preparing' ? '待取货' : item.status === 'pending' ? '已下单' : item.status === 'completed' ? '已领取' : item.status === 'cancelled' ? '已取消' : '未知状态'}}</text>
         </view>
         <view class="order-meta"><text class="order-id">订单号 {{item.id}}</text><text class="order-date">{{item.created_at}}</text></view>
       </view>
@@ -70,7 +70,39 @@
           <view class="order-item-meta"><text>x{{lineItem.quantity}}</text><text>¥{{lineItem.price * lineItem.quantity}}</text></view>
         </view>
       </view>
+      <!-- 取消订单按钮 -->
+      <view wx:if="{{item.status === 'pending' && item.canCancel}}" class="order-cancel-btn" bindtap="onCancelOrderClick" data-id="{{item.id}}">
+        <text>取消订单</text>
+      </view>
     </view>
   </view>
   </block>
+  
+  <!-- 取消订单确认对话框 -->
+  <view wx:if="{{showCancelDialog}}" class="cancel-dialog-overlay">
+    <view class="cancel-dialog">
+      <view class="cancel-dialog-header">
+        <text class="cancel-dialog-title">取消订单确认</text>
+        <text class="cancel-dialog-close" bindtap="onCancelCancel">×</text>
+      </view>
+      <view class="cancel-dialog-body">
+        <view class="cancel-dialog-warning">
+          <text class="cancel-dialog-warning-icon">⚠</text>
+          <text class="cancel-dialog-warning-text">取消订单后，订单将无法恢复，请确认是否继续。</text>
+        </view>
+        <view class="cancel-dialog-order-info">
+          <text class="cancel-dialog-order-id">订单号：{{orderToCancel.id}}</text>
+          <text class="cancel-dialog-order-amount">金额：¥{{orderToCancel.total_amount}}</text>
+        </view>
+      </view>
+      <view class="cancel-dialog-footer">
+        <view class="cancel-dialog-btn cancel-dialog-btn-cancel" bindtap="onCancelCancel">
+          <text>取消</text>
+        </view>
+        <view class="cancel-dialog-btn cancel-dialog-btn-confirm {{isCancelling ? 'cancel-dialog-btn-disabled' : ''}}" bindtap="onConfirmCancel">
+          <text>{{isCancelling ? '处理中...' : '确认取消'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

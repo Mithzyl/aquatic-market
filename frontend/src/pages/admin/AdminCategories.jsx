@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getProducts, getCategories } from '../../api/admin'
+import { getProducts, getCategories, createCategory, updateCategory, deleteCategory } from '../../api/admin'
 
 // 品类图标组件
 function CategoryIcon({ categoryId, className = 'h-10 w-10' }) {
@@ -126,6 +126,204 @@ function ErrorState({ message, onRetry }) {
   )
 }
 
+// 品类表单弹窗
+function CategoryFormModal({ isOpen, onClose, onSubmit, category, isLoading, mode }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: ''
+  })
+
+  // 当编辑品类时，填充表单
+  useEffect(() => {
+    if (category && mode === 'edit') {
+      setFormData({
+        name: category.name || '',
+        description: category.description || ''
+      })
+    } else {
+      setFormData({
+        name: '',
+        description: ''
+      })
+    }
+  }, [category, mode, isOpen])
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    onSubmit(formData)
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* 背景遮罩 */}
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* 弹窗内容 */}
+      <div className="relative bg-[#fbf6ef] rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
+        {/* 头部 */}
+        <div className="sticky top-0 bg-[#fbf6ef] border-b border-[#eadfce] px-5 py-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[#2c241b]">
+            {mode === 'edit' ? '编辑品类' : '创建品类'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 -mr-2 rounded-full hover:bg-[#f5f0e8] transition-colors"
+          >
+            <svg className="w-5 h-5 text-[#8b755d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 表单 */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {/* 品类名称 */}
+          <div>
+            <label className="block text-sm font-medium text-[#2c241b] mb-1.5">
+              品类名称 <span className="text-[#dc2626]">*</span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              placeholder="请输入品类名称"
+              className="w-full px-4 py-2.5 bg-white border border-[#eadfce] rounded-xl text-sm text-[#2c241b] placeholder-[#c9a87c] focus:outline-none focus:border-[#1f4034] focus:ring-1 focus:ring-[#1f4034]"
+            />
+          </div>
+
+          {/* 品类描述 */}
+          <div>
+            <label className="block text-sm font-medium text-[#2c241b] mb-1.5">
+              品类描述
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="请输入品类描述"
+              rows={3}
+              className="w-full px-4 py-2.5 bg-white border border-[#eadfce] rounded-xl text-sm text-[#2c241b] placeholder-[#c9a87c] focus:outline-none focus:border-[#1f4034] focus:ring-1 focus:ring-[#1f4034] resize-none"
+            />
+          </div>
+
+          {/* 提交按钮 */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full py-3 bg-[#1f4034] text-white rounded-xl font-medium transition-colors ${
+                isLoading ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#2a5647]'
+              }`}
+            >
+              {isLoading ? '保存中...' : (mode === 'edit' ? '保存修改' : '创建品类')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// 删除品类确认对话框
+function DeleteCategoryDialog({ category, productCount, onConfirm, onCancel, isLoading }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-[#fbf6ef] rounded-xl border border-[#eadfce] w-full max-w-md mx-4 overflow-hidden">
+        {/* 头部 */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#eadfce]">
+          <h3 className="text-lg font-semibold text-[#2c241b]">
+            删除品类确认
+          </h3>
+          <button
+            onClick={onCancel}
+            disabled={isLoading}
+            className="text-[#8b755d] hover:text-[#2c241b] transition-colors disabled:opacity-50"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 内容 */}
+        <div className="p-6 space-y-4">
+          {/* 警告提示 */}
+          {productCount > 0 && (
+            <div className="bg-[#fef2f2] border border-[#fee2e2] rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-[#dc2626] mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-[#dc2626] mb-1">
+                    该品类下有 {productCount} 个商品
+                  </p>
+                  <p className="text-sm text-[#991b1b]">
+                    删除品类后，这些商品的品类信息将被清空，请先处理关联商品。
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 品类信息 */}
+          <div className="bg-[#f6efe4] rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#fff4e8] to-[#ffe8d6] flex items-center justify-center text-[#d67635]">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M3 7.5V17a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.5l-1.5-2H5a2 2 0 00-2 2v.5" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M3 9h18" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-[#2c241b]">{category.name}</p>
+                <p className="text-xs text-[#7d6a53]">{category.description}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 确认提示 */}
+          <p className="text-sm text-[#7d6a53]">
+            {productCount > 0 
+              ? '建议先移除或修改关联商品的品类，再删除此品类。'
+              : '确定要删除该品类吗？此操作不可撤销。'}
+          </p>
+        </div>
+
+        {/* 底部按钮 */}
+        <div className="px-6 py-4 border-t border-[#eadfce] flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={isLoading}
+            className="flex-1 h-10 rounded-lg bg-[#f5f0e8] text-[#5c4a36] hover:bg-[#eadfce] transition-all disabled:opacity-50"
+          >
+            取消
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading || productCount > 0}
+            className={`flex-1 h-10 rounded-lg bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-all ${isLoading || productCount > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {isLoading ? '删除中...' : '确认删除'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // 品类描述映射
 const CATEGORY_DESCRIPTIONS = {
   shrimp: '鲜活现捞',
@@ -136,12 +334,9 @@ const CATEGORY_DESCRIPTIONS = {
 }
 
 // 品类卡片组件
-function CategoryCard({ category, productCount, onClick }) {
+function CategoryCard({ category, productCount, onClick, onEdit, onDelete }) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left rounded-[24px] border border-[#eadfce] bg-white/80 p-4 shadow-[0_8px_24px_rgba(94,70,38,0.05)] hover:shadow-[0_12px_32px_rgba(94,70,38,0.1)] hover:border-[#ff8b52]/30 active:scale-[0.98] transition-all"
-    >
+    <div className="rounded-[24px] border border-[#eadfce] bg-white/80 p-4 shadow-[0_8px_24px_rgba(94,70,38,0.05)] hover:shadow-[0_12px_32px_rgba(94,70,38,0.1)] hover:border-[#ff8b52]/30 transition-all">
       <div className="flex items-start gap-4">
         {/* 品类图标 */}
         <div className="flex-shrink-0 w-14 h-14 rounded-[18px] bg-gradient-to-br from-[#fff4e8] to-[#ffe8d6] flex items-center justify-center text-[#d67635]">
@@ -163,14 +358,37 @@ function CategoryCard({ category, productCount, onClick }) {
           </div>
         </div>
 
-        {/* 箭头图标 */}
-        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#f6efe4] flex items-center justify-center text-[#8b755d] mt-1">
-          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+        {/* 操作按钮 */}
+        <div className="flex-shrink-0 flex items-center gap-2">
+          <button
+            onClick={() => onEdit(category)}
+            className="w-8 h-8 rounded-full bg-[#f6efe4] flex items-center justify-center text-[#8b755d] hover:bg-[#eadfce] hover:text-[#2c241b] transition-all"
+            title="编辑品类"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => onDelete(category)}
+            className="w-8 h-8 rounded-full bg-[#fef2f2] flex items-center justify-center text-[#dc2626] hover:bg-[#fee2e2] transition-all"
+            title="删除品类"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
       </div>
-    </button>
+      
+      {/* 点击查看商品 */}
+      <button
+        onClick={onClick}
+        className="mt-3 w-full py-2 rounded-xl bg-[#f6efe4] text-[#8b755d] text-sm font-medium hover:bg-[#eadfce] active:scale-[0.98] transition-all"
+      >
+        查看商品
+      </button>
+    </div>
   )
 }
 
@@ -181,6 +399,13 @@ function AdminCategories() {
   const [error, setError] = useState(null)
   const [categories, setCategories] = useState([])
   const [productCounts, setProductCounts] = useState({})
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingCategory, setEditingCategory] = useState(null)
+  const [modalMode, setModalMode] = useState('create')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // 加载商品数据并统计品类
   const loadCategories = async () => {
@@ -238,22 +463,115 @@ function AdminCategories() {
     navigate(`/admin/products?category=${categoryId}`)
   }
 
+  // 创建品类
+  const handleCreateCategory = () => {
+    setEditingCategory(null)
+    setModalMode('create')
+    setIsModalOpen(true)
+  }
+
+  // 编辑品类
+  const handleEditCategory = (category) => {
+    setEditingCategory(category)
+    setModalMode('edit')
+    setIsModalOpen(true)
+  }
+
+  // 提交品类表单（创建或编辑）
+  const handleSubmitCategory = async (formData) => {
+    setIsSubmitting(true)
+    try {
+      const slug = formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
+      
+      if (modalMode === 'edit' && editingCategory) {
+        await updateCategory(editingCategory.id, {
+          name: formData.name,
+          icon: slug
+        })
+      } else {
+        await createCategory({
+          slug: slug,
+          name: formData.name,
+          icon: slug,
+          order: categories.length + 1
+        })
+      }
+      
+      setIsModalOpen(false)
+      setEditingCategory(null)
+      await loadCategories()
+    } catch (err) {
+      console.error('[AdminCategories] 保存失败:', err)
+      alert(err.message || '保存失败，请稍后重试')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // 删除品类
+  const handleDeleteCategory = (category) => {
+    setCategoryToDelete(category)
+    setShowDeleteDialog(true)
+  }
+
+  // 确认删除品类
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true)
+    try {
+      await deleteCategory(categoryToDelete.id)
+      
+      setShowDeleteDialog(false)
+      setCategoryToDelete(null)
+      await loadCategories()
+    } catch (err) {
+      console.error('[AdminCategories] 删除失败:', err)
+      alert(err.message || '删除失败，请稍后重试')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  // 取消删除
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false)
+    setCategoryToDelete(null)
+  }
+
+  // 关闭表单弹窗
+  const handleCloseModal = () => {
+    if (!isSubmitting) {
+      setIsModalOpen(false)
+      setEditingCategory(null)
+    }
+  }
+
   // 计算总商品数
   const totalProducts = Object.values(productCounts).reduce((sum, count) => sum + count, 0)
 
   return (
     <div className="py-4">
       {/* 页面标题 */}
-      <div className="mb-5">
-        <h1
-          className="text-2xl font-bold text-[#2c241b]"
-          style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <h1
+            className="text-2xl font-bold text-[#2c241b]"
+            style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
+          >
+            品类管理
+          </h1>
+          <p className="mt-1 text-sm text-[#7d6a53]">
+            查看各品类下的商品分布情况
+          </p>
+        </div>
+        <button
+          onClick={handleCreateCategory}
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#1f4034] text-white rounded-full text-sm font-medium hover:bg-[#2a5647] transition-colors shadow-sm"
         >
-          品类管理
-        </h1>
-        <p className="mt-1 text-sm text-[#7d6a53]">
-          查看各品类下的商品分布情况
-        </p>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          创建品类
+        </button>
       </div>
 
       {/* 统计卡片 */}
@@ -293,9 +611,32 @@ function AdminCategories() {
               category={category}
               productCount={category.productCount}
               onClick={() => handleCategoryClick(category.id)}
+              onEdit={handleEditCategory}
+              onDelete={handleDeleteCategory}
             />
           ))}
         </div>
+      )}
+
+      {/* 品类表单弹窗 */}
+      <CategoryFormModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmitCategory}
+        category={editingCategory}
+        isLoading={isSubmitting}
+        mode={modalMode}
+      />
+
+      {/* 删除品类确认对话框 */}
+      {showDeleteDialog && categoryToDelete && (
+        <DeleteCategoryDialog
+          category={categoryToDelete}
+          productCount={categoryToDelete.productCount || 0}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+          isLoading={isDeleting}
+        />
       )}
 
       {/* 底部提示 */}

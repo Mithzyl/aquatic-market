@@ -232,5 +232,41 @@ export async function getCategories() {
   return adminRequest('/admin/categories')
 }
 
+/**
+ * 创建品类
+ * @param {Object} categoryData - 品类数据 { name, description, slug, icon, order }
+ * @returns {Promise<Object>} 创建的品类
+ */
+export async function createCategory(categoryData) {
+  return adminRequest('/admin/categories', {
+    method: 'POST',
+    body: JSON.stringify(categoryData)
+  })
+}
+
+/**
+ * 更新品类
+ * @param {string|number} categoryId - 品类 ID
+ * @param {Object} categoryData - 更新的品类数据
+ * @returns {Promise<Object>} 更新后的品类
+ */
+export async function updateCategory(categoryId, categoryData) {
+  return adminRequest(`/admin/categories/${categoryId}`, {
+    method: 'PUT',
+    body: JSON.stringify(categoryData)
+  })
+}
+
+/**
+ * 删除品类
+ * @param {string|number} categoryId - 品类 ID
+ * @returns {Promise<Object>} 删除结果
+ */
+export async function deleteCategory(categoryId) {
+  return adminRequest(`/admin/categories/${categoryId}`, {
+    method: 'DELETE'
+  })
+}
+
 // 导出请求函数供高级用途使用
 export { adminRequest, getAdminToken }

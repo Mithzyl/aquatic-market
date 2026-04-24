@@ -106,6 +106,22 @@ class CategoryResponse(BaseModel):
     order: int
 
 
+class CategoryCreate(BaseModel):
+    """创建品类请求（F04: 品类管理）"""
+    slug: str = PydanticField(..., max_length=50, description="品类标识符，如 'shrimp'")
+    name: str = PydanticField(..., max_length=50, description="品类名称")
+    icon: str = PydanticField(default="", max_length=100, description="品类图标URL")
+    order: int = PydanticField(default=0, ge=0, description="排序顺序")
+
+
+class CategoryUpdate(BaseModel):
+    """更新品类请求（F04: 品类管理）"""
+    slug: Optional[str] = PydanticField(None, max_length=50, description="品类标识符")
+    name: Optional[str] = PydanticField(None, max_length=50, description="品类名称")
+    icon: Optional[str] = PydanticField(None, max_length=100, description="品类图标URL")
+    order: Optional[int] = PydanticField(None, ge=0, description="排序顺序")
+
+
 class RevenueStats(BaseModel):
     """收益统计"""
     today: dict

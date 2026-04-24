@@ -7,6 +7,11 @@ Merchant Management Routes - 商家管理路由
 - PUT /merchants/{id}/status: 更新商家状态（启用/禁用）
 - GET /merchants/{id}/orders: 获取商家订单
 - GET /merchants/{id}/products: 获取商家商品
+
+F02: 商家状态管理补全
+- 禁用商家时自动取消pending订单
+- 记录操作日志
+- 恢复库存
 """
 from datetime import datetime
 from typing import Optional, List
@@ -21,9 +26,12 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from shared.database import get_session
-from shared.models import Merchant, Product, Order, OrderItem
+from shared.models import Merchant, Product, Order, OrderItem, MerchantOperationLog, PlatformAdmin
 from shared.auth import get_current_admin, require_admin_permission
 from shared.schemas.base import PaginatedResponse, PaginationMeta
+
+# 导入订单服务
+from services.order_service import OrderService
 
 router = APIRouter()
 
@@ -185,8 +193,13 @@ def update_merchant_status(
     
     需要权限：merchant:update
     
-    注意：当前 Merchant 模型没有 is_active 字段
-    此接口为预留接口，后续可扩展
+    F02: 商家状态管理补全
+    - 禁用商家后，自动取消该商家的所有pending状态订单
+    - 记录商家启用/禁用操作日志（MerchantOperationLog模型）
+    - 库存恢复（取消订单时恢复库存）
+    
+    - 禁用商家后，商家无法登录和操作
+    - 启用商家后，恢复正常使用
     """
     merchant = session.get(Merchant, merchant_id)
     
@@ -196,17 +209,53 @@ def update_merchant_status(
             detail="商家不存在"
         )
     
-    # TODO: 实现 Merchant 的 is_active 字段后启用此功能
-    # merchant.is_active = request.is_active
-    # merchant.updated_at = datetime.utcnow()
-    # session.add(merchant)
-    # session.commit()
+    # 记录操作前状态
+    previous_status = merchant.is_active
     
-    return {
-        "success": True,
-        "message": f"商家状态已{'启用' if request.is_active else '禁用'}",
-        "note": "当前版本 Merchant 模型未实现 is_active 字段，此操作为预留接口"
-    }
+    # 如果是禁用操作，需要取消pending订单
+    cancelled_orders_count = 0
+    if not request.is_active and previous_status:
+        # F02: 批量取消pending订单并恢复库存
+        order_service = OrderService(session)
+        cancelled_orders_count = order_service.batch_cancel_pending_orders(merchant_id)
+    
+    try:
+        # 更新商家状态
+        merchant.is_active = request.is_active
+        merchant.updated_at = datetime.utcnow()
+        session.add(merchant)
+        
+        # F02: 记录操作日志
+        operation_log = MerchantOperationLog(
+            merchant_id=merchant_id,
+            admin_id=admin.get("admin_id"),
+            operation_type="disable" if not request.is_active else "enable",
+            previous_status=previous_status,
+            new_status=request.is_active,
+            reason=request.reason or "",
+            cancelled_orders_count=cancelled_orders_count,
+            created_at=datetime.utcnow()
+        )
+        session.add(operation_log)
+        
+        session.commit()
+        session.refresh(merchant)
+        
+        return {
+            "success": True,
+            "message": f"商家状态已{'启用' if request.is_active else '禁用'}",
+            "merchant_id": merchant_id,
+            "is_active": merchant.is_active,
+            "reason": request.reason,
+            "cancelled_orders_count": cancelled_orders_count,
+            "operation_logged": True
+        }
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"商家状态更新失败: {str(e)}"
+        )
 
 
 @router.get("/merchants/{merchant_id}/orders")

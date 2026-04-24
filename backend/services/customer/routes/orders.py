@@ -1,6 +1,12 @@
 """
 Order Routes - 订单路由定义（用户端）
 支持用户认证，从Token获取user_id
+
+F05: 订单取消功能
+- POST /api/customer/orders/{order_id}/cancel - 用户取消订单
+- 验证：用户认证、订单归属、订单状态为pending、创建时间在5分钟内
+- 取消成功后：更新订单状态为cancelled、恢复库存
+- 事务处理：确保订单状态和库存一致性
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
@@ -112,3 +118,28 @@ def create_order(
     """创建订单（包含订单明细）- 需要认证，user_id从Token获取"""
     service = OrderService(session)
     return service.create_order(order_data, user_id=user_id)
+
+
+@router.post("/orders/{order_id}/cancel")
+def cancel_order(
+    order_id: int,
+    user_id: int = Depends(get_user_id),
+    session: Session = Depends(get_session)
+):
+    """
+    用户取消订单（F05: 订单取消功能）
+    
+    验证规则：
+    - 用户认证：user_id必须匹配订单归属
+    - 订单状态：必须为pending
+    - 时间限制：创建时间在5分钟内
+    
+    取消成功后：
+    - 更新订单状态为cancelled
+    - 恢复库存
+    
+    Returns:
+        dict: 取消结果
+    """
+    service = OrderService(session)
+    return service.cancel_order(order_id, user_id=user_id)

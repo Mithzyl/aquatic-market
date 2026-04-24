@@ -116,6 +116,7 @@ class Merchant(SQLModel, table=True):
     wechat_openid: str = Field(default="", max_length=100, unique=True)
     shop_name: str = Field(default="", max_length=100)
     role_id: int = Field(default=1, foreign_key="merchantrole.id", description="角色ID，默认为owner")
+    is_active: bool = Field(default=True, description="是否启用，默认True")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -265,6 +266,67 @@ class PlatformAdmin(SQLModel, table=True):
                 "description": "运营人员，可查看和管理商家、查看报表"
             }
         ]
+    
+    @staticmethod
+    def init_default_admin(session: Session, username: str = None, password: str = None) -> bool:
+        """
+        初始化默认管理员账号（F03: 管理员账号初始化）
+        
+        Args:
+            session: 数据库会话
+            username: 管理员用户名（从环境变量 ADMIN_USERNAME 读取）
+            password: 管理员密码（从环境变量 ADMIN_PASSWORD 读取）
+        
+        Returns:
+            bool: True 表示创建了管理员，False 表示已存在
+        """
+        import logging
+        import bcrypt
+        import os
+        
+        logger = logging.getLogger("platform_admin_init")
+        
+        # 检查是否已有管理员账号
+        existing = session.exec(select(PlatformAdmin)).first()
+        if existing:
+            logger.info("管理员账号已存在，无需初始化")
+            return False
+        
+        # 从环境变量读取默认管理员配置
+        admin_username = username or os.getenv("ADMIN_USERNAME", "admin")
+        admin_password = password or os.getenv("ADMIN_PASSWORD", "admin123")
+        
+        if not admin_username or not admin_password:
+            logger.warning("未配置管理员账号环境变量 ADMIN_USERNAME/ADMIN_PASSWORD，跳过初始化")
+            return False
+        
+        # 密码 bcrypt 加密
+        password_hash = bcrypt.hashpw(
+            admin_password.encode('utf-8'), 
+            bcrypt.gensalt()
+        ).decode('utf-8')
+        
+        # 创建默认管理员账号
+        admin = PlatformAdmin(
+            username=admin_username,
+            password_hash=password_hash,
+            email=os.getenv("ADMIN_EMAIL", "admin@platform.com"),
+            real_name="默认管理员",
+            role="super_admin",
+            permissions=json.dumps([
+                "platform:read", "platform:write",
+                "merchant:read", "merchant:create", "merchant:update", "merchant:delete",
+                "admin:read", "admin:create", "admin:update", "admin:delete",
+                "report:read", "report:export"
+            ], ensure_ascii=False),
+            is_active=True
+        )
+        
+        session.add(admin)
+        session.commit()
+        
+        logger.info(f"默认管理员账号已创建: username={admin_username}")
+        return True
 
 
 # ============== 用户模型（新增） ==============
@@ -330,3 +392,35 @@ class MerchantConfig(SQLModel, table=True):
             enable_pickup=True,
             min_order_amount=0
         )
+
+
+# ============== 商家操作日志模型（F02: 商家状态管理） ==============
+
+class MerchantOperationLog(SQLModel, table=True):
+    """商家操作日志模型 - 记录商家启用/禁用操作"""
+    __tablename__ = "merchant_operation_log"
+    
+    id: Optional[int] = Field(default=None, primary_key=True, index=True)
+    merchant_id: int = Field(..., foreign_key="merchant.id", index=True, description="商家ID")
+    admin_id: int = Field(..., foreign_key="platform_admin.id", index=True, description="操作管理员ID")
+    operation_type: str = Field(..., max_length=20, description="操作类型：enable/disable")
+    previous_status: bool = Field(..., description="操作前状态")
+    new_status: bool = Field(..., description="操作后状态")
+    reason: str = Field(default="", max_length=500, description="操作原因")
+    cancelled_orders_count: int = Field(default=0, ge=0, description="取消的订单数量")
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="操作时间")
+
+
+# ============== 初始化锁模型（F03: 管理员账号初始化） ==============
+
+class InitLock(SQLModel, table=True):
+    """初始化锁模型 - 防止多实例并发初始化冲突"""
+    __tablename__ = "init_lock"
+    
+    id: Optional[int] = Field(default=None, primary_key=True, index=True)
+    lock_name: str = Field(..., max_length=50, unique=True, index=True, description="锁名称")
+    is_locked: bool = Field(default=False, description="是否锁定")
+    locked_at: Optional[datetime] = Field(default=None, description="锁定时间")
+    locked_by: str = Field(default="", max_length=100, description="锁定者标识")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

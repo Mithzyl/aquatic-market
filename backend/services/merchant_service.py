@@ -187,6 +187,10 @@ class AuthService:
         else:
             raise ValueError("请提供登录凭证（code 或 phone+verify_code）")
         
+        # 检查商家状态（F02: 商家状态管理）
+        if not merchant.is_active:
+            raise ValueError("商家账号已被禁用，请联系平台管理员")
+        
         # 获取商家角色信息
         role = self.session.exec(
             select(MerchantRole).where(MerchantRole.id == merchant.role_id)
@@ -370,6 +374,105 @@ class CategoryService:
         return self.session.exec(
             select(Category).where(Category.merchant_id == merchant_id).order_by(Category.order)
         ).all()
+    
+    def create_category(self, merchant_id: int, category_data: dict) -> Category:
+        """
+        创建品类（F04: 品类管理）
+        
+        Args:
+            merchant_id: 商家ID
+            category_data: 品类数据
+            
+        Returns:
+            Category: 创建的品类
+        """
+        now = datetime.utcnow()
+        category = Category(
+            merchant_id=merchant_id,
+            slug=category_data.get("slug", ""),
+            name=category_data.get("name"),
+            icon=category_data.get("icon", ""),
+            order=category_data.get("order", 0),
+            created_at=now,
+            updated_at=now
+        )
+        self.session.add(category)
+        self.session.commit()
+        self.session.refresh(category)
+        return category
+    
+    def update_category(self, merchant_id: int, category_id: int, category_data: dict) -> Optional[Category]:
+        """
+        更新品类（F04: 品类管理）
+        
+        Args:
+            merchant_id: 商家ID
+            category_id: 品类ID
+            category_data: 更新数据
+            
+        Returns:
+            Category: 更新后的品类，或None（不存在或不属于商家）
+        """
+        category = self.session.exec(
+            select(Category).where(
+                Category.id == category_id,
+                Category.merchant_id == merchant_id
+            )
+        ).first()
+        
+        if not category:
+            return None
+        
+        # 更新字段
+        for key, value in category_data.items():
+            if value is not None:
+                setattr(category, key, value)
+        
+        category.updated_at = datetime.utcnow()
+        self.session.add(category)
+        self.session.commit()
+        self.session.refresh(category)
+        return category
+    
+    def delete_category(self, merchant_id: int, category_id: int) -> dict:
+        """
+        删除品类（F04: 品类管理）
+        
+        删除前检查是否有关联商品
+        
+        Args:
+            merchant_id: 商家ID
+            category_id: 品类ID
+            
+        Returns:
+            dict: {"success": bool, "message": str}
+        """
+        category = self.session.exec(
+            select(Category).where(
+                Category.id == category_id,
+                Category.merchant_id == merchant_id
+            )
+        ).first()
+        
+        if not category:
+            return {"success": False, "message": "品类不存在或不属于当前商家"}
+        
+        # 检查是否有关联商品
+        products = self.session.exec(
+            select(Product).where(
+                Product.merchant_id == merchant_id,
+                Product.category == category.slug
+            )
+        ).all()
+        
+        if products:
+            return {"success": False, "message": f"品类下有 {len(products)} 个商品，无法删除"}
+        
+        # 删除品类
+        self.session.delete(category)
+        self.session.commit()
+        
+        return {"success": True, "message": "品类已删除"}
 
 
 class RevenueService:

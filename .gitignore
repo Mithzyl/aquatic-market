@@ -2,6 +2,7 @@
 backend/venv/
 backend/venv_new/
 backend/aquatic_market.db
+data/
 venv_backend/
 __pycache__/
 *.pyc
@@ -74,9 +75,13 @@ tests/
 .codebuddy/*
 AGENTS.md
 agent/
+.trae/*
+.workbuddy/*
 
 # Design prototypes
 原型/
+archives/*
+
 
 # Skills archives
 skills/
@@ -84,3 +89,6 @@ skills/
 docs/*
 
 ./qoder/*
+
+# virtual environment
+.venv/
