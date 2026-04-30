@@ -1,9 +1,9 @@
 // frontend/src/api/products.js - 商品API（用户端）
-import { API_BASE_URL } from './config.js'
+import { CUSTOMER_API_BASE_URL } from './config.js'
 import { getCustomerConfig } from './config.js'
 
-// 用户端API地址（端口8002）
-const CUSTOMER_API_BASE = 'http://localhost:8002/api/customer'
+// 用户端API地址（通过 nginx 反向代理，生产环境使用相对路径）
+const CUSTOMER_API_BASE = `${CUSTOMER_API_BASE_URL}/api/customer`
 
 /**
  * 获取商品列表
