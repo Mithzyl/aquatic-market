@@ -33,6 +33,9 @@ COPY shared ./shared
 # 复制 schemas 模块（从构建上下文 backend/schemas 目录）
 COPY schemas ./schemas
 
+# 复制路由模块（从构建上下文 backend/routes 目录）
+COPY routes ./routes
+
 # 复制 services 模块中的 merchant_service.py（从构建上下文 backend/services 目录）
 COPY services/merchant_service.py ./services/
 
