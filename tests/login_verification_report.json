@@ -1,0 +1,73 @@
+{
+  "test_time": "2026-04-16T15:24:58.170970",
+  "base_url": "http://localhost:8002",
+  "test_results": [
+    {
+      "test_id": "TC-011-01",
+      "scenario": "新用户注册",
+      "status": "PASS",
+      "details": "用户注册成功，返回200 OK，user_id=33",
+      "evidence": "响应: {\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozMywiZXhwIjoxNzc2OTI5MDk2LCJpYXQiOjE3NzYzMjQyOTYsInRva2VuX3R5cGUiOiJ1c2VyIiwicGhvbmUiOiIxMzgwMDE1MjQ1NiJ9.Tb6Q6K5lifMCeJ1gqpDCBVlfVsatMp034jDvsmhjEuU\", \"user_id\": 33, \"phone\": \"13800152456\", \"nickname\": \"测试用户_2456\", \"avatar_url\": \"\", \"default_merchant_id\": null}",
+      "timestamp": "2026-04-16T15:24:56.623749"
+    },
+    {
+      "test_id": "TC-011-02",
+      "scenario": "重复注册（已存在用户）",
+      "status": "PASS",
+      "details": "重复注册返回已存在用户Token，user_id=33",
+      "evidence": "响应: {\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozMywiZXhwIjoxNzc2OTI5MDk2LCJpYXQiOjE3NzYzMjQyOTYsInRva2VuX3R5cGUiOiJ1c2VyIiwicGhvbmUiOiIxMzgwMDE1MjQ1NiJ9.Tb6Q6K5lifMCeJ1gqpDCBVlfVsatMp034jDvsmhjEuU\", \"user_id\": 33, \"phone\": \"13800152456\", \"nickname\": \"测试用户_2456\", \"avatar_url\": \"\", \"default_merchant_id\": null}",
+      "timestamp": "2026-04-16T15:24:56.627560"
+    },
+    {
+      "test_id": "TC-004",
+      "scenario": "获取用户信息",
+      "status": "PASS",
+      "details": "成功获取用户信息，user_id=33, phone=13800152456",
+      "evidence": "响应: {\"id\": 33, \"phone\": \"13800152456\", \"nickname\": \"测试用户_2456\", \"avatar_url\": \"\", \"real_name\": \"\", \"default_merchant_id\": null, \"created_at\": \"2026-04-16T07:24:57\"}",
+      "timestamp": "2026-04-16T15:24:56.632288"
+    },
+    {
+      "test_id": "TC-003",
+      "scenario": "访问订单API",
+      "status": "PASS",
+      "details": "成功访问订单API，返回0条订单记录",
+      "evidence": "响应: []...",
+      "timestamp": "2026-04-16T15:24:56.637906"
+    },
+    {
+      "test_id": "TC-011-03",
+      "scenario": "微信登录",
+      "status": "PASS",
+      "details": "微信登录成功，返回200 OK，user_id=34",
+      "evidence": "响应: {\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozNCwiZXhwIjoxNzc2OTI5MDk2LCJpYXQiOjE3NzYzMjQyOTYsInRva2VuX3R5cGUiOiJ1c2VyIiwicGhvbmUiOiJ3eF90ZXN0X2NvZGVfMTUyNDU2In0.7TGR6fUWyRmTvrrqLun6E-bYRlSP_JvEYXbmBshKDiQ\", \"user_id\": 34, \"phone\": \"wx_test_code_152456\", \"nickname\": \"微信测试用户\", \"avatar_url\": \"https://example.com/avatar.jpg\", \"default_merchant_id\": null}",
+      "timestamp": "2026-04-16T15:24:56.645200"
+    },
+    {
+      "test_id": "TC-011-04",
+      "scenario": "多个微信用户注册",
+      "status": "FAIL",
+      "details": "只成功注册0个微信用户，wechat_openid唯一性约束可能仍有问题",
+      "evidence": "成功数量: 0/3",
+      "timestamp": "2026-04-16T15:24:58.170792"
+    }
+  ],
+  "defects": [
+    {
+      "defect_id": "DEF-005",
+      "description": "多个微信用户注册失败，wechat_openid唯一性约束问题",
+      "priority": "P0",
+      "affected_scenario": "TC-011",
+      "reproducible": "Yes",
+      "timestamp": "2026-04-16T15:24:58.170819"
+    }
+  ],
+  "summary": {
+    "total_tests": 6,
+    "passed": 5,
+    "failed": 1,
+    "blocked": 0,
+    "total_defects": 1,
+    "p0_defects": 1,
+    "p1_defects": 0
+  }
+}

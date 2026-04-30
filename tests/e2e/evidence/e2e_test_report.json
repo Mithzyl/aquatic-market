@@ -1,0 +1,130 @@
+{
+  "test_time": "2026-04-08T11:28:43.494826",
+  "frontend_url": "http://localhost:5173",
+  "backend_url": "http://localhost:8000",
+  "test_results": [
+    {
+      "test_id": "TC-E2E-01",
+      "scenario": "首页浏览商品列表",
+      "test_type": "E2E",
+      "priority": "P0",
+      "status": "PASS",
+      "evidence": "tests/e2e/evidence/tc_e2e_01_home.png",
+      "notes": "所有关键元素正常显示"
+    },
+    {
+      "test_id": "TC-E2E-02",
+      "scenario": "商品详情页查看",
+      "test_type": "E2E",
+      "priority": "P0",
+      "status": "PASS",
+      "evidence": "tests/e2e/evidence/tc_e2e_02_product_detail.png",
+      "notes": "详情页正常显示"
+    },
+    {
+      "test_id": "TC-E2E-03",
+      "scenario": "下单页添加商品到购物车",
+      "test_type": "E2E",
+      "priority": "P0",
+      "status": "PASS",
+      "evidence": "tests/e2e/evidence/tc_e2e_03_price_query.png",
+      "notes": "下单页功能正常"
+    },
+    {
+      "test_id": "TC-E2E-04",
+      "scenario": "正常下单流程",
+      "test_type": "E2E",
+      "priority": "P0",
+      "status": "FAIL",
+      "evidence": "tests/e2e/evidence/tc_e2e_04_booking.png",
+      "notes": "提交按钮未找到"
+    },
+    {
+      "test_id": "TC-E2E-05",
+      "scenario": "订单管理页查看订单",
+      "test_type": "E2E",
+      "priority": "P0",
+      "status": "PASS",
+      "evidence": "tests/e2e/evidence/tc_e2e_05_order_management.png",
+      "notes": "订单管理页正常"
+    },
+    {
+      "test_id": "TC-E2E-06",
+      "scenario": "我的页查看用户信息",
+      "test_type": "E2E",
+      "priority": "P1",
+      "status": "PASS",
+      "evidence": "tests/e2e/evidence/tc_e2e_06_my_page.png",
+      "notes": "我的页正常显示"
+    },
+    {
+      "test_id": "TC-E2E-07",
+      "scenario": "数据持久化验证",
+      "test_type": "Interface",
+      "priority": "P0",
+      "status": "PASS",
+      "evidence": "",
+      "notes": "数据库有4条订单"
+    },
+    {
+      "test_id": "TC-E2E-08",
+      "scenario": "安全修复验证",
+      "test_type": "Interface",
+      "priority": "P0",
+      "status": "PASS",
+      "evidence": "",
+      "notes": "越权访问被正确拦截"
+    },
+    {
+      "test_id": "TC-E2E-09",
+      "scenario": "空购物车提交",
+      "test_type": "E2E",
+      "priority": "P1",
+      "status": "PASS",
+      "evidence": "tests/e2e/evidence/tc_e2e_09_empty_cart.png",
+      "notes": "空购物车正确引导用户去下单"
+    },
+    {
+      "test_id": "TC-E2E-10",
+      "scenario": "缺失必填字段测试",
+      "test_type": "E2E",
+      "priority": "P1",
+      "status": "PASS",
+      "evidence": "tests/e2e/evidence/tc_e2e_10_missing_fields.png",
+      "notes": "必填字段校验正常"
+    },
+    {
+      "test_id": "TC-E2E-11",
+      "scenario": "移动端视口测试",
+      "test_type": "E2E",
+      "priority": "P1",
+      "status": "PASS",
+      "evidence": "tests/e2e/evidence/tc_e2e_11_mobile_home.png, tests/e2e/evidence/tc_e2e_11_mobile_price_query.png, tests/e2e/evidence/tc_e2e_11_mobile_orders.png",
+      "notes": "移动端主要页面正常"
+    },
+    {
+      "test_id": "TC-E2E-12",
+      "scenario": "后端异常处理",
+      "test_type": "E2E",
+      "priority": "P2",
+      "status": "PASS",
+      "evidence": "tests/e2e/evidence/tc_e2e_12_invalid_product.png",
+      "notes": "异常情况前端有处理"
+    }
+  ],
+  "defects": [
+    {
+      "defect_id": "D-004",
+      "description": "商品详情页缺少加入购物车按钮",
+      "priority": "P1",
+      "affected_scenario": "TC-E2E-02",
+      "reproducible": "Yes"
+    }
+  ],
+  "summary": {
+    "passed": 11,
+    "failed": 1,
+    "warned": 0,
+    "total": 12
+  }
+}
