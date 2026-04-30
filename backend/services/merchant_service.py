@@ -3,8 +3,6 @@ Merchant Service - 商家端业务逻辑层
 支持 RBAC 权限管理：登录返回角色信息、Token 包含权限
 """
 import json
-import os
-import warnings
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -68,18 +66,9 @@ class AuthService:
             _login_attempts[ip].append(now)
             return True
     
-    def login(self, code: Optional[str] = None, phone: Optional[str] = None, verify_code: Optional[str] = None, client_ip: Optional[str] = None) -> dict:
+    def login(self, username: str, password: str, client_ip: Optional[str] = None) -> dict:
         """
-        商家登录
-        
-        支持两种登录方式：
-        1. 微信授权登录：提供 code 参数
-        2. 手机号+验证码登录：提供 phone 和 verify_code 参数
-        
-        安全修复：
-        - Critical #1: 微信授权登录添加演示模式警告
-        - Critical #2: 自动创建商家添加环境变量控制
-        - Critical #3: 登录接口添加限流
+        商家登录（用户名 + 密码 + bcrypt）
         
         RBAC 支持：
         - 返回商家角色信息
@@ -88,104 +77,27 @@ class AuthService:
         Returns:
             dict: 包含 token 和 merchant 信息（含角色）
         """
-        merchant = None
+        from shared.models import verify_password
         
         # 检查登录限流（Critical #3）
         if client_ip and not self.check_login_rate_limit(client_ip):
             raise ValueError("登录请求过于频繁，请1分钟后重试")
         
-        if code:
-            # 微信授权登录 - 安全修复（Critical #1）
-            demo_mode = os.getenv("WECHAT_DEMO_MODE", "false").lower() == "true"
-            
-            if demo_mode:
-                # 演示模式：使用code模拟openid（仅开发测试）
-                warnings.warn(
-                    "演示模式已启用！微信授权未对接真实API，生产环境必须禁用 WECHAT_DEMO_MODE "
-                    "并对接微信 jscode2session 接口。攻击者可伪造任意商家身份！",
-                    UserWarning
-                )
-                openid = f"demo_{code}"
-            else:
-                # 生产模式：必须调用微信API获取真实openid
-                # TODO: 对接 https://api.weixin.qq.com/sns/jscode2session
-                # 需要配置：WECHAT_APPID, WECHAT_SECRET
-                raise ValueError("生产环境必须对接微信授权API，请配置 WECHAT_DEMO_MODE=false 并实现微信登录")
-            
-            merchant = self.session.exec(
-                select(Merchant).where(Merchant.wechat_openid == openid)
-            ).first()
-            
-            if not merchant:
-                # 自动创建商家 - 安全修复（Critical #2）
-                auto_create = os.getenv("AUTO_CREATE_MERCHANT", "false").lower() == "true"
-                if not auto_create:
-                    raise ValueError("商家账号不存在，请联系管理员注册")
-                
-                # 演示模式：自动创建新商家
-                warnings.warn(
-                    "自动创建商家模式已启用！生产环境必须禁用 AUTO_CREATE_MERCHANT "
-                    "并通过管理后台手动注册商家。",
-                    UserWarning
-                )
-                merchant = Merchant(
-                    name="新商家",
-                    phone="",
-                    wechat_openid=openid,
-                    shop_name="我的店铺",
-                    role_id=1  # 默认 owner 角色
-                )
-                self.session.add(merchant)
-                self.session.commit()
-                self.session.refresh(merchant)
+        # 查找商户
+        merchant = self.session.exec(
+            select(Merchant).where(Merchant.username == username)
+        ).first()
         
-        elif phone and verify_code:
-            # 手机号+验证码登录
-            demo_mode = os.getenv("VERIFY_CODE_DEMO_MODE", "false").lower() == "true"
-            
-            if demo_mode:
-                # 演示模式：仅用于开发测试
-                warnings.warn(
-                    "演示验证码模式已启用！仅限开发环境使用，生产环境必须禁用 VERIFY_CODE_DEMO_MODE "
-                    "并对接真实的短信验证码服务。",
-                    UserWarning
-                )
-                demo_code = os.getenv("DEMO_VERIFY_CODE")
-                if not demo_code:
-                    raise ValueError("验证码服务暂未配置，请联系管理员")
-                if verify_code != demo_code:
-                    raise ValueError("验证码错误")
-            else:
-                # 生产模式：需要对接真实的验证码服务
-                raise ValueError("验证码登录服务暂未开放，请使用微信登录")
-            
-            merchant = self.session.exec(
-                select(Merchant).where(Merchant.phone == phone)
-            ).first()
-            
-            if not merchant:
-                # 自动创建商家 - 安全修复（Critical #2）
-                auto_create = os.getenv("AUTO_CREATE_MERCHANT", "false").lower() == "true"
-                if not auto_create:
-                    raise ValueError("商家账号不存在，请联系管理员注册")
-                
-                warnings.warn(
-                    "自动创建商家模式已启用！生产环境必须禁用 AUTO_CREATE_MERCHANT "
-                    "并通过管理后台手动注册商家。",
-                    UserWarning
-                )
-                merchant = Merchant(
-                    name="新商家",
-                    phone=phone,
-                    wechat_openid=f"phone_{phone}",
-                    shop_name="我的店铺",
-                    role_id=1  # 默认 owner 角色
-                )
-                self.session.add(merchant)
-                self.session.commit()
-                self.session.refresh(merchant)
-        else:
-            raise ValueError("请提供登录凭证（code 或 phone+verify_code）")
+        if not merchant:
+            raise ValueError("用户名或密码错误")
+        
+        # 检查状态
+        if not merchant.is_active:
+            raise ValueError("商家账号已被禁用，请联系平台管理员")
+        
+        # 验证密码
+        if not verify_password(password, merchant.password_hash):
+            raise ValueError("用户名或密码错误")
         
         # 检查商家状态（F02: 商家状态管理）
         if not merchant.is_active:

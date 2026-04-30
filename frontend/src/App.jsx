@@ -199,11 +199,18 @@ function AppShell() {
   return (
     <CartContext.Provider value={{ cartItems, addToCart, updateQuantity, removeFromCart, clearCart, totalItems, totalPrice }}>
       <div className="min-h-screen bg-background">
-        <main>
+        <main style={{ paddingBottom: hideGlobalNav ? '0' : 'calc(var(--app-bottom-nav-space) + 12px)' }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/booking" element={<Booking />} />
+            <Route
+              path="/booking"
+              element={
+                <CustomerRouteGuard>
+                  <Booking />
+                </CustomerRouteGuard>
+              }
+            />
             <Route path="/price-query" element={<PriceQuery />} />
             <Route path="/login" element={<CustomerLogin />} />
             <Route

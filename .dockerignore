@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv_backend/
+*.egg-info/
+.pytest_cache/
+
+# Database
+*.db
+*.sqlite
+
+# Environment (use docker-compose environment)
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Git
+.git/
+.gitignore
+
+# Frontend (backend build context only)
+frontend/
+node_modules/
+
+# Docs & tests (not needed in production)
+docs/
+tests/
+screenshots/
+dogfood-output/
+e2e_evidence/
+
+# Agent configs
+.codebuddy/
+.trae/
+.workbuddy/
+.qoder/
+AGENTS.md
+
+# Archives & temp
+archives/
+*.zip
+*.tmp

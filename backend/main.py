@@ -13,6 +13,9 @@ load_dotenv()
 # 导入配置
 from config.database import create_db_and_tables
 
+# 导入日志中间件
+from shared.logging_middleware import request_logging_middleware
+
 # 导入路由
 from routes.product_routes import router as product_router
 from routes.order_routes import router as order_router
@@ -65,6 +68,9 @@ else:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+# 请求日志中间件
+app.middleware("http")(request_logging_middleware)
 
 # 启动时创建数据库表
 @app.on_event("startup")

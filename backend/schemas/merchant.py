@@ -9,9 +9,8 @@ from pydantic import BaseModel, Field as PydanticField
 
 class LoginRequest(BaseModel):
     """登录请求"""
-    code: Optional[str] = None
-    phone: Optional[str] = None
-    verify_code: Optional[str] = None
+    username: str = PydanticField(..., min_length=1, max_length=50)
+    password: str = PydanticField(..., min_length=6, max_length=100)
 
 
 class RoleInfo(BaseModel):

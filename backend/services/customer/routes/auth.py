@@ -2,9 +2,10 @@
 Auth Routes - 用户认证路由（用户端）
 
 提供用户认证功能：
-- POST /auth/login: 微信登录（获取Token）
-- POST /auth/register: 用户注册（手机号注册）
+- POST /auth/login: 手机号+密码登录（bcrypt）
+- POST /auth/register: 手机号注册（已弃用）
 - GET /auth/me: 获取当前用户信息
+- PUT /auth/me: 更新当前用户信息
 """
 from datetime import datetime
 from typing import Optional
@@ -19,7 +20,7 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from shared.database import get_session
-from shared.models import User, Merchant
+from shared.models import User, Merchant, verify_password
 from shared.auth import create_user_token, get_current_user, get_user_id
 
 router = APIRouter()
@@ -27,15 +28,14 @@ router = APIRouter()
 
 # ============== 请求/响应模型 ==============
 
-class WeChatLoginRequest(BaseModel):
-    """微信登录请求"""
-    code: str = Field(..., description="微信登录code")
-    nickname: Optional[str] = Field(default="", description="昵称")
-    avatar_url: Optional[str] = Field(default="", description="头像URL")
+class PasswordLoginRequest(BaseModel):
+    """手机号+密码登录请求"""
+    phone: str = Field(..., max_length=20, description="手机号")
+    password: str = Field(..., min_length=6, max_length=100, description="密码")
 
 
 class PhoneRegisterRequest(BaseModel):
-    """手机号注册请求"""
+    """手机号注册请求（已弃用，请使用密码登录）"""
     phone: str = Field(..., max_length=20, description="手机号")
     nickname: Optional[str] = Field(default="", description="昵称")
     merchant_id: Optional[int] = Field(default=None, description="默认商家ID")
@@ -68,74 +68,55 @@ class UserInfoResponse(BaseModel):
 # ============== API 端点 ==============
 
 @router.post("/auth/login", response_model=LoginResponse)
-def wechat_login(
-    request: WeChatLoginRequest,
+def password_login(
+    request: PasswordLoginRequest,
     session: Session = Depends(get_session)
 ):
     """
-    微信登录
+    手机号+密码登录
     
-    通过微信code换取openid，创建或获取用户，返回JWT Token
-    注意：实际项目中需要调用微信API获取openid，这里简化处理
+    通过手机号和密码验证用户身份，返回JWT Token
     """
-    # 模拟微信登录（实际项目需要调用微信API）
-    # 这里用code作为临时openid（实际应调用 https://api.weixin.qq.com/sns/jscode2session）
-    mock_openid = f"wx_{request.code}"
-    
-    # 查找或创建用户
+    # 1. 查找用户
     user = session.exec(
-        select(User).where(User.wechat_openid == mock_openid)
+        select(User).where(User.phone == request.phone)
     ).first()
     
     if not user:
-        # 创建新用户
-        # 为微信用户生成唯一的临时phone值（避免空字符串冲突）
-        temp_phone = f"wx_{request.code}"  # 使用wechat_openid作为临时phone
-        user = User(
-            phone=temp_phone,
-            wechat_openid=mock_openid,
-            nickname=request.nickname or "微信用户",
-            avatar_url=request.avatar_url or "",
-            is_active=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
-        )
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-    else:
-        # 更新用户信息
-        if request.nickname:
-            user.nickname = request.nickname
-        if request.avatar_url:
-            user.avatar_url = request.avatar_url
-        user.last_login_at = datetime.utcnow()
-        user.updated_at = datetime.utcnow()
-        session.add(user)
-        session.commit()
+        raise HTTPException(status_code=401, detail="手机号或密码错误")
     
-    # 创建Token
+    # 2. 验证密码
+    if not verify_password(request.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="手机号或密码错误")
+    
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="账号已被禁用")
+    
+    # 3. 更新登录时间
+    user.last_login_at = datetime.utcnow()
+    session.add(user)
+    session.commit()
+    
+    # 4. 生成JWT
     token = create_user_token(user_id=user.id, phone=user.phone)
     
     return LoginResponse(
-        token=token,
-        user_id=user.id,
-        phone=user.phone or "",
-        nickname=user.nickname,
-        avatar_url=user.avatar_url,
+        token=token, user_id=user.id, phone=user.phone,
+        nickname=user.nickname, avatar_url=user.avatar_url,
         default_merchant_id=user.default_merchant_id
     )
 
 
-@router.post("/auth/register", response_model=LoginResponse)
+@router.post("/auth/register", response_model=LoginResponse, deprecated=True)
 def phone_register(
     request: PhoneRegisterRequest,
     session: Session = Depends(get_session)
 ):
     """
-    手机号注册
+    手机号注册（已弃用）
     
-    通过手机号创建用户，返回JWT Token
+    通过手机号创建用户，返回JWT Token。
+    ⚠️ 此端点已弃用，请使用 POST /auth/login 进行密码登录。
     """
     # 检查手机号是否已存在
     existing_user = session.exec(

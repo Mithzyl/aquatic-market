@@ -14,10 +14,10 @@ router = APIRouter(prefix="/orders", tags=["订单"])
 
 @router.get("")
 def get_orders(
-    merchant_id: int,
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
     session: Session = Depends(get_session)
 ):
-    """获取订单列表，必须指定商家ID（防止数据泄露）"""
+    """获取订单列表（JWT认证，只能查看本商家的订单）"""
     from shared.models import Order
     orders = session.exec(
         select(Order).where(Order.merchant_id == merchant_id)
@@ -51,9 +51,10 @@ def get_orders_by_user_id(
 @router.get("/{order_id}")
 def get_order(
     order_id: int,
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
     session: Session = Depends(get_session)
 ):
-    """获取单个订单详情"""
+    """获取单个订单详情（JWT认证，只能查看本商家的订单）"""
     service = OrderService(session)
     order = service.get_order_by_id(order_id)
     
@@ -61,6 +62,13 @@ def get_order(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="订单不存在"
+        )
+    
+    # 校验订单归属：只能查看本商家的订单
+    if order.merchant_id != merchant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权访问该订单"
         )
     
     # 获取订单明细

@@ -6,6 +6,21 @@ from sqlmodel import SQLModel, Field, Session, select
 from datetime import datetime
 from typing import Optional, List
 import json
+import bcrypt
+
+
+# ============== bcrypt 工具函数 ==============
+
+def hash_password(password: str) -> str:
+    """对密码进行 bcrypt 哈希"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """验证密码是否与哈希匹配"""
+    if not hashed_password:
+        return False
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
 # ============== RBAC 角色模型 ==============
@@ -113,6 +128,8 @@ class Merchant(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(default="", max_length=100)
     phone: str = Field(default="", max_length=20)
+    username: str = Field(default="", max_length=50, unique=True, index=True, description="登录用户名")
+    password_hash: str = Field(default="", max_length=200, description="bcrypt加密的密码")
     wechat_openid: str = Field(default="", max_length=100, unique=True)
     shop_name: str = Field(default="", max_length=100)
     role_id: int = Field(default=1, foreign_key="merchantrole.id", description="角色ID，默认为owner")
@@ -337,6 +354,7 @@ class User(SQLModel, table=True):
     
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     phone: str = Field(default="", max_length=20, unique=True, index=True, description="手机号")
+    password_hash: str = Field(default="", max_length=200, description="bcrypt加密的密码")
     wechat_openid: Optional[str] = Field(default=None, max_length=100, unique=True, description="微信OpenID")
     nickname: str = Field(default="", max_length=50, description="昵称")
     avatar_url: str = Field(default="", max_length=500, description="头像URL")

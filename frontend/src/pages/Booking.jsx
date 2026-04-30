@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../App'
 import { createOrder } from '../api/orders'
+import { useCustomerAuth } from '../contexts/CustomerAuthContext'
 
 function StepperIcon({ type }) {
   if (type === 'minus') {
@@ -38,11 +39,24 @@ function SectionLabel({ index, title, subtitle }) {
 function Booking() {
   const navigate = useNavigate()
   const { cartItems, updateQuantity, clearCart } = useCart()
+  const { user, isAuthenticated } = useCustomerAuth()
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [pickupTime, setPickupTime] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [authError, setAuthError] = useState('')
+
+  // 未登录时跳转到登录页
+  useEffect(() => {
+    if (!isAuthenticated) {
+      console.log('[Booking] 用户未登录，跳转到登录页')
+      navigate('/login', { state: { from: '/booking' } })
+    }
+  }, [isAuthenticated, navigate])
+
+  // 从用户信息获取默认商家ID，如果没有则使用默认值1
+  const merchantId = user?.default_merchant_id || 1
 
   const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
@@ -58,11 +72,18 @@ function Booking() {
     if (event) event.preventDefault()
     if (!canSubmit) return
 
+    // 再次检查登录状态
+    if (!isAuthenticated || !user) {
+      setAuthError('请先登录后再提交订单')
+      navigate('/login', { state: { from: '/booking' } })
+      return
+    }
+
     setSubmitting(true)
+    setAuthError('')
     try {
       const orderData = {
-        user_id: 1,
-        merchant_id: 2,
+        merchant_id: merchantId,
         customer_name: customerName,
         customer_phone: customerPhone,
         pickup_time: pickupTime,
@@ -73,6 +94,8 @@ function Booking() {
         total_amount: totalAmount,
         status: 'pending'
       }
+
+      console.log('[Booking] 提交订单:', { merchantId, userId: user.id })
 
       await createOrder(orderData)
 
@@ -86,12 +109,8 @@ function Booking() {
         navigate('/order-management')
       }, 1800)
     } catch (error) {
-      setShowSuccess(true)
-      clearCart()
-      setTimeout(() => {
-        setShowSuccess(false)
-        navigate('/order-management')
-      }, 1800)
+      console.error('[Booking] 创建订单失败:', error.message)
+      setAuthError(error.message || '提交订单失败，请重试')
     } finally {
       setSubmitting(false)
     }
@@ -245,7 +264,14 @@ function Booking() {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-[32px] border border-[#eadfce] bg-[#fffaf3] shadow-[0_20px_40px_rgba(105,77,44,0.08)]">
+            {/* 错误提示 */}
+            {authError && (
+              <div className="rounded-[22px] border border-[#e8c4b0] bg-[#fff5ef] px-4 py-3 text-center">
+                <p className="text-sm text-[#d67635]">{authError}</p>
+              </div>
+            )}
+
+            <section className="overflow-hidden rounded-[32px] border border-[#eadfce] bg-[#fffaf3] shadow-[0 20px 40px rgba(105,77,44,0.08)]">
               <div className="border-b border-[#efe4d4] bg-[linear-gradient(180deg,#fff8ef_0%,#fbf4e8_100%)] px-5 py-5">
                 <SectionLabel index="3" title="订单摘要" subtitle="提交后将生成待处理订单，可在订单页查看处理进度。" />
               </div>

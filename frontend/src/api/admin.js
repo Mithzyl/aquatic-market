@@ -103,8 +103,8 @@ async function adminRequest(endpoint, options = {}) {
 // ============================================
 
 /**
- * 商家登录
- * @param {Object} credentials - 登录凭证 { code?, phone?, verify_code? }
+ * 商家登录（用户名 + 密码）
+ * @param {Object} credentials - 登录凭证 { username, password }
  * @returns {Promise<Object>} { token, merchant }
  */
 export async function login(credentials) {

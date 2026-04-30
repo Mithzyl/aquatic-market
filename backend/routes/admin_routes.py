@@ -63,12 +63,9 @@ router = APIRouter(prefix="/api/admin", tags=["管理端（路径别名）"])
 @router.post("/login", response_model=LoginResponse)
 def login(request: LoginRequest, http_request: Request, session: Session = Depends(get_session)):
     """
-    管理端登录（路径别名）
+    管理端登录（路径别名 - 用户名 + 密码 + bcrypt）
     
     与 /api/merchant/login 功能完全相同。
-    支持两种登录方式：
-    1. 微信授权登录：提供 code 参数
-    2. 手机号+验证码登录：提供 phone 和 verify_code 参数
     """
     # 获取客户端 IP（支持代理场景）
     client_ip = http_request.headers.get("X-Forwarded-For", "")
@@ -80,9 +77,8 @@ def login(request: LoginRequest, http_request: Request, session: Session = Depen
     service = AuthService(session)
     try:
         result = service.login(
-            code=request.code,
-            phone=request.phone,
-            verify_code=request.verify_code,
+            username=request.username,
+            password=request.password,
             client_ip=client_ip
         )
         return LoginResponse(
@@ -91,21 +87,19 @@ def login(request: LoginRequest, http_request: Request, session: Session = Depen
         )
     except ValueError as e:
         error_msg = str(e)
-        if "暂未开放" in error_msg or "暂未配置" in error_msg or "生产环境必须" in error_msg:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=error_msg
-            )
+        # 限流返回 429
         if "过于频繁" in error_msg:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=error_msg
             )
-        if "商家账号不存在" in error_msg:
+        # 禁用返回 403
+        if "已被禁用" in error_msg:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=error_msg
             )
+        # 其他业务错误返回 400
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_msg

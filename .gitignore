@@ -1,27 +1,35 @@
-# Backend
-backend/venv/
-backend/venv_new/
-backend/aquatic_market.db
-data/
-venv_backend/
+# ============================================================
+# Python / Backend
+# ============================================================
 __pycache__/
 *.pyc
 *.pyo
 .coverage
 .env
+**/venv*/
+.venv/
 
-# Frontend
-aquatic-web-app/node_modules/
-aquatic-web-app/dist/
-aquatic-web-app/dist-ssr/
-aquatic-web-app/*.local
+# Local database & data
+*.db
+data/
+backend/data/
+
+# Migration script (contains DB connection logic, use env vars)
+backend/migrate_to_mysql.py
+
+# ============================================================
+# Node / Frontend
+# ============================================================
 node_modules/
 .vite/
+*.local
 
-# Editor directories and files
+# ============================================================
+# IDE & Editors
+# ============================================================
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
@@ -29,8 +37,10 @@ node_modules/
 *.sln
 *.sw?
 
+# ============================================================
 # Logs
-logs
+# ============================================================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -38,57 +48,60 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Temporary files
-*.zip
-*.tmp
+# ============================================================
+# Documentation (local only)
+# ============================================================
+docs/
 
-# Test scripts (temporary)
+# Agent / AI configuration (local only)
+# ============================================================
+.trae/
+.codebuddy/
+agent/
+.qoder/
+.workbuddy/
+AGENTS.md
+
+# ============================================================
+# Design prototypes & archives
+# ============================================================
+原型/
+archives/
+
+# ============================================================
+# Test scripts & evidence
+# ============================================================
+uat_test.py
+uat_playwright_test*.py
 visual_qa_*.py
 e2e_*.py
 debug_page.py
 capture_*.py
+test_matrix_login_verification.md
 
-# Evidence directories
+# ============================================================
+# Screenshots & QA outputs
+# ============================================================
+screenshots/
 dogfood-output/
 e2e_evidence/
 visual_qa_evidence/
 
-# Tool directories
-.trae/
-.codebuddy/
-agent/
-
-# Temporary reports
+# ============================================================
+# Temporary reports & checklists
+# ============================================================
+docker-audit-report.json
+environment-config-checklist.md
 visual_qa_report.md
 
-# Frontend test scripts
+# ============================================================
+# Frontend verification scripts (temporary)
+# ============================================================
 frontend/test_*.py
 frontend/verify_*.js
 
-# Backend test files
-backend/test_*.py
-
-# Test evidence and reports
-tests/
-
-# AI/Agent configuration
-.codebuddy/*
-AGENTS.md
-agent/
-.trae/*
-.workbuddy/*
-
-# Design prototypes
-原型/
-archives/*
-
-
-# Skills archives
-skills/
-
-docs/*
-
-./qoder/*
-
-# virtual environment
-.venv/
+# ============================================================
+# Compressed archives
+# ============================================================
+*.zip
+*.tmp

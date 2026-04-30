@@ -29,6 +29,7 @@ load_dotenv()
 
 # 导入共享模块
 from shared.database import create_db_and_tables
+from shared.logging_middleware import request_logging_middleware
 
 # 导入路由（从当前服务目录）
 from routes import router as merchant_router, admin_router
@@ -102,6 +103,8 @@ else:
         allow_headers=["*"],
     )
 
+# 请求日志中间件
+app.middleware("http")(request_logging_middleware)
 
 # ============== 启动事件 ==============
 
