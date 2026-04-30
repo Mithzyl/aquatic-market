@@ -13,10 +13,11 @@ services:
     ports:
       - "8001:8001"
     environment:
+      - ENVIRONMENT=production
       - SERVICE_TYPE=merchant
       - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/aquatic_market.db}
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      - ALLOWED_ORIGINS=*
     volumes:
       - ./backend/shared:/app/shared:ro
       - ./backend/config:/app/config:ro
@@ -40,10 +41,11 @@ services:
     ports:
       - "8002:8002"
     environment:
+      - ENVIRONMENT=production
       - SERVICE_TYPE=customer
       - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/aquatic_market.db}
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      - ALLOWED_ORIGINS=*
     volumes:
       - ./backend/shared:/app/shared:ro
       - ./backend/config:/app/config:ro
@@ -67,10 +69,11 @@ services:
     ports:
       - "8003:8003"
     environment:
+      - ENVIRONMENT=production
       - SERVICE_TYPE=platform
       - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/aquatic_market.db}
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:5175}
+      - ALLOWED_ORIGINS=*
     volumes:
       - ./backend/shared:/app/shared:ro
       - ./backend/config:/app/config:ro

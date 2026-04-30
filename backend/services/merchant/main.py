@@ -45,25 +45,40 @@ app = FastAPI(
 environment = os.getenv("ENVIRONMENT", "development")
 
 if environment == "production":
-    allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
-    allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
-
-    if not allowed_origins:
+    allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "").strip()
+    
+    if allowed_origins_str == "*":
+        # 临时允许所有来源（使用 regex 模式，兼容 allow_credentials=True）
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origin_regex=".*",
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    elif allowed_origins_str:
+        allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=allowed_origins,
+            allow_credentials=True,
+            allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+            allow_headers=["Authorization", "Content-Type", "Accept"],
+        )
+    else:
         import warnings
         warnings.warn(
             "生产环境未配置 ALLOWED_ORIGINS，CORS 将拒绝所有跨域请求。"
             "请设置环境变量 ALLOWED_ORIGINS=https://your-domain.com",
             UserWarning
         )
-        allowed_origins = []
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=allowed_origins,
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "Accept"],
-    )
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=[],
+            allow_credentials=True,
+            allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+            allow_headers=["Authorization", "Content-Type", "Accept"],
+        )
 else:
     app.add_middleware(
         CORSMiddleware,
