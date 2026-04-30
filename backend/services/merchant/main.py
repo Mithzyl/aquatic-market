@@ -16,9 +16,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-# 添加项目根目录到 Python 路径，以便导入共享模块
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
+# 添加 /app 到 Python 路径（Docker 容器内 config/shared 都在 /app/ 下）
+sys.path.insert(0, "/app")
 
 # 加载环境变量
 load_dotenv()
