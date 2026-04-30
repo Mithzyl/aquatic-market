@@ -1,20 +1,28 @@
 """
-Merchant Service - 商家端独立服务
+Platform Admin Service - 平台后台管理服务
 
-提供商家端所有功能：
-- 商家认证与登录
-- 商品管理（创建、更新、删除、上下架）
-- 品类管理
-- 订单管理
-- 收益统计
-- 商家信息管理
+提供平台级管理功能：
+- 管理员认证与权限管理
+- 商家管理（审核、查询、禁用）
+- 用户管理
+- 平台统计
+- 审核管理
+
+F03: 管理员账号初始化
+- Platform服务启动时检查是否存在管理员账号
+- 若不存在，从环境变量读取配置（ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_EMAIL）
+- 创建默认管理员账号（密码bcrypt加密）
+- 使用数据库锁防止多实例并发初始化冲突
 """
 import os
 import sys
+import logging
+import bcrypt
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from datetime import datetime
 
 # 添加项目根目录到 Python 路径，以便导入共享模块
 project_root = Path(__file__).parent.parent.parent
@@ -27,35 +35,40 @@ sys.path.insert(0, str(service_root))
 # 加载环境变量
 load_dotenv()
 
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("platform_service")
+
 # 导入共享模块
-from shared.database import create_db_and_tables
-from shared.logging_middleware import request_logging_middleware
+from shared.database import create_db_and_tables, engine
+from shared.models import PlatformAdmin, InitLock
+from sqlmodel import Session, select
 
 # 导入路由（从当前服务目录）
-from routes import router as merchant_router, admin_router
+from routes.auth import router as auth_router
+from routes.merchants import router as merchants_router
+from routes.users import router as users_router
+from routes.statistics import router as statistics_router
+from routes.audit import router as audit_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
-    title="商家端服务",
+    title="平台后台管理服务",
     description="""
-商家端 API 服务
+平台后台管理 API 服务
 
 ## 功能模块
-- **认证管理**：商家登录、Token 验证、权限管理
-- **商品管理**：商品创建、更新、删除、上下架
-- **品类管理**：品类查询
-- **订单管理**：订单查询、状态更新
-- **收益统计**：今日/本周/本月收益统计
-- **商家信息**：商家信息查询与更新
+- **认证管理**：管理员登录、Token 验证、权限管理
+- **商家管理**：商家审核、查询、禁用、统计
+- **用户管理**：用户查询、管理
+- **统计分析**：平台级数据统计
+- **审核管理**：商家入驻审核、资质审核
 
 ## 认证方式
 使用 JWT Bearer Token 认证，在请求头中添加：
 ```
 Authorization: Bearer <token>
 ```
-
-## 路径别名
-本服务同时支持 `/api/merchant/*` 和 `/api/admin/*` 路径，功能完全相同。
     """,
     version="1.0.0",
     docs_url="/docs",
@@ -93,20 +106,89 @@ else:
         allow_origins=[
             "http://localhost:3000",
             "http://localhost:5173",
+            "http://localhost:5174",
             "http://localhost:5175",
-            "http://localhost:5176",
-            "http://localhost:5177",
-            "http://localhost:8001",
+            "http://localhost:8003",
         ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
-# 请求日志中间件
-app.middleware("http")(request_logging_middleware)
 
 # ============== 启动事件 ==============
+
+def init_admin_account():
+    """
+    F03: 初始化管理员账号
+    
+    使用数据库锁防止多实例并发初始化冲突
+    """
+    with Session(engine) as session:
+        try:
+            # 尝试获取初始化锁
+            lock = session.exec(
+                select(InitLock).where(InitLock.lock_name == "admin_init")
+            ).first()
+            
+            if not lock:
+                # 创建锁记录
+                lock = InitLock(
+                    lock_name="admin_init",
+                    is_locked=False
+                )
+                session.add(lock)
+                session.commit()
+            
+            # 检查是否已被锁定
+            if lock.is_locked:
+                logger.info("管理员账号初始化已被其他实例处理，跳过")
+                return
+            
+            # 检查是否已有管理员账号
+            existing_admin = session.exec(select(PlatformAdmin)).first()
+            if existing_admin:
+                logger.info("管理员账号已存在，无需初始化")
+                return
+            
+            # 锁定初始化过程
+            lock.is_locked = True
+            lock.locked_at = datetime.utcnow()
+            lock.locked_by = f"platform_service_{os.getenv('HOSTNAME', 'localhost')}"
+            session.add(lock)
+            session.commit()
+            
+            # 从环境变量读取配置
+            admin_username = os.getenv("ADMIN_USERNAME", "admin")
+            admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+            admin_email = os.getenv("ADMIN_EMAIL", "admin@platform.com")
+            
+            # 密码 bcrypt 加密
+            password_hash = bcrypt.hashpw(
+                admin_password.encode('utf-8'),
+                bcrypt.gensalt()
+            ).decode('utf-8')
+            
+            # 创建默认管理员账号
+            admin = PlatformAdmin(
+                username=admin_username,
+                password_hash=password_hash,
+                email=admin_email,
+                real_name="默认管理员",
+                role="super_admin",
+                permissions='["platform:read", "platform:write", "merchant:read", "merchant:create", "merchant:update", "merchant:delete", "admin:read", "admin:create", "admin:update", "admin:delete", "report:read", "report:export"]',
+                is_active=True
+            )
+            session.add(admin)
+            session.commit()
+            
+            logger.info(f"默认管理员账号已创建: username={admin_username}")
+            
+        except Exception as e:
+            session.rollback()
+            logger.error(f"管理员账号初始化失败: {str(e)}")
+            raise
+
 
 @app.on_event("startup")
 def on_startup():
@@ -119,7 +201,12 @@ def on_startup():
             "JWT_SECRET 环境变量未设置！生产环境必须配置 JWT_SECRET，服务拒绝启动。"
             "请在 .env 文件或环境变量中设置 JWT_SECRET。"
         )
+    
+    # 创建数据库表
     create_db_and_tables()
+    
+    # F03: 初始化管理员账号
+    init_admin_account()
 
 
 # ============== 健康检查 ==============
@@ -134,7 +221,7 @@ def health_check():
     """
     return {
         "status": "healthy",
-        "service": "merchant"
+        "service": "platform"
     }
 
 
@@ -142,7 +229,7 @@ def health_check():
 def read_root():
     """根路径"""
     return {
-        "message": "商家端服务",
+        "message": "平台后台管理服务",
         "docs": "/docs",
         "version": "1.0.0"
     }
@@ -150,15 +237,18 @@ def read_root():
 
 # ============== 注册路由 ==============
 
-app.include_router(merchant_router)
-app.include_router(admin_router)
+app.include_router(auth_router, prefix="/api/platform", tags=["认证管理"])
+app.include_router(merchants_router, prefix="/api/platform", tags=["商家管理"])
+app.include_router(users_router, prefix="/api/platform", tags=["用户管理"])
+app.include_router(statistics_router, prefix="/api/platform", tags=["统计分析"])
+app.include_router(audit_router, prefix="/api/platform", tags=["审核管理"])
 
 
 # ============== 主程序入口 ==============
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("MERCHANT_SERVICE_PORT", 8001))
+    port = int(os.getenv("PLATFORM_SERVICE_PORT", 8003))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",

@@ -42,7 +42,7 @@ logger = logging.getLogger("platform_service")
 # 导入共享模块
 from shared.database import create_db_and_tables, engine
 from shared.models import PlatformAdmin, InitLock
-from shared.logging_middleware import request_logging_middleware
+from shared.logging_middleware import RequestLoggingMiddleware
 from sqlmodel import Session, select
 
 # 导入路由（从当前服务目录）
@@ -117,7 +117,7 @@ else:
     )
 
 # 请求日志中间件
-app.middleware("http")(request_logging_middleware)
+app.add_middleware(RequestLoggingMiddleware)
 
 # ============== 启动事件 ==============
 
