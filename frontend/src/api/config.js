@@ -8,13 +8,13 @@
  * 优先从环境变量读取，默认使用 localhost
  */
 // API配置：商家端服务端口8000
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 /**
  * 用户端 API 基础 URL（端口 8002）
  * 生产环境通过 VITE_CUSTOMER_API_BASE_URL 环境变量配置
  */
-export const CUSTOMER_API_BASE_URL = import.meta.env.VITE_CUSTOMER_API_BASE_URL || 'http://localhost:8002'
+export const CUSTOMER_API_BASE_URL = import.meta.env.VITE_CUSTOMER_API_BASE_URL ?? ''
 
 /**
  * API 路径前缀

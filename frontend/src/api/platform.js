@@ -12,7 +12,7 @@ const PLATFORM_ADMIN_KEY = 'platform_admin'
 // 平台后台服务地址
 // 生产环境留空使用相对路径（通过 nginx 反向代理）
 // 开发环境通过 VITE_PLATFORM_API_URL 环境变量配置（如 http://localhost:8003）
-const PLATFORM_SERVICE_URL = import.meta.env.VITE_PLATFORM_API_URL || ''
+const PLATFORM_SERVICE_URL = import.meta.env.VITE_PLATFORM_API_URL ?? ''
 
 /**
  * 获取存储的平台后台 Token

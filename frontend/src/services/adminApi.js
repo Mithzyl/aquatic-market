@@ -3,7 +3,7 @@
  * 统一请求处理，自动注入 Authorization Header
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 /**
  * 获取存储的 Admin Token
