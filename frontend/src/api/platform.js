@@ -316,6 +316,44 @@ export async function platformLogout() {
   redirectToPlatformLogin()
 }
 
+/**
+ * 新增商家
+ * @param {Object} data - { username, password, shop_name, name, phone }
+ * @returns {Promise<Object>} 创建结果
+ */
+export async function createMerchant(data) {
+  return platformRequest('/merchants', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+}
+
+/**
+ * 修改商家信息
+ * @param {number} merchantId - 商家 ID
+ * @param {Object} data - 要修改的字段（全部选填）
+ * @returns {Promise<Object>} 更新结果
+ */
+export async function updateMerchant(merchantId, data) {
+  return platformRequest(`/merchants/${merchantId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  })
+}
+
+/**
+ * 删除商家
+ * @param {number} merchantId - 商家 ID
+ * @param {boolean} force - 是否强制删除（跳过订单保护）
+ * @returns {Promise<Object>} 删除结果
+ */
+export async function deleteMerchant(merchantId, force = false) {
+  return platformRequest(`/merchants/${merchantId}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ force })
+  })
+}
+
 // 导出请求函数和常量供高级用途使用
 export { 
   platformRequest, 

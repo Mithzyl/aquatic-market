@@ -26,7 +26,10 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from shared.database import get_session
-from shared.models import Merchant, Product, Order, OrderItem, MerchantOperationLog, PlatformAdmin
+from shared.models import (
+    Merchant, Product, Order, OrderItem, MerchantOperationLog, PlatformAdmin,
+    MerchantConfig, hash_password
+)
 from shared.auth import get_current_admin, require_admin_permission
 from shared.schemas.base import PaginatedResponse, PaginationMeta
 
@@ -81,6 +84,39 @@ class MerchantDetailResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+# ============== 新增端点请求模型 ==============
+
+class MerchantCreateRequest(BaseModel):
+    """新增商家请求 (N01)"""
+    username: str = Field(..., min_length=3, max_length=50, description="登录用户名")
+    password: str = Field(..., min_length=6, max_length=50, description="登录密码")
+    shop_name: str = Field(..., min_length=1, max_length=100, description="店铺名称")
+    name: str = Field(default="", max_length=100, description="联系人姓名")
+    phone: str = Field(default="", max_length=20, description="手机号")
+
+
+class MerchantUpdateRequest(BaseModel):
+    """修改商家信息请求 (N02) — 所有字段选填"""
+    # merchant 表字段
+    shop_name: Optional[str] = Field(default=None, max_length=100, description="店铺名称")
+    name: Optional[str] = Field(default=None, max_length=100, description="联系人姓名")
+    phone: Optional[str] = Field(default=None, max_length=20, description="手机号")
+    # merchant_config 表字段
+    address: Optional[str] = Field(default=None, max_length=200, description="店铺地址")
+    business_hours: Optional[str] = Field(default=None, max_length=100, description="营业时间")
+    contact_phone: Optional[str] = Field(default=None, max_length=20, description="联系电话")
+    announcement: Optional[str] = Field(default=None, max_length=500, description="店铺公告")
+    theme_color: Optional[str] = Field(default=None, max_length=20, description="主题色")
+    enable_ordering: Optional[bool] = Field(default=None, description="是否开启下单")
+    enable_pickup: Optional[bool] = Field(default=None, description="是否开启自提")
+    min_order_amount: Optional[float] = Field(default=None, ge=0, description="最低订单金额")
+
+
+class MerchantDeleteRequest(BaseModel):
+    """删除商家请求 (N03)"""
+    force: bool = Field(default=False, description="是否强制删除（跳过订单保护）")
 
 
 # ============== API 端点 ==============
@@ -375,3 +411,356 @@ def get_merchant_products(
         "page": page,
         "page_size": page_size
     }
+
+
+# ============== N01: 新增商家 ==============
+
+@router.post("/merchants", status_code=201)
+def create_merchant(
+    request: MerchantCreateRequest,
+    admin: dict = Depends(require_admin_permission("merchant:create")),
+    session: Session = Depends(get_session)
+):
+    """
+    新增商家 (N01)
+    
+    权限：merchant:create
+    
+    业务逻辑：
+    1. 校验 username 唯一性
+    2. bcrypt 加密密码
+    3. 创建 Merchant 记录（role_id=1, is_active=True）
+    4. 自动创建 MerchantConfig 默认配置
+    5. 返回 201 + 完整商家信息
+    """
+    # 校验 username 唯一性
+    existing = session.exec(
+        select(Merchant).where(Merchant.username == request.username)
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="用户名已被占用"
+        )
+    
+    now = datetime.utcnow()
+    
+    try:
+        # 创建 Merchant
+        merchant = Merchant(
+            username=request.username,
+            password_hash=hash_password(request.password),
+            shop_name=request.shop_name,
+            name=request.name,
+            phone=request.phone,
+            role_id=1,
+            is_active=True,
+            created_at=now,
+            updated_at=now
+        )
+        session.add(merchant)
+        session.flush()  # 获取 merchant.id
+        
+        # 自动创建 MerchantConfig 默认配置
+        config = MerchantConfig.get_default_config(merchant.id)
+        config.shop_name = request.shop_name  # 同步店铺名称
+        session.add(config)
+        
+        session.commit()
+        session.refresh(merchant)
+        
+        return {
+            "id": merchant.id,
+            "username": merchant.username,
+            "shop_name": merchant.shop_name,
+            "name": merchant.name,
+            "phone": merchant.phone,
+            "role_id": merchant.role_id,
+            "is_active": merchant.is_active,
+            "created_at": merchant.created_at.isoformat(),
+            "message": "商家创建成功"
+        }
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"商家创建失败: {str(e)}"
+        )
+
+
+# ============== N02: 修改商家信息 ==============
+
+@router.put("/merchants/{merchant_id}")
+def update_merchant(
+    merchant_id: int,
+    request: MerchantUpdateRequest,
+    admin: dict = Depends(require_admin_permission("merchant:update")),
+    session: Session = Depends(get_session)
+):
+    """
+    修改商家信息 (N02)
+    
+    权限：merchant:update
+    
+    业务逻辑：
+    1. 查找商家（不存在 → 404）
+    2. 只更新传入的非 None 字段
+    3. merchant_config 字段 → upsert
+    4. 修改 shop_name 时同步 merchant_config.shop_name
+    5. 请求体全为空 → 400
+    """
+    merchant = session.get(Merchant, merchant_id)
+    if not merchant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="商家不存在"
+        )
+    
+    # 检查是否至少有一个非 None 字段
+    update_data = request.model_dump(exclude_unset=True, exclude_none=True) if hasattr(request, 'model_dump') else request.dict(exclude_unset=True, exclude_none=True)
+    
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="至少需要提供一个修改字段"
+        )
+    
+    # 分离 merchant 表字段和 merchant_config 表字段
+    merchant_fields = {"shop_name", "name", "phone"}
+    config_fields = {"address", "business_hours", "contact_phone", "announcement",
+                     "theme_color", "enable_ordering", "enable_pickup", "min_order_amount"}
+    
+    merchant_updates = {k: v for k, v in update_data.items() if k in merchant_fields}
+    config_updates = {k: v for k, v in update_data.items() if k in config_fields}
+    
+    try:
+        now = datetime.utcnow()
+        shop_name_changed = False
+        
+        # 更新 merchant 表字段
+        if "shop_name" in merchant_updates:
+            merchant.shop_name = merchant_updates["shop_name"]
+            shop_name_changed = True
+        if "name" in merchant_updates:
+            merchant.name = merchant_updates["name"]
+        if "phone" in merchant_updates:
+            merchant.phone = merchant_updates["phone"]
+        
+        merchant.updated_at = now
+        session.add(merchant)
+        
+        # upsert merchant_config
+        if config_updates or shop_name_changed:
+            config = session.exec(
+                select(MerchantConfig).where(MerchantConfig.merchant_id == merchant_id)
+            ).first()
+            
+            if not config:
+                # 不存在则创建
+                config = MerchantConfig.get_default_config(merchant_id)
+                session.add(config)
+                session.flush()
+            
+            # 更新 config 字段
+            if "address" in config_updates:
+                config.address = config_updates["address"]
+            if "business_hours" in config_updates:
+                config.business_hours = config_updates["business_hours"]
+            if "contact_phone" in config_updates:
+                config.contact_phone = config_updates["contact_phone"]
+            if "announcement" in config_updates:
+                config.announcement = config_updates["announcement"]
+            if "theme_color" in config_updates:
+                config.theme_color = config_updates["theme_color"]
+            if "enable_ordering" in config_updates:
+                config.enable_ordering = config_updates["enable_ordering"]
+            if "enable_pickup" in config_updates:
+                config.enable_pickup = config_updates["enable_pickup"]
+            if "min_order_amount" in config_updates:
+                config.min_order_amount = config_updates["min_order_amount"]
+            
+            # Q1: 同步 shop_name
+            if shop_name_changed:
+                config.shop_name = merchant_updates["shop_name"]
+            
+            config.updated_at = now
+            session.add(config)
+        
+        session.commit()
+        session.refresh(merchant)
+        
+        # 重新获取 config 用于响应
+        final_config = session.exec(
+            select(MerchantConfig).where(MerchantConfig.merchant_id == merchant_id)
+        ).first()
+        
+        config_response = None
+        if final_config:
+            config_response = {
+                "id": final_config.id,
+                "merchant_id": final_config.merchant_id,
+                "shop_name": final_config.shop_name,
+                "address": final_config.address,
+                "business_hours": final_config.business_hours,
+                "contact_phone": final_config.contact_phone,
+                "announcement": final_config.announcement,
+                "theme_color": final_config.theme_color,
+                "enable_ordering": final_config.enable_ordering,
+                "enable_pickup": final_config.enable_pickup,
+                "min_order_amount": final_config.min_order_amount
+            }
+        
+        return {
+            "success": True,
+            "message": "商家信息已更新",
+            "merchant": {
+                "id": merchant.id,
+                "username": merchant.username,
+                "shop_name": merchant.shop_name,
+                "name": merchant.name,
+                "phone": merchant.phone,
+                "role_id": merchant.role_id,
+                "is_active": merchant.is_active,
+                "created_at": merchant.created_at.isoformat(),
+                "updated_at": merchant.updated_at.isoformat()
+            },
+            "config": config_response
+        }
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"商家信息更新失败: {str(e)}"
+        )
+
+
+# ============== N03: 删除商家 ==============
+
+@router.delete("/merchants/{merchant_id}")
+def delete_merchant(
+    merchant_id: int,
+    request: MerchantDeleteRequest = MerchantDeleteRequest(),
+    admin: dict = Depends(require_admin_permission("merchant:delete")),
+    session: Session = Depends(get_session)
+):
+    """
+    删除商家 (N03)
+    
+    权限：merchant:delete
+    
+    业务逻辑：
+    1. 查找商家（不存在 → 404）
+    2. force=false：检查活跃订单 → 有则 409
+    3. force=true：先取消所有 pending 订单 + 恢复库存
+    4. 级联删除：OrderItem → Order → Product → MerchantConfig → MerchantOperationLog → Merchant
+    5. Q2: 保留 C端 user 记录
+    6. 使用数据库事务，失败 rollback
+    """
+    merchant = session.get(Merchant, merchant_id)
+    if not merchant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="商家不存在"
+        )
+    
+    # 统计活跃订单 (pending/confirmed/ready)
+    active_orders = session.exec(
+        select(Order).where(
+            Order.merchant_id == merchant_id,
+            Order.status.in_(["pending", "confirmed", "ready"])
+        )
+    ).all()
+    active_order_count = len(active_orders)
+    
+    cancelled_orders_count = 0
+    
+    if not request.force:
+        # 有活跃订单 → 拒绝删除
+        if active_order_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"商家有 {active_order_count} 个未完成订单，无法删除。请先处理订单或使用 force=true"
+            )
+    else:
+        # force=true: 取消所有 pending 订单 + 恢复库存
+        order_service = OrderService(session)
+        cancelled_orders_count = order_service.batch_cancel_pending_orders(merchant_id)
+    
+    # 统计数据用于响应
+    products_count = len(session.exec(
+        select(Product).where(Product.merchant_id == merchant_id)
+    ).all())
+    
+    all_order_ids = [o.id for o in session.exec(
+        select(Order).where(Order.merchant_id == merchant_id)
+    ).all()]
+    orders_count = len(all_order_ids)
+    
+    try:
+        # 级联删除（按 FK 依赖顺序）
+        # 1. 删除 OrderItem（先删除子记录）
+        if all_order_ids:
+            for oid in all_order_ids:
+                items = session.exec(
+                    select(OrderItem).where(OrderItem.order_id == oid)
+                ).all()
+                for item in items:
+                    session.delete(item)
+        
+        # 2. 删除 Order
+        orders_to_delete = session.exec(
+            select(Order).where(Order.merchant_id == merchant_id)
+        ).all()
+        for order in orders_to_delete:
+            session.delete(order)
+        
+        # 3. 删除 Product
+        products_to_delete = session.exec(
+            select(Product).where(Product.merchant_id == merchant_id)
+        ).all()
+        for product in products_to_delete:
+            session.delete(product)
+        
+        # 4. 删除 MerchantConfig
+        config = session.exec(
+            select(MerchantConfig).where(MerchantConfig.merchant_id == merchant_id)
+        ).first()
+        config_deleted = config is not None
+        if config:
+            session.delete(config)
+        
+        # 5. 删除 MerchantOperationLog
+        logs = session.exec(
+            select(MerchantOperationLog).where(MerchantOperationLog.merchant_id == merchant_id)
+        ).all()
+        for log in logs:
+            session.delete(log)
+        
+        # 6. 删除 Merchant
+        session.delete(merchant)
+        
+        session.commit()
+        
+        return {
+            "success": True,
+            "message": "商家及关联数据已删除",
+            "deleted": {
+                "merchant_id": merchant_id,
+                "products_count": products_count,
+                "orders_count": orders_count,
+                "cancelled_orders_count": cancelled_orders_count,
+                "config_deleted": config_deleted
+            }
+        }
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"删除商家失败: {str(e)}"
+        )
