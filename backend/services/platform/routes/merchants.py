@@ -46,7 +46,7 @@ class MerchantResponse(BaseModel):
     id: int
     name: str
     phone: str
-    wechat_openid: str
+    wechat_openid: Optional[str] = None
     shop_name: str
     role_id: int
     created_at: datetime
@@ -73,7 +73,7 @@ class MerchantDetailResponse(BaseModel):
     id: int
     name: str
     phone: str
-    wechat_openid: str
+    wechat_openid: Optional[str] = None
     shop_name: str
     role_id: int
     created_at: datetime
@@ -103,6 +103,7 @@ class MerchantUpdateRequest(BaseModel):
     shop_name: Optional[str] = Field(default=None, max_length=100, description="店铺名称")
     name: Optional[str] = Field(default=None, max_length=100, description="联系人姓名")
     phone: Optional[str] = Field(default=None, max_length=20, description="手机号")
+    password: Optional[str] = Field(default=None, min_length=6, max_length=50, description="登录密码（选填，填写则更新）")
     # merchant_config 表字段
     address: Optional[str] = Field(default=None, max_length=200, description="店铺地址")
     business_hours: Optional[str] = Field(default=None, max_length=100, description="营业时间")
@@ -529,7 +530,7 @@ def update_merchant(
         )
     
     # 分离 merchant 表字段和 merchant_config 表字段
-    merchant_fields = {"shop_name", "name", "phone"}
+    merchant_fields = {"shop_name", "name", "phone", "password"}
     config_fields = {"address", "business_hours", "contact_phone", "announcement",
                      "theme_color", "enable_ordering", "enable_pickup", "min_order_amount"}
     
@@ -548,6 +549,8 @@ def update_merchant(
             merchant.name = merchant_updates["name"]
         if "phone" in merchant_updates:
             merchant.phone = merchant_updates["phone"]
+        if "password" in merchant_updates:
+            merchant.password_hash = hash_password(merchant_updates["password"])
         
         merchant.updated_at = now
         session.add(merchant)

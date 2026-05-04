@@ -403,6 +403,7 @@ function MerchantDetailModal({ merchant, onClose, onToggleStatus, onDelete, onMe
     shop_name: '',
     name: '',
     phone: '',
+    password: '',
     address: '',
     business_hours: '',
     contact_phone: '',
@@ -436,6 +437,7 @@ function MerchantDetailModal({ merchant, onClose, onToggleStatus, onDelete, onMe
       shop_name: detail?.shop_name || merchant.shop_name || '',
       name: detail?.name || merchant.name || '',
       phone: detail?.phone || merchant.phone || '',
+      password: '',
       address: '',
       business_hours: '',
       contact_phone: '',
@@ -476,6 +478,10 @@ function MerchantDetailModal({ merchant, onClose, onToggleStatus, onDelete, onMe
       }
       if (editForm.phone !== (detail?.phone || merchant.phone || '')) {
         payload.phone = editForm.phone
+      }
+      // 密码（填写了才发送）
+      if (editForm.password && editForm.password.trim()) {
+        payload.password = editForm.password.trim()
       }
       // config 字段始终发送（后端 upsert）
       payload.address = editForm.address
@@ -562,6 +568,18 @@ function MerchantDetailModal({ merchant, onClose, onToggleStatus, onDelete, onMe
                     value={editForm.phone}
                     onChange={(e) => handleEditChange('phone', e.target.value)}
                     className="w-full h-9 px-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">
+                    新密码 <span className="text-slate-500">（选填，不填则不修改）</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={editForm.password}
+                    onChange={(e) => handleEditChange('password', e.target.value)}
+                    placeholder="至少6位，留空不修改"
+                    className="w-full h-9 px-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                 </div>
               </div>

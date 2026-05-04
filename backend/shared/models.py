@@ -130,7 +130,7 @@ class Merchant(SQLModel, table=True):
     phone: str = Field(default="", max_length=20)
     username: str = Field(default="", max_length=50, unique=True, index=True, description="登录用户名")
     password_hash: str = Field(default="", max_length=200, description="bcrypt加密的密码")
-    wechat_openid: str = Field(default="", max_length=100, unique=True)
+    wechat_openid: Optional[str] = Field(default=None, max_length=100, unique=True, nullable=True)
     shop_name: str = Field(default="", max_length=100)
     role_id: int = Field(default=1, foreign_key="merchantrole.id", description="角色ID，默认为owner")
     is_active: bool = Field(default=True, description="是否启用，默认True")
