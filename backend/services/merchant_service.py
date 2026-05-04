@@ -68,7 +68,11 @@ class AuthService:
     
     def login(self, username: str, password: str, client_ip: Optional[str] = None) -> dict:
         """
-        商家登录（用户名 + 密码 + bcrypt）
+        商家登录（用户名/手机号 + 密码 + bcrypt）
+        
+        支持两种登录凭证：
+        1. username: 用户名登录
+        2. username: 手机号登录（自动识别）
         
         RBAC 支持：
         - 返回商家角色信息
@@ -78,14 +82,17 @@ class AuthService:
             dict: 包含 token 和 merchant 信息（含角色）
         """
         from shared.models import verify_password
+        from sqlmodel import or_
         
         # 检查登录限流（Critical #3）
         if client_ip and not self.check_login_rate_limit(client_ip):
             raise ValueError("登录请求过于频繁，请1分钟后重试")
         
-        # 查找商户
+        # 查找商户：支持用户名或手机号
         merchant = self.session.exec(
-            select(Merchant).where(Merchant.username == username)
+            select(Merchant).where(
+                or_(Merchant.username == username, Merchant.phone == username)
+            )
         ).first()
         
         if not merchant:

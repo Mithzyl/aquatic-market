@@ -38,7 +38,7 @@ router = APIRouter(prefix="/api/merchant", tags=["商家端"])
 @router.post("/login", response_model=LoginResponse)
 def login(request: LoginRequest, http_request: Request, session: Session = Depends(get_session)):
     """
-    商家登录（用户名 + 密码 + bcrypt）
+    商家登录（用户名/手机号 + 密码 + bcrypt）
     
     安全修复：
     - 登录限流：每IP每分钟最多5次尝试（Critical #3）

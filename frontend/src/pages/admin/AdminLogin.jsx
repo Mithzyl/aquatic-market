@@ -24,7 +24,7 @@ function AdminLogin() {
     e.preventDefault()
 
     if (!username.trim()) {
-      setInputError('请输入用户名')
+      setInputError('请输入用户名或手机号')
       return
     }
     if (!password || password.length < 6) {
@@ -74,12 +74,12 @@ function AdminLogin() {
 
         <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4">
           <div>
-            <label className="block text-xs font-medium text-[#5a4d3d] mb-2">用户名</label>
+            <label className="block text-xs font-medium text-[#5a4d3d] mb-2">用户名 / 手机号</label>
             <input
               type="text"
               value={username}
               onChange={(e) => { setUsername(e.target.value); setInputError('') }}
-              placeholder="请输入用户名"
+              placeholder="请输入用户名或手机号"
               className="w-full h-12 px-4 rounded-xl border border-[#eadfce] bg-white text-[#2c241b] placeholder-[#b5a18a] focus:outline-none focus:border-[#ff8b52] focus:ring-2 focus:ring-[#ff8b52]/20 transition-all"
               disabled={isLoading}
               autoComplete="username"
