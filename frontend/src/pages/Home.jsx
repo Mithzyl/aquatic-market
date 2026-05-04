@@ -3,8 +3,13 @@ import { Link } from 'react-router-dom'
 import { getProducts, getCategories } from '../api/products'
 import { getCustomerConfig } from '../api/config'
 
-// CategoryIcon 组件（复用 PriceQuery.jsx 的实现）
-function CategoryIcon({ categoryId }) {
+// CategoryIcon 组件（复用 PriceQuery.jsx 的实现，支持 emoji 图标）
+function CategoryIcon({ categoryId, icon }) {
+  // 如果有自定义 emoji icon，优先显示
+  if (icon && /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27FF]/.test(icon)) {
+    return <span className="inline-flex items-center justify-center text-2xl">{icon}</span>
+  }
+
   const commonProps = {
     className: 'h-8 w-8',
     fill: 'none',
@@ -285,7 +290,7 @@ const Home = () => {
                 to="/price-query"
                 className="flex min-h-[92px] flex-col items-center justify-center rounded-[22px] bg-[#fff4e8] px-2 py-3 text-center transition-transform active:scale-[0.98]"
               >
-                <CategoryIcon categoryId={category.id} />
+                <CategoryIcon categoryId={category.id} icon={category.icon} />
                 <span className="mt-2 text-xs font-semibold text-[#46392c]">{category.name}</span>
                 <span className="mt-1 text-[10px] text-[#9a8062]">{category.description}</span>
               </Link>

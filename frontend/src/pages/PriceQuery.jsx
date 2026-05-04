@@ -6,10 +6,21 @@ import { getCustomerConfig } from '../api/config'
 
 const fallbackImage = 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?w=800&h=800&fit=crop'
 
-function CategoryIcon({ categoryId, active = false, compact = false }) {
+function CategoryIcon({ categoryId, icon, active = false, compact = false }) {
   const wrapperClass = compact
     ? `flex h-7 w-7 items-center justify-center rounded-full ${active ? 'bg-[#fff1e6] text-[#d67635]' : 'bg-[#f1e6d7] text-[#8c755d]'}`
     : `flex h-10 w-10 items-center justify-center rounded-full ${active ? 'bg-[#fff1e6] text-[#d67635]' : 'bg-[#f1e6d7] text-[#8c755d]'}`
+
+  // 如果有自定义 emoji icon，优先显示
+  if (icon && /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27FF]/.test(icon)) {
+    const emojiClass = compact ? 'text-base' : 'text-xl'
+    return (
+      <div className={wrapperClass}>
+        <span className={emojiClass}>{icon}</span>
+      </div>
+    )
+  }
+
   const svgClass = compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'
 
   const commonProps = {
@@ -19,10 +30,10 @@ function CategoryIcon({ categoryId, active = false, compact = false }) {
     viewBox: '0 0 24 24'
   }
 
-  let icon
+  let svgIcon
 
   if (categoryId === 'shrimp') {
-    icon = (
+    svgIcon = (
       <svg {...commonProps}>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M6.5 13.5c2.5-5.5 8.5-7.5 11-5 2 2-1 5-4 5H9.5" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M9.5 13.5c0 2.5 1.5 4 4 4" />
@@ -30,14 +41,14 @@ function CategoryIcon({ categoryId, active = false, compact = false }) {
       </svg>
     )
   } else if (categoryId === 'crab') {
-    icon = (
+    svgIcon = (
       <svg {...commonProps}>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M8 12a4 4 0 1 1 8 0v2H8v-2Z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M8 11 5.5 9M16 11 18.5 9M8 14 5 15.5M16 14l3 1.5M10 8.5 8.5 6.5M14 8.5l1.5-2" />
       </svg>
     )
   } else if (categoryId === 'fish') {
-    icon = (
+    svgIcon = (
       <svg {...commonProps}>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M5.5 12c2-2.6 4.9-4 8.3-4 2.3 0 4.1.6 5.7 1.9l-2 2.1 2 2.1c-1.6 1.3-3.4 1.9-5.7 1.9-3.4 0-6.3-1.4-8.3-4Z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M7 12h4.5" />
@@ -45,14 +56,14 @@ function CategoryIcon({ categoryId, active = false, compact = false }) {
       </svg>
     )
   } else if (categoryId === 'shell') {
-    icon = (
+    svgIcon = (
       <svg {...commonProps}>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M6 15c0-4.2 2.5-7 6-7s6 2.8 6 7c-2-.7-4-.7-6 0-2-.7-4-.7-6 0Z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M12 8v7M9 9.2l1.5 5M15 9.2l-1.5 5" />
       </svg>
     )
   } else {
-    icon = (
+    svgIcon = (
       <svg {...commonProps}>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M9 7h6l1.5 4.5L12 17l-4.5-5.5L9 7Z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M9 7 7 4.5M15 7 17 4.5" />
@@ -60,7 +71,7 @@ function CategoryIcon({ categoryId, active = false, compact = false }) {
     )
   }
 
-  return <div className={wrapperClass}>{icon}</div>
+  return <div className={wrapperClass}>{svgIcon}</div>
 }
 
 const PriceQuery = () => {
@@ -440,7 +451,7 @@ const PriceQuery = () => {
                   >
                     {isActive && <span className="absolute left-0 top-6 h-10 w-1 rounded-full bg-[#ff7e45]" />}
                     <div className="flex flex-col items-center">
-                      <CategoryIcon categoryId={category.id} active={isActive} />
+                      <CategoryIcon categoryId={category.id} icon={category.icon} active={isActive} />
                       <div className={`font-semibold leading-none ${isActive ? 'mt-3 text-[14px]' : 'mt-2 text-[12px]'}`}>
                         {category.name}
                       </div>
@@ -502,7 +513,7 @@ const PriceQuery = () => {
                         }}
                       >
                         <div className="mb-3 flex items-center gap-2">
-                          <CategoryIcon categoryId={category.id} compact />
+                          <CategoryIcon categoryId={category.id} icon={category.icon} compact />
                           <h3 className="text-lg font-semibold text-[#2c241c]">{category.name}</h3>
                           <span className="rounded-full bg-[#f7f1e8] px-2 py-1 text-[10px] font-medium text-[#8f7558]">
                             {category.products.length} 款

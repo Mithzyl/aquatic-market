@@ -24,6 +24,8 @@ from schemas.merchant import (
     ProductUpdate,
     ProductStatusUpdate,
     ProductResponse,
+    CategoryCreate,
+    CategoryUpdate,
     CategoryResponse,
     RevenueStats,
     MerchantUpdate,
@@ -177,6 +179,65 @@ def get_categories(
     service = CategoryService(session)
     categories = service.get_categories(merchant_id)
     return categories
+
+
+@router.post("/categories", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
+def create_category(
+    request: CategoryCreate,
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
+    session: Session = Depends(get_session)
+):
+    """
+    创建品类
+
+    权限：商家登录即可（通过 JWT Token 自动识别商家）
+    """
+    service = CategoryService(session)
+    category = service.create_category(merchant_id, request.model_dump())
+    return category
+
+
+@router.put("/categories/{category_id}", response_model=CategoryResponse)
+def update_category(
+    category_id: int,
+    request: CategoryUpdate,
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
+    session: Session = Depends(get_session)
+):
+    """
+    更新品类
+
+    只更新传入的非 None 字段
+    """
+    service = CategoryService(session)
+    category = service.update_category(merchant_id, category_id, request.model_dump(exclude_unset=True, exclude_none=True))
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="品类不存在或不属于当前商家"
+        )
+    return category
+
+
+@router.delete("/categories/{category_id}")
+def delete_category(
+    category_id: int,
+    merchant_id: int = Depends(get_current_merchant_id_from_token),
+    session: Session = Depends(get_session)
+):
+    """
+    删除品类
+
+    检查是否有关联商品，有则拒绝删除
+    """
+    service = CategoryService(session)
+    result = service.delete_category(merchant_id, category_id)
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result["message"]
+        )
+    return {"success": True, "message": result["message"]}
 
 
 # ============== 收益统计 API ==============

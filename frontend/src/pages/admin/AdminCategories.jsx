@@ -2,8 +2,16 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getProducts, getCategories, createCategory, updateCategory, deleteCategory } from '../../api/admin'
 
+// 常用海鲜 emoji 图标
+const SEAFOOD_EMOJIS = ['🦐', '🦀', '🐟', '🦪', '🦞', '🐙', '🦑', '🐠', '🐡', '🦈', '🐳', '🦭', '🦂', '🍣', '🐚', '🦴', '🍤', '🥡']
+
 // 品类图标组件
-function CategoryIcon({ categoryId, className = 'h-10 w-10' }) {
+function CategoryIcon({ categoryId, icon, className = 'h-10 w-10' }) {
+  // 如果有自定义 icon（emoji），优先显示
+  if (icon && /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27FF]/.test(icon)) {
+    return <span className={`${className} inline-flex items-center justify-center text-2xl`}>{icon}</span>
+  }
+
   const commonProps = {
     className,
     fill: 'none',
@@ -130,6 +138,7 @@ function ErrorState({ message, onRetry }) {
 function CategoryFormModal({ isOpen, onClose, onSubmit, category, isLoading, mode }) {
   const [formData, setFormData] = useState({
     name: '',
+    icon: '🦐',
     description: ''
   })
 
@@ -138,11 +147,13 @@ function CategoryFormModal({ isOpen, onClose, onSubmit, category, isLoading, mod
     if (category && mode === 'edit') {
       setFormData({
         name: category.name || '',
+        icon: category.icon || '🦐',
         description: category.description || ''
       })
     } else {
       setFormData({
         name: '',
+        icon: '🦐',
         description: ''
       })
     }
@@ -187,6 +198,30 @@ function CategoryFormModal({ isOpen, onClose, onSubmit, category, isLoading, mod
 
         {/* 表单 */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {/* 品类图标 */}
+          <div>
+            <label className="block text-sm font-medium text-[#2c241b] mb-1.5">
+              品类图标
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {SEAFOOD_EMOJIS.map(emoji => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, icon: emoji }))}
+                  className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
+                    formData.icon === emoji
+                      ? 'bg-[#1f4034] text-white scale-110 shadow-md'
+                      : 'bg-white border border-[#eadfce] hover:border-[#ff8b52] hover:bg-[#fff4e8]'
+                  }`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-[#7d6a53]">选择一个图标代表该品类</p>
+          </div>
+
           {/* 品类名称 */}
           <div>
             <label className="block text-sm font-medium text-[#2c241b] mb-1.5">
@@ -335,12 +370,13 @@ const CATEGORY_DESCRIPTIONS = {
 
 // 品类卡片组件
 function CategoryCard({ category, productCount, onClick, onEdit, onDelete }) {
+  const hasEmojiIcon = category.icon && /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27FF]/.test(category.icon)
   return (
     <div className="rounded-[24px] border border-[#eadfce] bg-white/80 p-4 shadow-[0_8px_24px_rgba(94,70,38,0.05)] hover:shadow-[0_12px_32px_rgba(94,70,38,0.1)] hover:border-[#ff8b52]/30 transition-all">
       <div className="flex items-start gap-4">
         {/* 品类图标 */}
-        <div className="flex-shrink-0 w-14 h-14 rounded-[18px] bg-gradient-to-br from-[#fff4e8] to-[#ffe8d6] flex items-center justify-center text-[#d67635]">
-          <CategoryIcon categoryId={category.id} />
+        <div className={`flex-shrink-0 w-14 h-14 rounded-[18px] flex items-center justify-center ${hasEmojiIcon ? 'bg-[#f6efe4] text-3xl' : 'bg-gradient-to-br from-[#fff4e8] to-[#ffe8d6] text-[#d67635]'}`}>
+          <CategoryIcon categoryId={category.id} icon={category.icon} />
         </div>
 
         {/* 品类信息 */}
@@ -433,10 +469,11 @@ function AdminCategories() {
 
       // 合并品类信息：将后端格式转换为前端期望格式
       // 后端 admin API: { id: number, slug: string, name: string, icon: string, order: number }
-      // 前端期望: { id: string (slug), name: string, description: string, productCount: number }
+      // 前端期望: { id: string (slug), name: string, description: string, icon: string, productCount: number }
       const categoriesWithCounts = categoriesData.map(cat => ({
         id: cat.slug || String(cat.id), // 使用 slug 作为 id，兼容 CategoryIcon
         name: cat.name,
+        icon: cat.icon || '',
         description: CATEGORY_DESCRIPTIONS[cat.slug] || '精选品类',
         productCount: counts[cat.slug] || 0
       }))
@@ -486,13 +523,13 @@ function AdminCategories() {
       if (modalMode === 'edit' && editingCategory) {
         await updateCategory(editingCategory.id, {
           name: formData.name,
-          icon: slug
+          icon: formData.icon || '🦐'
         })
       } else {
         await createCategory({
           slug: slug,
           name: formData.name,
-          icon: slug,
+          icon: formData.icon || '🦐',
           order: categories.length + 1
         })
       }
