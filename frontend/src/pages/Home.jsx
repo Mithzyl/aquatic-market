@@ -220,21 +220,21 @@ const Home = () => {
 
           <div className="relative px-5 pb-6 pt-6">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-medium tracking-[0.18em] text-white/82 backdrop-blur">
-              NEW RETAIL SEAFOOD
+              鲜选直达 · 当日到店
             </div>
 
             <div className="mt-10 max-w-[220px]">
-              <p className="text-sm text-white/70">柳州鲜选海产店</p>
+              <p className="text-sm text-white/70">{merchantConfig?.shop_name || '柳州鲜选'}</p>
               <h1
                 className="mt-2 text-[30px] font-bold leading-[1.1]"
                 style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
               >
-                当日直采的
+                源头直采
                 <br />
-                海鲜零售首页
+                鲜活到家
               </h1>
               <p className="mt-3 text-sm leading-6 text-white/72">
-                把门店鲜度、今日活动和招牌商品先讲清楚，再进入具体分类下单。
+                每日凌晨渔港直发，虾蟹贝鱼分类上架，下单即留货。
               </p>
             </div>
 
