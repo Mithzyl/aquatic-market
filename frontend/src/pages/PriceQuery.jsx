@@ -474,7 +474,7 @@ const PriceQuery = () => {
                   {activeCategory?.name || '加载中...'}
                 </span>
                 <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">
-                  {keywordFilteredProducts.length} 款可选
+                  {keywordFilteredProducts.filter((p) => p.category === activeCategory?.id).length} 款可选
                 </span>
               </div>
             </div>
