@@ -36,6 +36,9 @@ COPY schemas ./schemas
 # 复制 services 模块中的 merchant_service.py（从构建上下文 backend/services 目录）
 COPY services/merchant_service.py ./services/
 
+# 复制全局路由（从构建上下文 backend/routes，用于 carousel 等跨服务路由）
+COPY routes/carousel_routes.py ./routes/
+
 # 复制商家端服务代码（从构建上下文 backend/services/merchant 目录）
 COPY services/merchant ./merchant_service
 
