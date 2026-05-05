@@ -16,7 +16,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 # 添加项目根目录到 Python 路径，以便导入共享模块
-project_root = Path(__file__).parent.parent.parent
+# Docker 中 COPY . . → 文件在 /app/services/platform/main.py → project_root = /app
+project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # 添加当前服务目录到 Python 路径，以便导入路由模块
