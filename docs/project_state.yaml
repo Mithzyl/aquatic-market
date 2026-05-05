@@ -1,0 +1,117 @@
+project_state:
+  updated_at: "2026-05-05T19:20:00"
+  phase: active_development
+  phase_description: "七牛云对象存储集成 + 平台端内容管理，feature/qiniu-object-storage 分支上"
+  branch: "feature/qiniu-object-storage"
+
+  focus_areas:
+    - "七牛云图片上传（商品/头像/Logo/轮播图）"
+    - "轮播图管理（商家端 CRUD + 用户端展示 + 平台端管理）"
+    - "平台端内容管理（商品管理、轮播图管理）"
+    - "营销文案优化"
+
+  # 不在现阶段范围内的功能
+  out_of_scope:
+    - feature: "商家入驻"
+      reason: "商家由平台管理员直接创建"
+    - feature: "审核管理"
+      reason: "单商家 SaaS 模式，无需审核流程"
+    - feature: "支付"
+      reason: "后续单独开发"
+    - feature: "真实短信验证码"
+      reason: "当前使用模拟验证码，后续对接"
+
+  in_progress: []
+
+  pending_tasks:
+    - id: "P0-001"
+      desc: "Booking 下单 user_id/merchant_id 硬编码"
+    - id: "P0-002"
+      desc: "My 页面联系手机号 400-820-5520 硬编码"
+    - id: "P1-001"
+      desc: "平台超级管理员初始化未完成"
+
+  completed_tasks:
+    - task_id: "TASK-2026-04-08-000"
+      agent: "project-controller"
+      result: PASS
+      trace_file: "docs/logs/tasks/TASK-2026-04-08-000-audit.yaml"
+    - task_id: "TASK-2026-04-23-001"
+      agent: "project-controller"
+      result: PASS
+      note: "质量门检查汇总与验收"
+    - task_id: "TASK-2026-04-23-002"
+      agent: "backend-engineer"
+      result: PASS
+      note: "修复订单详情API字段不一致"
+    - task_id: "TASK-2026-04-23-003"
+      agent: "frontend-integration-engineer"
+      result: PASS
+      note: "修复登录验证码逻辑和API地址硬编码"
+    - task_id: "TASK-2026-04-23-004"
+      agent: "quality-testing-specialist"
+      result: PASS
+      note: "QA验证修复效果"
+    - task_id: "TASK-2026-04-23-005"
+      agent: "project-controller"
+      result: PASS
+      note: "最终验收结论-有条件验收"
+    - task_id: "TASK-2026-04-23-006"
+      agent: "visual-qa-specialist"
+      result: PASS
+      note: "Visual QA 前端页面视觉验证"
+    - task_id: "TASK-2026-04-08-001"
+      agent: "ci-quality-gate-specialist"
+      result: PASS
+      note: "部署配置修复与验证"
+    - task_id: "TASK-2026-04-29-000"
+      agent: "backend-engineer"
+      result: PASS
+      note: "Merchant+User 新增登录字段，bcrypt 工具函数"
+    - task_id: "TASK-2026-04-08-002"
+      agent: "quality-testing-specialist"
+      result: PASS
+      note: "P0鉴权漏洞验证-修复后验证通过"
+    - task_id: "TASK-2026-04-08-005"
+      agent: "backend-engineer"
+      result: PASS
+      note: "P0安全阻塞项修复"
+    - task_id: "TASK-2026-04-21-001"
+      agent: "miniprogram-porting-engineer"
+      result: PASS
+      note: "小程序注释型文字修改为营销文案"
+    - task_id: "TASK-2026-04-21-002"
+      agent: "miniprogram-porting-engineer"
+      result: PASS
+      note: "小程序首页文案排版优化"
+
+  quality_gates:
+    ci: PASS        # pytest 33 passed
+    build: PASS     # npm run build exit 0, 无 localhost 硬编码
+    qa: N/A
+    spec_validate: PASS  # 2 份 Spec 文档已完成
+    visual_qa: N/A
+    code_review: N/A
+    uat: N/A
+
+  acceptance:
+    verdict: IN_PROGRESS
+    conditions:
+      - "P0-001 Booking 硬编码修复"
+      - "P0-002 My 页面硬编码修复"
+      - "P1-001 平台管理员初始化"
+    risk_summary: "验证码模拟实现为 MVP 阶段可接受风险，本次分支聚焦对象存储和内容管理"
+
+  known_issues:
+    - id: "KI-001"
+      severity: "medium"
+      description: "验证码模拟实现，需替换为真实短信服务"
+      status: "open"
+    - id: "KI-002"
+      severity: "low"
+      description: "pytest fixture问题，3个 customer carousel 测试需独立运行"
+      status: "open"
+    - id: "KI-003"
+      severity: "high"
+      description: "生产数据库密码在git历史中暴露，需更换密码"
+      status: "open"
