@@ -378,7 +378,7 @@ const PriceQuery = () => {
                   className="text-[24px] font-bold leading-tight text-[#2f281f]"
                   style={{ fontFamily: '"Noto Serif SC", "Songti SC", serif' }}
                 >
-                  左侧分类，右侧商品
+                  按类选鲜，一站配齐
                 </h1>
               </div>
 
