@@ -37,4 +37,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8003/health || exit 1
 
 # 启动命令
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8003"]
+# 注意：COPY . . 将 backend/ 复制到 /app/，因此 platform 代码在 /app/services/platform/
+CMD ["uvicorn", "services.platform.main:app", "--host", "0.0.0.0", "--port", "8003"]
