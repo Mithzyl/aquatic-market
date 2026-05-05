@@ -17,7 +17,7 @@
         <view class="contact-icon"></view>
         <view class="contact-info">
           <text class="contact-label">联系客服</text>
-          <text class="contact-value">{{contactPhone}}</text>
+          <text class="contact-value">{{contactPhone || '暂无'}}</text>
         </view>
         <view class="contact-action"><text>→</text></view>
       </view>
@@ -41,7 +41,7 @@
         <view class="contact-icon"></view>
         <view class="contact-info">
           <text class="contact-label">联系客服</text>
-          <text class="contact-value">{{contactPhone}}</text>
+          <text class="contact-value">{{contactPhone || '暂无'}}</text>
         </view>
         <view class="contact-action"><text>→</text></view>
       </view>

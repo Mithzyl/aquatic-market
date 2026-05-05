@@ -7,7 +7,7 @@ Page({
     isLoggedIn: false,
     userInfo: null,
     defaultName: '柳州鲜选会员',
-    contactPhone: '400-820-5520',
+    contactPhone: '',
     refreshing: false
   },
 

@@ -37,11 +37,11 @@
       <image class="hero-bg" src="{{heroProduct.image}}" mode="aspectFill" />
       <view class="hero-overlay"></view>
       <view class="hero-content">
-        <view class="hero-tag">NEW RETAIL SEAFOOD</view>
+        <view class="hero-tag">鲜选直达 · 当日到店</view>
         <view class="hero-text">
           <text class="hero-subtitle">{{shopName}}</text>
-          <text class="hero-title">当日直采的\n海鲜零售首页</text>
-          <text class="hero-desc">把门店鲜度、今日活动和招牌商品先讲清楚，再进入具体分类下单。</text>
+          <text class="hero-title">源头直采\n鲜活到家</text>
+          <text class="hero-desc">每日凌晨渔港直发，虾蟹贝鱼分类上架，下单即留货。</text>
         </view>
         <view class="hero-actions">
           <view class="hero-btn-primary" bindtap="onGoToOrder">进入下单</view>
@@ -57,6 +57,23 @@
             <text class="hero-spotlight-price">¥{{heroProduct.price}}</text>
           </view>
         </view>
+      </view>
+    </view>
+
+    <!-- 轮播图 Banner -->
+    <view class="carousel-section" wx:if="{{carousels.length > 0}}">
+      <scroll-view class="carousel-scroll" scroll-x enhanced show-scrollbar="{{false}}" snap="{{true}}">
+        <view class="carousel-track">
+          <view class="carousel-item" wx:for="{{carousels}}" wx:key="id">
+            <image class="carousel-image" src="{{item.image_url}}" mode="aspectFill" />
+            <view class="carousel-title-bar" wx:if="{{item.title}}">
+              <text>{{item.title}}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      <view class="carousel-dots" wx:if="{{carousels.length > 1}}">
+        <view class="carousel-dot {{index === 0 ? 'active' : ''}}" wx:for="{{carousels}}" wx:key="id" wx:for-index="index"></view>
       </view>
     </view>
 

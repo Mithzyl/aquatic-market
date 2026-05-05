@@ -8,8 +8,9 @@ Page({
     heroProduct: null,
     showcaseProducts: [],
     categories: [],
+    carousels: [],
     serviceHighlights: config.serviceHighlights,
-    shopName: '柳州鲜选海产店',
+    shopName: '柳州鲜选',
     loading: true,
     isEmptyMerchant: false,
     merchantConfig: null
@@ -19,11 +20,12 @@ Page({
     this.checkMerchantStatus()
     this.fetchData()
     this.loadMerchantConfig()
+    this.fetchCarousels()
   },
 
   onPullDownRefresh() {
     this.checkMerchantStatus()
-    this.fetchData().then(() => {
+    Promise.all([this.fetchData(), this.fetchCarousels()]).then(() => {
       wx.stopPullDownRefresh()
     })
   },
@@ -34,11 +36,11 @@ Page({
       const merchantConfig = await configService.getConfig()
       this.setData({
         isEmptyMerchant: !hasMerchant,
-        merchantConfig: merchantConfig
+        merchantConfig: merchantConfig,
+        shopName: merchantConfig.shop_name || '柳州鲜选'
       })
     } catch (error) {
       console.error('Failed to check merchant status:', error)
-      // 如果检查失败，设置为空商家状态
       this.setData({
         isEmptyMerchant: true,
         merchantConfig: configService.getEmptyConfig()
@@ -52,6 +54,21 @@ Page({
       this.setData({ shopName })
     } catch (error) {
       console.error('Failed to load merchant config:', error)
+    }
+  },
+
+  async fetchCarousels() {
+    try {
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${config.apiBaseUrl}/api/customer/carousels?merchant_id=1&is_active=true`,
+          success: resolve,
+          fail: reject
+        })
+      })
+      this.setData({ carousels: res.data || [] })
+    } catch (error) {
+      console.warn('获取轮播图失败:', error)
     }
   },
 
