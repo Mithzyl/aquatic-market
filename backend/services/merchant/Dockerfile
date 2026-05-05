@@ -36,11 +36,11 @@ COPY schemas ./schemas
 # 复制 services 模块中的 merchant_service.py（从构建上下文 backend/services 目录）
 COPY services/merchant_service.py ./services/
 
-# 复制全局路由到商家路由目录（从构建上下文 backend/routes）
-COPY routes/carousel_routes.py ./merchant_service/routes/
-
 # 复制商家端服务代码（从构建上下文 backend/services/merchant 目录）
 COPY services/merchant ./merchant_service
+
+# 追加全局路由到商家路由目录（必须在 COPY services/merchant 之后，避免被覆盖）
+COPY routes/carousel_routes.py ./merchant_service/routes/
 
 # 暴露端口
 EXPOSE 8001
