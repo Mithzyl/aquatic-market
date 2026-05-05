@@ -24,10 +24,6 @@ project_state:
   in_progress: []
 
   pending_tasks:
-    - id: "P0-001"
-      desc: "Booking 下单 user_id/merchant_id 硬编码"
-    - id: "P0-002"
-      desc: "My 页面联系手机号 400-820-5520 硬编码"
     - id: "P1-001"
       desc: "平台超级管理员初始化未完成"
 
