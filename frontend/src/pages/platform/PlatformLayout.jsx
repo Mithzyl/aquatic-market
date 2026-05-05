@@ -10,6 +10,8 @@ import { usePlatformAuth } from '../../contexts/PlatformAuthContext'
 const sidebarNav = [
   { path: '/platform/dashboard', label: '数据概览', icon: 'chart' },
   { path: '/platform/merchants', label: '商家管理', icon: 'store' },
+  { path: '/platform/carousels', label: '轮播图', icon: 'image' },
+  { path: '/platform/products', label: '商品管理', icon: 'box' },
   { path: '/platform/users', label: '用户管理', icon: 'users', disabled: true },
   { path: '/platform/audit', label: '审核管理', icon: 'audit', disabled: true },
 ]
@@ -54,6 +56,24 @@ function SidebarIcon({ type, isActive }) {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 20c0-4 4-6 6-6s6 2 6 6" />
         <circle cx="17" cy="11" r="3" strokeWidth={1.8} />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 20c0-3-3-5-4-5" />
+      </svg>
+    )
+  }
+
+  // 轮播图 - image 图标
+  if (type === 'image') {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    )
+  }
+
+  // 商品管理 - box 图标
+  if (type === 'box') {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
       </svg>
     )
   }

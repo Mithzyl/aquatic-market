@@ -20,6 +20,8 @@ import PlatformLogin from './pages/platform/PlatformLogin'
 import PlatformLayout from './pages/platform/PlatformLayout'
 import PlatformDashboard from './pages/platform/PlatformDashboard'
 import PlatformMerchants from './pages/platform/PlatformMerchants'
+import PlatformCarousels from './pages/platform/PlatformCarousels'
+import PlatformProducts from './pages/platform/PlatformProducts'
 import { PlatformAuthProvider, usePlatformAuth } from './contexts/PlatformAuthContext'
 // 用户端认证
 import { CustomerAuthProvider, useCustomerAuth } from './contexts/CustomerAuthContext'
@@ -310,6 +312,24 @@ function PlatformShell() {
             element={
               <PlatformRouteGuard>
                 <PlatformMerchants />
+              </PlatformRouteGuard>
+            }
+          />
+          {/* 轮播图管理 */}
+          <Route
+            path="carousels"
+            element={
+              <PlatformRouteGuard>
+                <PlatformCarousels />
+              </PlatformRouteGuard>
+            }
+          />
+          {/* 商品管理 */}
+          <Route
+            path="products"
+            element={
+              <PlatformRouteGuard>
+                <PlatformProducts />
               </PlatformRouteGuard>
             }
           />

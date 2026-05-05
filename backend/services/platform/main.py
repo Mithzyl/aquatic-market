@@ -37,6 +37,8 @@ from routes.merchants import router as merchants_router
 from routes.users import router as users_router
 from routes.statistics import router as statistics_router
 from routes.audit import router as audit_router
+from routes.carousels import router as carousels_router
+from routes.products import router as products_router
 
 # 导入共享上传路由
 from shared.upload_routes import router as upload_router
@@ -156,6 +158,8 @@ app.include_router(merchants_router, prefix="/api/platform", tags=["商家管理
 app.include_router(users_router, prefix="/api/platform", tags=["用户管理"])
 app.include_router(statistics_router, prefix="/api/platform", tags=["统计分析"])
 app.include_router(audit_router, prefix="/api/platform", tags=["审核管理"])
+app.include_router(carousels_router, prefix="/api/platform", tags=["轮播图管理"])
+app.include_router(products_router, prefix="/api/platform", tags=["商品管理"])
 app.include_router(upload_router)
 
 
