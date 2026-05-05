@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCustomerAuth } from '../contexts/CustomerAuthContext'
-import { CUSTOMER_API_BASE_URL } from '../api/config'
+import { CUSTOMER_API_BASE_URL, CUSTOMER_TOKEN_KEY } from '../api/config'
+import ImageUploader from '../components/ImageUploader'
 
 const My = () => {
   const navigate = useNavigate()
@@ -46,9 +47,16 @@ const My = () => {
   }
 
   // 用户信息（从 Context 获取）
-  const userName = user?.name || '柳州鲜选会员'
+  const userName = user?.name || user?.nickname || '柳州鲜选会员'
   const userPhone = user?.phone || '未绑定手机'
-  const userAvatar = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}`
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || user?.avatar || '')
+
+  // 用户数据变化时同步头像
+  useEffect(() => {
+    if (user?.avatar_url || user?.avatar) {
+      setAvatarUrl(user.avatar_url || user.avatar)
+    }
+  }, [user])
 
   return (
     <div
@@ -73,10 +81,35 @@ const My = () => {
             className="relative h-[120px] w-[120px] overflow-hidden rounded-full border-4 shadow-[0_10px_30px_rgba(105,77,44,0.12)]"
             style={{ borderColor: '#f3e8d8' }}
           >
-            <img
-              src={userAvatar}
-              alt={userName}
-              className="h-full w-full object-cover"
+            <ImageUploader
+              value={avatarUrl}
+              onChange={async (url) => {
+                setAvatarUrl(url)
+                // 保存头像 URL 到后端
+                try {
+                  const token = localStorage.getItem(CUSTOMER_TOKEN_KEY)
+                  const response = await fetch(`${CUSTOMER_API_BASE_URL}/api/customer/auth/me`, {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ avatar_url: url }),
+                  })
+                  if (response.ok) {
+                    const updated = await response.json()
+                    login(token, updated)
+                  }
+                } catch (err) {
+                  console.error('[My] 保存头像失败:', err)
+                }
+              }}
+              folder="avatars"
+              token={token}
+              useCustomerApi={true}
+              placeholder=""
+              previewSize="h-full w-full"
+              maxSizeMB={3}
             />
           </div>
 

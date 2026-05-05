@@ -33,6 +33,10 @@ from routes.orders import router as orders_router
 from routes.categories import router as categories_router
 from routes.auth import router as auth_router
 from routes.config import router as config_router
+from routes.carousels import router as carousels_router
+
+# 导入共享上传路由
+from shared.upload_routes import router as upload_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -147,6 +151,8 @@ app.include_router(products_router, prefix="/api/customer", tags=["商品管理"
 app.include_router(orders_router, prefix="/api/customer", tags=["订单管理"])
 app.include_router(categories_router, prefix="/api/customer", tags=["分类管理"])
 app.include_router(config_router, prefix="/api/customer", tags=["配置管理"])
+app.include_router(carousels_router, prefix="/api/customer", tags=["轮播图"])
+app.include_router(upload_router)
 
 
 # ============== 主程序入口 ==============

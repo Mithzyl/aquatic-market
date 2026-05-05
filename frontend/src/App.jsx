@@ -13,6 +13,7 @@ import AdminProducts from './pages/admin/AdminProducts'
 import AdminRevenue from './pages/admin/AdminRevenue'
 import AdminCategories from './pages/admin/AdminCategories'
 import AdminSettings from './pages/admin/AdminSettings'
+import AdminCarousels from './pages/admin/AdminCarousels'
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
 // 平台后台页面
 import PlatformLogin from './pages/platform/PlatformLogin'
@@ -252,6 +253,14 @@ function AdminShell() {
             element={
               <AdminRouteGuard>
                 <AdminCategories />
+              </AdminRouteGuard>
+            }
+          />
+          <Route
+            path="carousels"
+            element={
+              <AdminRouteGuard>
+                <AdminCarousels />
               </AdminRouteGuard>
             }
           />

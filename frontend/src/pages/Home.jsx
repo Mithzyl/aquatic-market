@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getProducts, getCategories } from '../api/products'
-import { getCustomerConfig } from '../api/config'
+import { getCustomerConfig, CUSTOMER_API_BASE_URL } from '../api/config'
 
 // CategoryIcon 组件（复用 PriceQuery.jsx 的实现）
 function CategoryIcon({ categoryId }) {
@@ -57,10 +57,27 @@ function CategoryIcon({ categoryId }) {
 const Home = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [carousels, setCarousels] = useState([])
   const [serviceHighlights, setServiceHighlights] = useState([])
   const [loading, setLoading] = useState(true)
   const [isEmptyMerchant, setIsEmptyMerchant] = useState(false)
   const [merchantConfig, setMerchantConfig] = useState(null)
+
+  // 获取轮播图数据
+  useEffect(() => {
+    const fetchCarousels = async () => {
+      try {
+        const response = await fetch(`${CUSTOMER_API_BASE_URL}/api/customer/carousels?merchant_id=1`)
+        if (response.ok) {
+          const data = await response.json()
+          setCarousels(Array.isArray(data) ? data : [])
+        }
+      } catch (err) {
+        console.warn('[Home] 获取轮播图失败:', err.message)
+      }
+    }
+    fetchCarousels()
+  }, [])
 
   // 获取配置数据（serviceHighlights）
   useEffect(() => {
@@ -248,6 +265,43 @@ const Home = () => {
             </div>
           </div>
         </section>
+
+        {/* 轮播图 Banner */}
+        {carousels.length > 0 && (
+          <section className="mt-5">
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide">
+              {carousels.map((c) => (
+                <Link
+                  key={c.id}
+                  to={c.link_url || '#'}
+                  className="flex-shrink-0 w-[85%] max-w-sm snap-center rounded-2xl overflow-hidden border border-[#eadfce] shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="aspect-[16/7] bg-[#f5f0e8]">
+                    <img
+                      src={c.image_url}
+                      alt={c.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.style.display = 'none' }}
+                    />
+                  </div>
+                  {c.title && (
+                    <div className="px-3 py-2 bg-white">
+                      <p className="text-sm font-medium text-[#2c241b] truncate">{c.title}</p>
+                    </div>
+                  )}
+                </Link>
+              ))}
+            </div>
+            {/* 指示点 */}
+            {carousels.length > 1 && (
+              <div className="flex justify-center gap-1.5 mt-2">
+                {carousels.map((_, i) => (
+                  <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-[#2f6b56]' : 'bg-[#d4c8b8]'}`} />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         <section className="mt-5 grid grid-cols-3 gap-3">
           {serviceHighlights.map((item) => (

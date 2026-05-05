@@ -1,8 +1,8 @@
 // frontend/src/api/orders.js - 订单API
-import { API_BASE_URL } from './config.js'
+import { API_BASE_URL, CUSTOMER_API_BASE_URL } from './config.js'
 
-// 用户端API地址（端口8002）
-const CUSTOMER_API_BASE = 'http://localhost:8002'
+// 用户端API地址
+const CUSTOMER_API_BASE = CUSTOMER_API_BASE_URL
 
 /**
  * 创建订单（商家端）

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useCustomerAuth } from '../contexts/CustomerAuthContext'
+import { CUSTOMER_API_BASE_URL } from '../api/config'
 
-// 用户端 API 地址（端口 8002）
-const CUSTOMER_API_BASE = 'http://localhost:8002'
+// 用户端 API 地址
+const CUSTOMER_API_BASE = CUSTOMER_API_BASE_URL
 
 function CustomerLogin() {
   const navigate = useNavigate()

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
-import { API_BASE_URL } from '../../api/config'
+import { API_BASE_URL, ADMIN_TOKEN_KEY } from '../../api/config'
+import ImageUploader from '../../components/ImageUploader'
 
 function AdminSettings() {
   const navigate = useNavigate()
@@ -70,6 +71,51 @@ function AdminSettings() {
       >
         设置
       </h1>
+
+      {/* 店铺Logo卡片 */}
+      <div className="bg-white rounded-2xl border border-[#eadfce] shadow-sm overflow-hidden">
+        <div className="px-5 py-4">
+          <div className="flex items-center gap-3 mb-3">
+            <svg
+              className="w-5 h-5 text-[#9a8062]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-sm font-medium text-[#2c241b]">店铺 Logo</span>
+          </div>
+          <ImageUploader
+            value={merchant?.shop_logo || ''}
+            onChange={async (url) => {
+              try {
+                const token = localStorage.getItem(ADMIN_TOKEN_KEY)
+                // 保存 logo URL 到商家配置
+                const response = await fetch(`${API_BASE_URL}/api/admin/config`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ shop_logo: url }),
+                })
+                if (response.ok) {
+                  // 刷新商家数据
+                  window.location.reload()
+                }
+              } catch (err) {
+                console.error('[AdminSettings] 保存 Logo 失败:', err)
+              }
+            }}
+            folder="logos"
+            token={localStorage.getItem(ADMIN_TOKEN_KEY)}
+            placeholder="上传店铺 Logo"
+            previewSize="w-24 h-24 rounded-full"
+            maxSizeMB={3}
+          />
+        </div>
+      </div>
 
       {/* 商家信息卡片 */}
       <div className="bg-white rounded-2xl border border-[#eadfce] shadow-sm overflow-hidden">

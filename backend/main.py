@@ -19,6 +19,8 @@ from routes.order_routes import router as order_router
 from routes.merchant_routes import router as merchant_router
 from routes.category_routes import router as category_router
 from routes.admin_routes import router as admin_router  # 路径别名：/api/admin/*
+from routes.carousel_routes import router as carousel_router
+from shared.upload_routes import router as upload_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -85,6 +87,8 @@ app.include_router(order_router)
 app.include_router(merchant_router)
 app.include_router(category_router)
 app.include_router(admin_router)  # 注册 /api/admin/* 路径别名
+app.include_router(carousel_router)
+app.include_router(upload_router)
 
 
 # ============== 根路径 ==============

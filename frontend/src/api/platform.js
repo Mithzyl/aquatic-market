@@ -10,7 +10,7 @@ const PLATFORM_TOKEN_KEY = 'platform_token'
 const PLATFORM_ADMIN_KEY = 'platform_admin'
 
 // 平台后台服务端口
-const PLATFORM_SERVICE_URL = 'http://localhost:8003'
+const PLATFORM_SERVICE_URL = import.meta.env.VITE_PLATFORM_API_URL ?? ''
 
 /**
  * 获取存储的平台后台 Token

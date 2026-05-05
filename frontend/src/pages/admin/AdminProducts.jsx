@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { getProducts, createProduct, updateProduct, deleteProduct, getCategories } from '../../api/admin'
+import { getProducts, createProduct, updateProduct, deleteProduct, getCategories, getAdminToken } from '../../api/admin'
+import ImageUploader from '../../components/ImageUploader'
 
 // 状态标签颜色映射
 const STATUS_CONFIG = {
@@ -311,31 +312,20 @@ function ProductModal({ isOpen, onClose, onSubmit, product, categories, isLoadin
             </select>
           </div>
 
-          {/* 图片 URL */}
+          {/* 商品图片上传 */}
           <div>
             <label className="block text-sm font-medium text-[#2c241b] mb-1.5">
-              图片链接
+              商品图片
             </label>
-            <input
-              type="url"
-              name="image_url"
+            <ImageUploader
               value={formData.image_url}
-              onChange={handleChange}
-              placeholder="https://example.com/image.jpg"
-              className="w-full px-4 py-2.5 bg-white border border-[#eadfce] rounded-xl text-sm text-[#2c241b] placeholder-[#c9a87c] focus:outline-none focus:border-[#1f4034] focus:ring-1 focus:ring-[#1f4034]"
+              onChange={(url) => setFormData(prev => ({ ...prev, image_url: url }))}
+              folder="products"
+              token={getAdminToken()}
+              placeholder="上传商品图片"
+              previewSize="w-full h-32"
+              maxSizeMB={5}
             />
-            {formData.image_url && (
-              <div className="mt-2 rounded-lg overflow-hidden border border-[#eadfce]">
-                <img
-                  src={formData.image_url}
-                  alt="预览"
-                  className="w-full h-24 object-cover"
-                  onError={(e) => {
-                    e.target.style.display = 'none'
-                  }}
-                />
-              </div>
-            )}
           </div>
 
           {/* 提交按钮 */}

@@ -330,3 +330,18 @@ class MerchantConfig(SQLModel, table=True):
             enable_pickup=True,
             min_order_amount=0
         )
+
+
+# ============== 轮播图模型 ==============
+
+class Carousel(SQLModel, table=True):
+    """轮播图模型 - 商家端轮播图管理"""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    merchant_id: int = Field(..., foreign_key="merchant.id", index=True, description="商家ID")
+    title: str = Field(..., max_length=100, description="轮播图标题")
+    image_url: str = Field(..., max_length=500, description="图片URL")
+    link_url: str = Field(default="", max_length=500, description="跳转链接")
+    sort_order: int = Field(default=0, ge=0, description="排序序号")
+    is_active: bool = Field(default=True, description="是否启用")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

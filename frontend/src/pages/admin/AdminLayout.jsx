@@ -6,6 +6,7 @@ import { useAdminAuth } from '../../contexts/AdminAuthContext'
 const adminTabs = [
   { path: '/admin/products', label: '商品', icon: 'grid' },
   { path: '/admin/categories', label: '品类', icon: 'folder' },
+  { path: '/admin/carousels', label: '轮播', icon: 'image' },
   { path: '/admin/revenue', label: '收益', icon: 'chart' },
   { path: '/admin/settings', label: '设置', icon: 'cog' }
 ]
@@ -37,6 +38,15 @@ function AdminNavIcon({ type, isActive }) {
       <svg {...common}>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M3 7.5V17a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.5l-1.5-2H5a2 2 0 00-2 2v.5" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M3 9h18" />
+      </svg>
+    )
+  }
+
+  // 轮播 - image 图标
+  if (type === 'image') {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
     )
   }

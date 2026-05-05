@@ -31,7 +31,10 @@ load_dotenv()
 from shared.database import create_db_and_tables
 
 # 导入路由（从当前服务目录）
-from routes import router as merchant_router, admin_router
+from routes import router as merchant_router, admin_router, carousel_router
+
+# 导入共享上传路由
+from shared.upload_routes import router as upload_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -149,6 +152,8 @@ def read_root():
 
 app.include_router(merchant_router)
 app.include_router(admin_router)
+app.include_router(carousel_router)
+app.include_router(upload_router)
 
 
 # ============== 主程序入口 ==============
