@@ -1,5 +1,5 @@
 // frontend/src/api/products.js - 商品API（用户端）
-import { CUSTOMER_API_BASE_URL } from './config.js'
+import { CUSTOMER_API_BASE_URL, getCustomerConfig } from './config.js'
 
 // 用户端API地址
 const CUSTOMER_API_BASE = `${CUSTOMER_API_BASE_URL}/api/customer`
