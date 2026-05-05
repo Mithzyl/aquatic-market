@@ -50,16 +50,32 @@ def _get_bucket_manager():
     return qiniu.BucketManager(auth)
 
 
-def generate_upload_token(folder: str, file_name: str) -> dict:
+# 各用途的命名策略
+FOLDER_NAMING = {
+    "products":  {"date_fmt": "%Y-%m",    "prefix": "prod"},    # 商品图片：按月分组
+    "avatars":   {"date_fmt": "%Y",       "prefix": "avatar"},  # 用户头像：按年分组
+    "logos":     {"date_fmt": "%Y",       "prefix": "logo"},    # 店铺Logo：按年分组
+    "carousels": {"date_fmt": "%Y-%m",    "prefix": "banner"},  # 轮播图：按月分组
+}
+
+
+def generate_upload_token(folder: str, file_name: str, merchant_id: int = 0) -> dict:
     """
     生成七牛云上传凭证。
 
-    根据 folder 和当前日期构造 key：
-    {folder}/{YYYY}/{MM}/{DD}/{uuid}_{file_name}
+    根据 folder 类型采用不同的命名策略：
+
+    | folder     | key 示例                                        |
+    |------------|------------------------------------------------|
+    | products   | products/2026-05/prod_a1b2_鲜活大虾.jpg           |
+    | avatars    | avatars/2026/avatar_f3e4_smile.jpg             |
+    | logos      | logos/2026/logo_m1_b1a2_logo.png               |
+    | carousels  | carousels/2026-05/banner_c3d4_新品促销.jpg        |
 
     Args:
-        folder: 文件夹名称（如 products, avatars, logos, carousels）
+        folder: 文件夹名称（products | avatars | logos | carousels）
         file_name: 原始文件名
+        merchant_id: 商家ID（用于 logos 命名，可选）
 
     Returns:
         dict: {"token": "...", "key": "...", "upload_url": "...", "file_url": "..."}
@@ -67,11 +83,18 @@ def generate_upload_token(folder: str, file_name: str) -> dict:
     config = get_qiniu_config()
     auth = _get_auth()
 
-    # 构造存储 key：文件夹/日期/唯一文件名
+    naming = FOLDER_NAMING.get(folder, {"date_fmt": "%Y/%m/%d", "prefix": "file"})
+
+    # 按不同粒度生成日期路径
     now = datetime.now()
-    date_path = now.strftime("%Y/%m/%d")
+    date_path = now.strftime(naming["date_fmt"])
     unique_prefix = uuid.uuid4().hex[:8]
-    key = f"{folder}/{date_path}/{unique_prefix}_{file_name}"
+
+    # 构造语义化 key
+    if folder == "logos" and merchant_id > 0:
+        key = f"{folder}/{date_path}/{naming['prefix']}_m{merchant_id}_{unique_prefix}_{file_name}"
+    else:
+        key = f"{folder}/{date_path}/{naming['prefix']}_{unique_prefix}_{file_name}"
 
     # 生成上传凭证（1 小时有效）
     token = auth.upload_token(config["bucket"], key, 3600)

@@ -38,7 +38,8 @@ def create_upload_token(
         )
 
     try:
-        result = generate_upload_token(request.folder, request.file_name)
+        mid = merchant.get("merchant_id", 0)
+        result = generate_upload_token(request.folder, request.file_name, merchant_id=mid)
         return UploadTokenResponse(**result)
     except Exception as e:
         raise HTTPException(
