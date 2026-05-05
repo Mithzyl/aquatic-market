@@ -518,7 +518,8 @@ function AdminCategories() {
   const handleSubmitCategory = async (formData) => {
     setIsSubmitting(true)
     try {
-      const slug = formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
+      let slug = formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fff-]/g, '')
+      if (!slug) slug = formData.name
       
       if (modalMode === 'edit' && editingCategory) {
         await updateCategory(editingCategory.id, {

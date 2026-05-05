@@ -332,7 +332,7 @@ function ProductModal({ isOpen, onClose, onSubmit, product, categories, isLoadin
             >
               <option value="">请选择品类</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.name}>
+                <option key={cat.id} value={cat.slug}>
                   {cat.name}
                 </option>
               ))}
