@@ -2,7 +2,7 @@
 
 > 最后更新：2026-05-05  
 > 当前分支：`feature/qiniu-object-storage`  
-> 最新提交：`ec53dca docs: 补充平台端内容管理 Spec`
+> 最新提交：`956b678 docs: P0 修复完成 — Booking 关联真实用户 + My 动态联系手机`
 
 ### 🚫 现阶段排除的功能
 | 功能 | 原因 |
@@ -10,6 +10,18 @@
 | 商家审核管理 | 当前为单商家 SaaS 模式，无需审核流程 |
 | 商家入驻 | 商家由平台管理员直接创建 |
 | 用户管理详情 | 侧边栏已禁用，待后续需要时开发 |
+| 支付 | 后续单独开发 |
+| 真实短信验证码 | 当前模拟，后续对接 |
+
+### 🎯 下一阶段：小程序开发
+
+> **设计原则**：小程序基于用户端 Web App 的页面结构和交互逻辑进行实现。复用用户端 API（8002 端口），保证数据口径一致。
+
+| 维度 | 说明 |
+|------|------|
+| 参考页面 | `frontend/src/pages/` 中的 Home、PriceQuery、ProductDetail、Booking、OrderManagement、My、CustomerLogin |
+| 数据源 | 复用 `/api/customer/*` 接口（商品、品类、订单、轮播图、配置） |
+| 已有基础 | `miniprogram/pages/` 已有 7 个页面骨架（index/price-query/product-detail/booking/order-list/login/profile） |
 
 ---
 
@@ -279,6 +291,18 @@ pending → confirmed → ready → completed
 /platform/merchants       → PlatformMerchants（商家管理）
 /platform/carousels       → PlatformCarousels（全平台轮播图管理）
 /platform/products        → PlatformProducts（全平台商品管理）
+```
+
+### 小程序路由（基于用户端 Web App 设计）
+
+```
+pages/index/index          → 首页（对标 Home.jsx：轮播图+品类+热卖）
+pages/price-query/index    → 下单页（对标 PriceQuery.jsx：分类+搜索+商品列表）
+pages/product-detail/index → 商品详情（对标 ProductDetail.jsx）
+pages/booking/index        → 下单确认（对标 Booking.jsx）
+pages/order-list/index     → 订单管理（对标 OrderManagement.jsx）
+pages/profile/index        → 我的（对标 My.jsx：头像+信息）
+pages/login/index          → 登录（对标 CustomerLogin.jsx）
 ```
 
 ### 路由守卫

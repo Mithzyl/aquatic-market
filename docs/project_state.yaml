@@ -1,14 +1,15 @@
 project_state:
   updated_at: "2026-05-05T19:20:00"
-  phase: active_development
-  phase_description: "七牛云对象存储集成 + 平台端内容管理，feature/qiniu-object-storage 分支上"
+  phase: transitioning_to_miniprogram
+  phase_description: "Web 端核心功能完成，下一阶段聚焦微信小程序开发，基于用户端 Web App 设计实现"
   branch: "feature/qiniu-object-storage"
 
   focus_areas:
-    - "七牛云图片上传（商品/头像/Logo/轮播图）"
-    - "轮播图管理（商家端 CRUD + 用户端展示 + 平台端管理）"
-    - "平台端内容管理（商品管理、轮播图管理）"
-    - "营销文案优化"
+    - "七牛云图片上传（商品/头像/Logo/轮播图）"  # ✅ 已完成
+    - "轮播图管理（商家端 CRUD + 用户端展示 + 平台端管理）"  # ✅ 已完成
+    - "平台端内容管理（商品管理、轮播图管理）"  # ✅ 已完成
+    - "营销文案优化"  # ✅ 已完成
+    - "小程序开发 — 基于用户端 Web App (Home/PriceQuery/ProductDetail/Booking/OrderManagement/My/Login)"  # 🔄 下一阶段
 
   # 不在现阶段范围内的功能
   out_of_scope:
@@ -26,6 +27,30 @@ project_state:
   pending_tasks:
     - id: "P1-001"
       desc: "平台超级管理员初始化未完成"
+
+  # 小程序开发任务（基于用户端 Web App 设计）
+  miniprogram_tasks:
+    - page: "首页 (index)"
+      ref: "Home.jsx"
+      features: "轮播图 Banner、品类入口、热卖商品、商家配置"
+    - page: "下单页 (price-query)"
+      ref: "PriceQuery.jsx"
+      features: "左侧分类、右侧商品列表、搜索、加入已选、结算条"
+    - page: "商品详情 (product-detail)"
+      ref: "ProductDetail.jsx"
+      features: "大图展示、价格、规格、数量选择、加入已选/立即下单"
+    - page: "下单确认 (booking)"
+      ref: "Booking.jsx"
+      features: "已选商品清单、取货信息填写、订单提交"
+    - page: "订单管理 (order-list)"
+      ref: "OrderManagement.jsx"
+      features: "订单列表、状态筛选、交易凭证"
+    - page: "我的 (profile)"
+      ref: "My.jsx"
+      features: "头像上传、用户信息、联系手机、退出登录"
+    - page: "登录 (login)"
+      ref: "CustomerLogin.jsx"
+      features: "手机号 + 验证码登录"
 
   completed_tasks:
     - task_id: "TASK-2026-04-08-000"
