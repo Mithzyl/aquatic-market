@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../App'
+import { useCustomerAuth } from '../contexts/CustomerAuthContext'
 import { createOrder } from '../api/orders'
 
 function StepperIcon({ type }) {
@@ -38,6 +39,7 @@ function SectionLabel({ index, title, subtitle }) {
 function Booking() {
   const navigate = useNavigate()
   const { cartItems, updateQuantity, clearCart } = useCart()
+  const { user } = useCustomerAuth()
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [pickupTime, setPickupTime] = useState('')
@@ -61,8 +63,8 @@ function Booking() {
     setSubmitting(true)
     try {
       const orderData = {
-        user_id: 1,
-        merchant_id: 2,
+        user_id: user?.id || 0,
+        merchant_id: user?.default_merchant_id || 1,
         customer_name: customerName,
         customer_phone: customerPhone,
         pickup_time: pickupTime,

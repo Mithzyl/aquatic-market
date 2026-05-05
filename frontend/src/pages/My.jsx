@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCustomerAuth } from '../contexts/CustomerAuthContext'
-import { CUSTOMER_API_BASE_URL, CUSTOMER_TOKEN_KEY } from '../api/config'
+import { CUSTOMER_API_BASE_URL, CUSTOMER_TOKEN_KEY, getCustomerConfig } from '../api/config'
 import ImageUploader from '../components/ImageUploader'
 
 const My = () => {
   const navigate = useNavigate()
   const { user, token, login, logout } = useCustomerAuth()
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [merchantConfig, setMerchantConfig] = useState({})
 
   // 页面加载时刷新用户数据
   useEffect(() => {
@@ -39,6 +40,11 @@ const My = () => {
     
     refreshUserData()
   }, [token, login])
+
+  // 获取商家配置（联系手机等）
+  useEffect(() => {
+    getCustomerConfig().then(setMerchantConfig).catch(() => {})
+  }, [])
 
   // 处理登出
   const handleLogout = () => {
@@ -152,10 +158,11 @@ const My = () => {
             </div>
             <div className="flex-1">
               <p className="text-xs text-[#9a8a78]">联系手机</p>
-              <p className="mt-1 text-base font-medium text-[#2f281f]">400-820-5520</p>
+              <p className="mt-1 text-base font-medium text-[#2f281f]">{merchantConfig?.contact_phone || '暂无'}</p>
             </div>
+            {merchantConfig?.contact_phone && (
             <a
-              href="tel:400-820-5520"
+              href={`tel:${merchantConfig.contact_phone}`}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e8f5e9] text-[#2f6b56] transition-transform active:scale-95"
             >
               <svg
@@ -172,6 +179,7 @@ const My = () => {
                 />
               </svg>
             </a>
+            )}
           </div>
         </div>
 
