@@ -17,9 +17,12 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./aquatic_market.db")
 def create_engine_with_config():
     """根据数据库类型创建配置好的引擎"""
     if DATABASE_URL.startswith("mysql"):
-        # MySQL 配置
+        # MySQL 配置：charset 必须同时在 URL 和 connect_args 中设置，防止中文乱码
+        url = DATABASE_URL
+        if "charset" not in url:
+            url = url + ("&" if "?" in url else "?") + "charset=utf8mb4"
         return create_engine(
-            DATABASE_URL,
+            url,
             pool_pre_ping=True,  # 自动检测连接是否有效
             pool_recycle=3600,   # 每小时回收连接
             echo=False,          # 生产环境关闭SQL日志
