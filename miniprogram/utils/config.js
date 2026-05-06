@@ -2,7 +2,9 @@
 // 注意：商家配置（店铺名称、联系电话等）已移至 services/config.js 从 API 获取
 const config = {
   // API 基地址：用户端服务
-  apiBase: 'http://localhost:8002',
+  // 开发环境：本地后端 → 'http://localhost:8002'
+  // 生产环境：远程服务器 → 'http://43.134.24.99'
+  apiBase: 'http://43.134.24.99',
   
   // API 路径前缀：用户端路由
   apiPrefix: '/api/customer',

@@ -61,7 +61,7 @@ Page({
     try {
       const res = await new Promise((resolve, reject) => {
         wx.request({
-          url: `${config.apiBaseUrl}/api/customer/carousels?merchant_id=1&is_active=true`,
+          url: `${config.apiBase}/api/customer/carousels?merchant_id=1&is_active=true`,
           success: resolve,
           fail: reject
         })
